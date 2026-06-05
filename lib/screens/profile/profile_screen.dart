@@ -1,0 +1,1041 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../providers/app_state.dart';
+import '../auth/login_screen.dart';
+import '../../widgets/glass_card.dart';
+import '../mentor/mentor_chat_screen.dart';
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 10),
+            _buildProfileCard(context, appState),
+            const SizedBox(height: 32),
+            _buildSection(context, 'CONNECTIONS', [
+              _buildSettingItem(
+                context,
+                Icons.hub_outlined,
+                'GitHub Account',
+                trailing: '@${appState.githubUsername}',
+                onTap: () => _showEditGitHubDialog(context, appState),
+              ),
+            ]),
+            const SizedBox(height: 24),
+            _buildDeveloperMemorySection(context, appState),
+            const SizedBox(height: 24),
+            _buildSection(context, 'PREFERENCES', [
+              _buildSettingItem(
+                context,
+                Icons.notifications_none_rounded,
+                'Push Notifications',
+                hasSwitch: true,
+                switchValue: appState.pushNotifications,
+                onToggle: () => appState.togglePreference('notifications'),
+              ),
+              _buildSettingItem(
+                context,
+                Icons.auto_awesome_outlined,
+                'AI Insights',
+                hasSwitch: true,
+                switchValue: appState.aiInsights,
+                onToggle: () => appState.togglePreference('ai'),
+              ),
+              _buildSettingItem(
+                context,
+                Icons.assignment_outlined,
+                'Weekly Progress Report',
+                hasSwitch: true,
+                switchValue: appState.weeklyReport,
+                onToggle: () => appState.togglePreference('report'),
+              ),
+              _buildSettingItem(
+                context,
+                appState.isDarkTheme ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                'Appearance',
+                trailing: appState.isDarkTheme ? 'Dark' : 'Light',
+                onTap: () => _showAppearanceBottomSheet(context, appState),
+              ),
+            ]),
+            const SizedBox(height: 24),
+            _buildSection(context, 'ACCOUNT', [
+              _buildSettingItem(
+                context,
+                Icons.privacy_tip_outlined,
+                'Privacy & Security',
+                onTap: () => _showPrivacyBottomSheet(context, appState),
+              ),
+              _buildSettingItem(
+                context,
+                Icons.help_outline_rounded,
+                'Help & Support',
+                onTap: () => _showHelpBottomSheet(context),
+              ),
+            ]),
+            const SizedBox(height: 32),
+            _buildDestructiveButton(context, appState),
+            const SizedBox(height: 40),
+            Center(
+              child: Text(
+                'DEVMENTOR v1.0.0',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  color: AppTheme.textSecondary.withOpacity(0.5),
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(BuildContext context, AppState state) {
+    // Generate simple initials from username
+    String initials = 'AJ';
+    try {
+      final parts = state.username.split(' ');
+      if (parts.length >= 2) {
+        initials = parts[0].substring(0, 1) + parts[1].substring(0, 1);
+      } else if (state.username.isNotEmpty) {
+        initials = state.username.substring(0, 2).toUpperCase();
+      }
+    } catch (_) {}
+
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppTheme.accent,
+              borderRadius: BorderRadius.circular(16),
+              image: state.avatarUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(state.avatarUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: state.avatarUrl == null
+                ? Center(
+                    child: Text(
+                      initials,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      state.username,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textMain,
+                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accent.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'PRO',
+                        style: TextStyle(
+                          color: AppTheme.accent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  '@${state.githubUsername.toLowerCase()}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(BuildContext context, String title, List<Widget> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontSize: 10,
+                color: AppTheme.textSecondary,
+              ),
+        ),
+        const SizedBox(height: 12),
+        GlassCard(
+          child: Column(
+            children: items,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingItem(
+    BuildContext context,
+    IconData icon,
+    String title, {
+    String? trailing,
+    bool hasSwitch = false,
+    bool switchValue = false,
+    VoidCallback? onToggle,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppTheme.textSecondary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textMain,
+                    ),
+              ),
+            ),
+            if (hasSwitch)
+              Switch(
+                value: switchValue,
+                onChanged: (v) => onToggle?.call(),
+                activeColor: AppTheme.accent,
+                activeTrackColor: AppTheme.accent.withOpacity(0.3),
+                inactiveThumbColor: AppTheme.textSecondary,
+                inactiveTrackColor: AppTheme.border,
+                trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+              )
+            else if (trailing != null)
+              Row(
+                children: [
+                  Text(
+                    trailing,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right, size: 16, color: AppTheme.textSecondary),
+                ],
+              )
+            else
+              Icon(Icons.chevron_right, size: 16, color: AppTheme.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDestructiveButton(BuildContext context, AppState state) {
+    return GestureDetector(
+      onTap: () => _showSignOutConfirmDialog(context, state),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.destructive.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppTheme.destructive.withOpacity(0.2), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.logout_rounded, color: AppTheme.destructive, size: 20),
+            const SizedBox(width: 16),
+            Text(
+              'Sign Out',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.destructive,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Edit GitHub username dialog
+  void _showEditGitHubDialog(BuildContext context, AppState state) {
+    final controller = TextEditingController(text: state.githubUsername);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit GitHub Account',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.textMain,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: TextStyle(color: AppTheme.textMain),
+                  decoration: InputDecoration(
+                    labelText: 'GitHub Username',
+                    labelStyle: TextStyle(color: AppTheme.textSecondary),
+                    prefixText: '@ ',
+                    prefixStyle: TextStyle(color: AppTheme.textSecondary),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.border),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: AppTheme.accent),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: AppTheme.textSecondary),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        final newUsername = controller.text.trim();
+                        if (newUsername.isNotEmpty) {
+                          state.setGithubUsername(newUsername);
+                        }
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('GitHub handle updated to @$newUsername'),
+                            backgroundColor: AppTheme.success,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(80, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Appearance Bottom Sheet
+  void _showAppearanceBottomSheet(BuildContext context, AppState state) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(
+                  top: BorderSide(color: AppTheme.border, width: 1.5),
+                ),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppTheme.textSecondary.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Appearance',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppTheme.textMain,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Select your theme style. The liquid glass styling adapts to both light and dark backgrounds.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildThemeOption(context, state, 'Liquid Glass (Light)', false, Icons.light_mode_rounded),
+                        const SizedBox(height: 12),
+                        _buildThemeOption(context, state, 'Cosmic Glass (Dark)', true, Icons.dark_mode_rounded),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context,
+    AppState appState,
+    String label,
+    bool targetDark,
+    IconData icon,
+  ) {
+    final isSelected = appState.isDarkTheme == targetDark;
+    return GestureDetector(
+      onTap: () {
+        if (appState.isDarkTheme != targetDark) {
+          appState.toggleTheme();
+        }
+        Navigator.pop(context);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.accent.withOpacity(0.12) : AppTheme.surface.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.accent.withOpacity(0.4) : AppTheme.border,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppTheme.textMain : AppTheme.textSecondary,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle_rounded, color: AppTheme.accent),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Privacy & Security Bottom Sheet
+  void _showPrivacyBottomSheet(BuildContext context, AppState state) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.3),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                border: Border(
+                  top: BorderSide(color: AppTheme.border, width: 1.5),
+                ),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppTheme.textSecondary.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Privacy & Security',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: AppTheme.textMain,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 20),
+                        // 1. Share Analytics Switch
+                        _buildSheetSwitch(
+                          context,
+                          Icons.analytics_outlined,
+                          'Share Usage Analytics',
+                          'Help us improve DevMentor by sending anonymous usage statistics.',
+                          state.shareAnalytics,
+                          (val) {
+                            state.togglePreference('analytics');
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // 2. 2FA Switch
+                        _buildSheetSwitch(
+                          context,
+                          Icons.security_outlined,
+                          'Two-Factor Authentication',
+                          'Add an extra layer of protection to your DevMentor account.',
+                          state.twoFactorAuth,
+                          (val) {
+                            state.togglePreference('2fa');
+                            setModalState(() {});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  state.twoFactorAuth
+                                      ? 'Two-Factor Authentication Enabled.'
+                                      : 'Two-Factor Authentication Disabled.',
+                                ),
+                                backgroundColor: AppTheme.accent,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        // Action Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text('Local cache database cleared.'),
+                                      backgroundColor: AppTheme.success,
+                                    ),
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: AppTheme.border),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  minimumSize: const Size(0, 48),
+                                ),
+                                child: Text('Clear Cache', style: TextStyle(color: AppTheme.textMain)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Export sent to: ${state.githubUsername}@github.com'),
+                                      backgroundColor: AppTheme.success,
+                                    ),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.accent,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  minimumSize: const Size(0, 48),
+                                ),
+                                child: const Text('Export Data'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetSwitch(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String desc,
+    bool val,
+    ValueChanged<bool> onChanged,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppTheme.accent, size: 24),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: AppTheme.textMain,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                desc,
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Switch(
+          value: val,
+          onChanged: onChanged,
+          activeColor: AppTheme.accent,
+          activeTrackColor: AppTheme.accent.withOpacity(0.3),
+          inactiveThumbColor: AppTheme.textSecondary,
+          inactiveTrackColor: AppTheme.border,
+          trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+        ),
+      ],
+    );
+  }
+
+  // Help & Support Bottom Sheet
+  void _showHelpBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.3),
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(
+              top: BorderSide(color: AppTheme.border, width: 1.5),
+            ),
+          ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              maxChildSize: 0.9,
+              minChildSize: 0.5,
+              expand: false,
+              builder: (context, scrollController) {
+                return SafeArea(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppTheme.textSecondary.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Help & Support',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: AppTheme.textMain,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 20),
+                      // FAQ Section
+                      Text(
+                        'FREQUENTLY ASKED QUESTIONS',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildFAQItem(
+                        context,
+                        'How does the AI calculate my Developer Score?',
+                        'DevMentor analyzes your commit activity, code complexity, testing coverage, and architectural patterns in linked GitHub repositories to calculate your score.',
+                      ),
+                      _buildFAQItem(
+                        context,
+                        'How often are career roadmaps updated?',
+                        'Your roadmap updates dynamically as you complete projects, master milestones, or when our AI detects new skills gaps in your commits.',
+                      ),
+                      _buildFAQItem(
+                        context,
+                        'Can I suggest other repos for mentoring?',
+                        'Yes! Simply tap "Chat with Mentor" on the Dashboard and send the repo link. The AI will analyze and add it to your explore page.',
+                      ),
+                      const SizedBox(height: 24),
+                      // Support Action Buttons
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const MentorChatScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Chat with AI Support Mentor'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accent,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Support email client launched.'),
+                              backgroundColor: AppTheme.success,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.email_outlined),
+                        label: Text('Email Support Desk', style: TextStyle(color: AppTheme.textMain)),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppTheme.border),
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFAQItem(BuildContext context, String q, String a) {
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: Text(
+          q,
+          style: TextStyle(
+            color: AppTheme.textMain,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconColor: AppTheme.accent,
+        collapsedIconColor: AppTheme.textSecondary,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              a,
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Sign out confirmation dialog
+  void _showSignOutConfirmDialog(BuildContext context, AppState state) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sign Out',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.textMain,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Are you sure you want to sign out from DevMentor?',
+                  style: TextStyle(color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: AppTheme.textSecondary),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Perform sign out
+                        Navigator.pop(context);
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.destructive,
+                        minimumSize: const Size(80, 40),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: const Text('Sign Out', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDeveloperMemorySection(BuildContext context, AppState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'DEVELOPER MEMORY',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontSize: 10,
+                color: AppTheme.textSecondary,
+              ),
+        ),
+        const SizedBox(height: 12),
+        GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'PERSONALIZED AI MEMORY',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.accent,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _showEditMemoryDialog(context, state),
+                    child: Text(
+                      'EDIT',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.flag_rounded, color: AppTheme.peach, size: 16),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('CURRENT CAREER GOAL', style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AppTheme.textSecondary)),
+                        const SizedBox(height: 4),
+                        Text(state.personalGoal, style: TextStyle(fontSize: 13, color: AppTheme.textMain, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.layers_rounded, color: AppTheme.blue, size: 16),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('PREFERRED TECH STACK', style: GoogleFonts.jetBrainsMono(fontSize: 9, color: AppTheme.textSecondary)),
+                        const SizedBox(height: 4),
+                        Text(state.preferredStack, style: TextStyle(fontSize: 13, color: AppTheme.textMain, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showEditMemoryDialog(BuildContext context, AppState state) {
+    final goalController = TextEditingController(text: state.personalGoal);
+    final stackController = TextEditingController(text: state.preferredStack);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.isDark ? const Color(0xFF1E1E24) : Colors.white,
+          title: Text('Edit Developer Memory', style: TextStyle(color: AppTheme.textMain)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: goalController,
+                style: TextStyle(color: AppTheme.textMain, fontSize: 14),
+                decoration: InputDecoration(
+                  labelText: 'CAREER GOAL',
+                  labelStyle: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppTheme.textSecondary),
+                  hintText: 'e.g. Become Full Stack AI Engineer',
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: stackController,
+                style: TextStyle(color: AppTheme.textMain, fontSize: 14),
+                decoration: InputDecoration(
+                  labelText: 'PREFERRED STACK',
+                  labelStyle: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppTheme.textSecondary),
+                  hintText: 'e.g. Flutter, FastAPI, PostgreSQL',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            TextButton(
+              onPressed: () {
+                state.saveDeveloperMemory(goalController.text.trim(), stackController.text.trim());
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('AI personalized memory updated successfully.')),
+                );
+              },
+              child: Text('Save', style: TextStyle(color: AppTheme.accent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

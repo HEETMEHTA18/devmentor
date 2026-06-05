@@ -1,0 +1,483 @@
+import json
+import logging
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from app.api.deps import get_current_user_id, get_db
+from app.core.config import settings
+from app.models.entities import Repository, TechNews, GithubProfile, DeveloperScore
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
+class ResumeReviewRequest(BaseModel):
+    resume_text: str
+
+
+class ProjectEvaluateRequest(BaseModel):
+    project_title: str
+
+
+class BattleRequest(BaseModel):
+    target: str
+
+
+async def call_ai_json(prompt: str) -> dict:
+    """
+    Utility function to call Groq or Gemini API with a JSON prompt and return parsed dict.
+    """
+    if settings.groq_api_key:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {settings.groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        json_payload = {
+            "model": "llama-3.1-8b-instant",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.3
+        }
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(url, json=json_payload, headers=headers, timeout=25.0)
+                if response.status_code == 200:
+                    reply = response.json()['choices'][0]['message']['content']
+                    return json.loads(reply)
+                else:
+                    logger.error(f"Groq API error in advanced route: {response.text}")
+            except Exception as e:
+                logger.error(f"Error calling Groq in advanced route: {e}")
+
+    # Fallback to Gemini
+    api_key = settings.gemini_api_key
+    if api_key:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+        json_payload = {
+            "contents": [{
+                "parts": [{
+                    "text": f"{prompt}\nReturn your response strictly as a single JSON object. Do not include markdown code block syntax (like ```json)."
+                }]
+            }]
+        }
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(url, json=json_payload, headers={"Content-Type": "application/json"}, timeout=25.0)
+                if response.status_code == 200:
+                    reply = response.json()['candidates'][0]['content']['parts'][0]['text']
+                    clean_reply = reply.replace("```json", "").replace("```", "").strip()
+                    return json.loads(clean_reply)
+                else:
+                    logger.error(f"Gemini API error in advanced route: {response.text}")
+            except Exception as e:
+                logger.error(f"Error calling Gemini in advanced route: {e}")
+
+    # Ultimate fallback if no keys or errors occur
+    return {}
+
+
+@router.get('/dna')
+async def get_developer_dna(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    stmt = select(Repository).where(Repository.user_id == user_id)
+    repos = db.scalars(stmt).all()
+    repo_list_str = ", ".join([r.full_name for r in repos]) if repos else "No repositories synced"
+
+    prompt = (
+        f"Analyze this developer's GitHub repositories: {repo_list_str}. "
+        "Classify them into one of these 4 Developer Archetypes:\n"
+        "- Builder (focuses on shipping quick products/MVPs)\n"
+        "- Architect (focuses on clean code structure, scale, patterns)\n"
+        "- Hacker (likes quick hacks, automation, cybersecurity, scripts)\n"
+        "- Explorer (explores open source, diverse tech stack, contributions)\n\n"
+        "Return a JSON object with these exact keys:\n"
+        "{\n"
+        '  "archetype": "Builder" | "Architect" | "Hacker" | "Explorer",\n'
+        '  "score": int (archetype alignment percentage 1-100),\n'
+        '  "description": "catchy 1-sentence archetype tagline",\n'
+        '  "strengths": ["strength 1", "strength 2", "strength 3"],\n'
+        '  "weaknesses": ["weakness 1", "weakness 2", "weakness 3"]\n'
+        "}"
+    )
+
+    try:
+        dna_data = await call_ai_json(prompt)
+        if dna_data:
+            return dna_data
+    except Exception:
+        pass
+
+    # Static fallback
+    return {
+        "archetype": "Builder",
+        "score": 86,
+        "description": "You love shipping products quickly and prototyping fresh ideas.",
+        "strengths": ["Rapid Prototyping", "Full Stack Development", "MVP Building"],
+        "weaknesses": ["DevOps Pipelines", "Automated Testing", "Advanced System Design"]
+    }
+
+
+@router.get('/roast')
+async def get_github_roast(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    stmt = select(Repository).where(Repository.user_id == user_id)
+    repos = db.scalars(stmt).all()
+    repo_list_str = ", ".join([r.full_name for r in repos]) if repos else "No repositories"
+
+    # Get user score
+    score_stmt = select(DeveloperScore).where(DeveloperScore.user_id == user_id)
+    score_rec = db.scalar(score_stmt)
+    score = score_rec.score / 10.0 if score_rec else 5.0
+
+    prompt = (
+        f"Analyze this developer's GitHub repositories: {repo_list_str} (Developer Score: {score}/10). "
+        "Write a brutal but hilarious review/roast of their GitHub profile. Roast them about unfinished projects, "
+        "boilerplate repositories, missing descriptions, lack of readmes, or generic names. "
+        "Keep it highly entertaining but constructive. Also provide 3 quick tips to make their profile look elite.\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "roast": "Brutal roast text goes here...",\n'
+        '  "tips": ["constructive tip 1", "constructive tip 2", "constructive tip 3"]\n'
+        "}"
+    )
+
+    try:
+        roast_data = await call_ai_json(prompt)
+        if roast_data:
+            return roast_data
+    except Exception:
+        pass
+
+    return {
+        "roast": "Your GitHub profile looks like a digital graveyard of unfinished tutorials. You have repositories with no READMEs and more generic boilerplates than a WordPress agency.",
+        "tips": [
+            "Archive or delete repositories that are just cloned templates.",
+            "Write a proper README with screenshots for your top 3 repos.",
+            "Choose descriptive names instead of 'test-app' or 'demo-1'."
+        ]
+    }
+
+
+@router.post('/resume-review')
+async def review_developer_resume(payload: ResumeReviewRequest, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    stmt = select(Repository).where(Repository.user_id == user_id)
+    repos = db.scalars(stmt).all()
+    repo_list_str = ", ".join([r.full_name for r in repos]) if repos else "No repositories synced"
+
+    prompt = (
+        f"Compare this developer's resume content:\n{payload.resume_text}\n\n"
+        f"With their synced GitHub repositories: {repo_list_str}.\n"
+        "Determine an ATS alignment score (1-100) representing how well their actual coding repositories back up their resume claims. "
+        "List 3 missing key technologies they claim but don't have code for, 3 weak resume bullet points, and 3 project upgrade suggestions to improve alignment.\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "ats_score": int,\n'
+        '  "missing_technologies": ["tech 1", "tech 2", "tech 3"],\n'
+        '  "weak_bullet_points": ["bullet 1", "bullet 2", "bullet 3"],\n'
+        '  "project_improvements": ["improvement 1", "improvement 2", "improvement 3"]\n'
+        "}"
+    )
+
+    try:
+        review_data = await call_ai_json(prompt)
+        if review_data:
+            return review_data
+    except Exception:
+        pass
+
+    return {
+        "ats_score": 74,
+        "missing_technologies": ["Docker / Containers", "Redis Caching", "CI/CD Actions"],
+        "weak_bullet_points": [
+            "Generic statement: 'Assisted in building various web applications.'",
+            "Unquantified bullet: 'Responsible for maintaining database systems.'",
+            "Redundant bullet: 'Learned HTML, CSS and TypeScript.'"
+        ],
+        "project_improvements": [
+            "Add Dockerfiles and compose files to express-api-starter.",
+            "Implement a test suite using Jest/Pytest in your main repositories.",
+            "Add visual architecture diagrams to your READMEs."
+        ]
+    }
+
+
+@router.post('/evaluate-project')
+async def evaluate_project_idea(payload: ProjectEvaluateRequest):
+    prompt = (
+        f"Evaluate the portfolio and resume value of a developer building a project titled '{payload.project_title}'. "
+        "Rate its value out of 10 (where 10 is highly complex/unique like building a compiler, and 1 is overly common like a simple calculator). "
+        "Provide a detailed, short explanation. Suggest a 4-step premium upgrade path to turn this basic idea into an elite, resume-making project.\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "score": int (1-10),\n'
+        '  "explanation": "Brief explanation why...",\n'
+        '  "upgrade_path": ["Upgrade Step 1: ...", "Upgrade Step 2: ...", "Upgrade Step 3: ...", "Upgrade Step 4: ..."]\n'
+        "}"
+    )
+
+    try:
+        evaluation = await call_ai_json(prompt)
+        if evaluation:
+            return evaluation
+    except Exception:
+        pass
+
+    return {
+        "score": 4,
+        "explanation": f"'{payload.project_title}' is extremely common on junior resumes and fails to stand out to recruiters unless heavily upgraded with cloud-native, real-time, or production-grade components.",
+        "upgrade_path": [
+            "Upgrade Step 1: Implement OAuth2 Authentication (GitHub/Google) and JWT session tokens.",
+            "Upgrade Step 2: Integrate a Redis layer for caching frequent database lookups and query results.",
+            "Upgrade Step 3: Containerize the app using Docker and write a CI/CD pipeline using GitHub Actions.",
+            "Upgrade Step 4: Add Prometheus/Grafana monitoring or structured logging to showcase production readiness."
+        ]
+    }
+
+
+@router.post('/battle')
+async def developer_battle(payload: BattleRequest, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    stmt = select(Repository).where(Repository.user_id == user_id)
+    repos = db.scalars(stmt).all()
+    repo_list_str = ", ".join([r.full_name for r in repos]) if repos else "No repositories"
+
+    prompt = (
+        f"Compare this developer's repositories: {repo_list_str} against a target role profile: '{payload.target}'. "
+        "Calculate a matching percentage score (1-100). Identify 4 critical missing skills or technologies they need to reach that level. "
+        "Provide comparative scores (1-100) representing their standing in Code Quality, Scale/Load, and System Architecture.\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "match_score": int,\n'
+        '  "missing_skills": ["skill 1", "skill 2", "skill 3", "skill 4"],\n'
+        '  "metrics": {\n'
+        '    "code_quality": int,\n'
+        '    "scale": int,\n'
+        '    "system_architecture": int\n'
+        "  }\n"
+        "}"
+    )
+
+    try:
+        battle_data = await call_ai_json(prompt)
+        if battle_data:
+            return battle_data
+    except Exception:
+        pass
+
+    return {
+        "match_score": 62,
+        "missing_skills": ["Microservices / GRPC", "Unit and Integration Testing", "Infrastructure as Code", "Load Balancing / Caching"],
+        "metrics": {
+            "code_quality": 75,
+            "scale": 45,
+            "system_architecture": 58
+        }
+    }
+
+
+@router.get('/weekly-report')
+async def get_weekly_report(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    stmt = select(Repository).where(Repository.user_id == user_id)
+    repos = db.scalars(stmt).all()
+    repo_list_str = ", ".join([r.full_name for r in repos]) if repos else "No repositories"
+
+    prompt = (
+        f"Analyze these repositories: {repo_list_str}. "
+        "Generate a weekly developer progress report. "
+        "Provide repositories explored (int), skills learned (int), overall improvement percentage (int), "
+        "and a list of 7 integers representing daily commit counts/learning hours (Mon-Sun).\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "repositories_explored": int,\n'
+        '  "skills_learned": int,\n'
+        '  "improvement_percentage": int,\n'
+        '  "chart_data": [int, int, int, int, int, int, int]\n'
+        "}"
+    )
+
+    try:
+        report_data = await call_ai_json(prompt)
+        if report_data:
+            return report_data
+    except Exception:
+        pass
+
+    return {
+        "repositories_explored": 3,
+        "skills_learned": 2,
+        "improvement_percentage": 7,
+        "chart_data": [12, 19, 3, 5, 2, 3, 10]
+    }
+
+
+@router.get('/learning-paths')
+async def get_learning_paths(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    stmt = select(Repository).where(Repository.user_id == user_id)
+    repos = db.scalars(stmt).all()
+    repo_list_str = ", ".join([r.full_name for r in repos]) if repos else "No repositories"
+
+    prompt = (
+        f"Create a personalized 5-step Duolingo-style learning path for this developer based on their repositories: {repo_list_str}. "
+        "Each step should recommend a highly popular real-world open-source GitHub repository to study, a brief description of why it fits, and an actionable learning task. "
+        "Mark the first step as completed if it matches their languages, and the rest as not completed.\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "path_title": "Path Title...",\n'
+        '  "steps": [\n'
+        "    {\n"
+        '      "step_num": 1,\n'
+        '      "repo_name": "owner/repo",\n'
+        '      "description": "Why study this...",\n'
+        '      "task": "Study code in folder X...",\n'
+        '      "is_completed": true | false\n'
+        "    },\n"
+        "    ... (4 more steps)\n"
+        "  ]\n"
+        "}"
+    )
+
+    try:
+        path_data = await call_ai_json(prompt)
+        if path_data:
+            return path_data
+    except Exception:
+        pass
+
+    return {
+        "path_title": "Advanced Web Architect",
+        "steps": [
+            {
+                "step_num": 1,
+                "repo_name": "nestjs/nest",
+                "description": "Learn modern backend architectures and decorators.",
+                "task": "Inspect how Dependency Injection is implemented in the NestJS core package.",
+                "is_completed": True
+            },
+            {
+                "step_num": 2,
+                "repo_name": "typeorm/typeorm",
+                "description": "Understand database connections and active-record patterns.",
+                "task": "Review query builder creation inside src/query-builder/QueryBuilder.ts.",
+                "is_completed": False
+            },
+            {
+                "step_num": 3,
+                "repo_name": "fastify/fastify",
+                "description": "High performance request lifecycle and schema validation.",
+                "task": "Check how fastify hook pipeline is implemented.",
+                "is_completed": False
+            },
+            {
+                "step_num": 4,
+                "repo_name": "moby/moby",
+                "description": "Deep dive containerization principles.",
+                "task": "Read Docker execution runtime interfaces.",
+                "is_completed": False
+            },
+            {
+                "step_num": 5,
+                "repo_name": "hashicorp/terraform",
+                "description": "Automated deployments and state engines.",
+                "task": "Examine terraform provider lifecycle code.",
+                "is_completed": False
+            }
+        ]
+    }
+
+
+@router.get('/opportunities')
+async def get_tech_opportunities(db: Session = Depends(get_db)):
+    news_stmt = select(TechNews).order_by(TechNews.scanned_at.desc()).limit(15)
+    news = db.scalars(news_stmt).all()
+    news_titles = ", ".join([n.title for n in news]) if news else "AI, Tech trends, Software scaling"
+
+    prompt = (
+        f"Based on these recent scanned tech headlines: {news_titles}. "
+        "Identify 3 forward-looking, high-value software opportunities/projects a developer should build this week to stay ahead of the curve. "
+        "Specify the title, a clear market explanation ('why'), and a recommended modern technology stack.\n\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "opportunities": [\n'
+        "    {\n"
+        '      "title": "Project Name",\n'
+        '      "why": "Why build this now (trend description)...",\n'
+        '      "tech_stack": "React, Python, FastAPI, Postgres, etc."\n'
+        "    },\n"
+        "    ... (2 more opportunities)\n"
+        "  ]\n"
+        "}"
+    )
+
+    try:
+        opp_data = await call_ai_json(prompt)
+        if opp_data:
+            return opp_data
+    except Exception:
+        pass
+
+    return {
+        "opportunities": [
+            {
+                "title": "Local RAG Code Assistant",
+                "why": "Privacy-focused developers are actively seeking offline code synthesis tools that don't transmit source files to cloud servers.",
+                "tech_stack": "Flutter, Rust, Ollama (Llama 3), SQLite"
+            },
+            {
+                "title": "Real-time Collaborative Diagrammer",
+                "why": "Remote engineering teams need fast collaborative system architecture charting tools that sync changes instantly.",
+                "tech_stack": "Vite, TypeScript, WebSockets, Redis, Go"
+            },
+            {
+                "title": "AI-Powered PDF Contract Auditor",
+                "why": "Small businesses are actively seeking tools to summarize legal agreements and raise flags on liability clauses.",
+                "tech_stack": "Next.js, Python, FastAPI, Gemini Pro API, Supabase"
+            }
+        ]
+    }
+
+
+class CopilotRequest(BaseModel):
+    issue_title: str
+    issue_description: str
+    repo_name: str
+
+
+@router.post('/copilot')
+async def open_source_copilot(payload: CopilotRequest):
+    prompt = (
+        f"Explain this issue for the repository '{payload.repo_name}':\n"
+        f"Title: {payload.issue_title}\n"
+        f"Description: {payload.issue_description}\n\n"
+        "Explain what this issue means, explain how such a codebase is typically structured, "
+        "suggest 2-3 files/directories to edit, and provide a 4-step implementation plan.\n"
+        "Return a JSON object with keys:\n"
+        "{\n"
+        '  "issue_explanation": "Clear plain text explanation...",\n'
+        '  "codebase_explanation": "Overview of relevant module structures...",\n'
+        '  "files_to_edit": ["file_a", "file_b"],\n'
+        '  "implementation_plan": ["Step 1: ...", "Step 2: ...", "Step 3: ...", "Step 4: ..."]\n'
+        "}"
+    )
+
+    try:
+        copilot_data = await call_ai_json(prompt)
+        if copilot_data:
+            return copilot_data
+    except Exception:
+        pass
+
+    return {
+        "issue_explanation": f"The issue asks to address '{payload.issue_title}' in '{payload.repo_name}'. This usually requires tracing how inputs are processed and validated.",
+        "codebase_explanation": f"In a typical repository like '{payload.repo_name}', this configuration is handled by core controller modules or configuration parser modules under the main directory.",
+        "files_to_edit": ["lib/core/config.dart", "lib/services/validator.dart"],
+        "implementation_plan": [
+            "Step 1: Locate the configuration validation function and write a failing test reproducing this issue.",
+            "Step 2: Add bounds check or missing type verification inside the validator logic.",
+            "Step 3: Update configuration loader to catch exceptions and print a helpful error message.",
+            "Step 4: Run the test suite and verify the fix works without breaking other modules."
+        ]
+    }
+

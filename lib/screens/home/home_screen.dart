@@ -1,0 +1,1335 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_theme.dart';
+import '../../widgets/glass_card.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../core/config/app_config.dart';
+
+import 'package:provider/provider.dart';
+import '../../providers/app_state.dart';
+import '../mentor/mentor_chat_screen.dart';
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Dashboard', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                onPressed: () => _showNotificationCenter(context, appState),
+                icon: Icon(
+                  appState.unreadNotificationsCount > 0
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_none_rounded,
+                  color: appState.unreadNotificationsCount > 0 ? AppTheme.accent : AppTheme.textSecondary,
+                ),
+              ),
+              if (appState.unreadNotificationsCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${appState.unreadNotificationsCount}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Background Gradient Orbs
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.accent.withValues(alpha: 0.15),
+              ),
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                _buildWelcomeHeader(context, appState),
+                const SizedBox(height: 20),
+                _buildScoreSection(context, appState),
+                const SizedBox(height: 32),
+                _buildActivityHeatmap(context, appState),
+                _buildDnaSection(context, appState),
+                _buildWeeklyReportSection(context, appState),
+                _buildRoastSection(context, appState),
+                const SizedBox(height: 32),
+                _buildSectionHeader(context, 'AI Insights', onSeeAll: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Analyzing your profile for more insights...')),
+                  );
+                }),
+                const SizedBox(height: 12),
+                _buildInsightRow(
+                  context,
+                  'SKILL MATCH',
+                  appState.strengths.isNotEmpty ? appState.strengths.first : 'Analyzing repository structure...',
+                  AppTheme.isDark ? const Color(0xFF10B981) : AppTheme.accent,
+                  Icons.bolt_rounded,
+                  onTap: () {
+                    _showListDialog(context, 'All Profile Strengths', appState.strengths, AppTheme.success);
+                  },
+                ),
+                _buildInsightRow(
+                  context,
+                  'GAP DETECTED',
+                  appState.gaps.isNotEmpty ? appState.gaps.first : 'No critical gaps detected',
+                  AppTheme.destructive,
+                  Icons.warning_amber_rounded,
+                  onTap: () {
+                    _showListDialog(context, 'All Profile Gaps', appState.gaps, AppTheme.destructive);
+                  },
+                ),
+                const SizedBox(height: 32),
+                _buildSectionHeader(context, 'Top Languages'),
+                const SizedBox(height: 16),
+                _buildLanguageBar(context, 'TypeScript', 0.65, AppTheme.accent),
+                _buildLanguageBar(context, 'Rust', 0.20, AppTheme.peach),
+                _buildLanguageBar(context, 'Python', 0.15, AppTheme.blue),
+                const SizedBox(height: 100), // FAB space
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 75),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const MentorChatScreen()),
+            );
+          },
+          elevation: 0,
+          backgroundColor: AppTheme.accent.withValues(alpha: 0.85),
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.chat_bubble_outline),
+          label: Text('⚡', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 1),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreSection(BuildContext context, AppState state) {
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('DEVELOPER SCORE', style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${state.developerScore}', style: Theme.of(context).textTheme.displayLarge),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16, left: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.arrow_drop_up, color: AppTheme.success, size: 24),
+                    Text(
+                      '0.3',
+                      style: GoogleFonts.jetBrainsMono(
+                        color: AppTheme.success,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppTheme.accent.withValues(alpha: 0.3)),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.star_outline_rounded, color: AppTheme.accent),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildStatItem(context, '${state.stars}', 'STARS'),
+              _buildStatItem(context, '${state.commits}', 'COMMITS'),
+              _buildStatItem(context, '${state.repos}', 'REPOS'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(BuildContext context, String value, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value, style: GoogleFonts.jetBrainsMono(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textMain)),
+        const SizedBox(height: 4),
+        Text(label, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 10)),
+      ],
+    );
+  }
+
+  Widget _buildActivityHeatmap(BuildContext context, AppState state) {
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('ACTIVITY', style: Theme.of(context).textTheme.labelLarge),
+              DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: state.selectedActivityYear,
+                  dropdownColor: AppTheme.isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                  icon: Icon(Icons.arrow_drop_down, color: AppTheme.accent, size: 16),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 10, color: AppTheme.accent),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      state.setActivityYear(newValue);
+                    }
+                  },
+                  items: <String>['Last 14 Weeks', '2026', '2025', '2024', '2023']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value.toUpperCase(), style: TextStyle(color: AppTheme.textMain)),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          state.isLoadingActivity
+              ? const SizedBox(
+                  height: 120,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              : state.selectedActivityYear == 'Last 14 Weeks'
+                  ? GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 14,
+                        crossAxisSpacing: 6,
+                        mainAxisSpacing: 6,
+                      ),
+                      itemCount: state.activityData.length.clamp(0, 70),
+                      itemBuilder: (context, index) {
+                        if (index >= state.activityData.length) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }
+                        final dayData = state.activityData[index];
+                        final int count = dayData['count'] ?? 0;
+                        final String date = dayData['date'] ?? '';
+                        final double opacity = count == 0 ? 0.1 : count <= 2 ? 0.4 : count <= 5 ? 0.7 : 1.0;
+                        return InkWell(
+                          onTap: () {
+                            _showDayActivityDialog(context, date, state.token ?? '');
+                          },
+                          borderRadius: BorderRadius.circular(4),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent.withValues(alpha: opacity),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        height: 120,
+                        width: 53 * 16.0,
+                        child: GridView.builder(
+                          scrollDirection: Axis.horizontal,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 7,
+                            crossAxisSpacing: 4,
+                            mainAxisSpacing: 4,
+                          ),
+                          itemCount: state.activityData.length,
+                          itemBuilder: (context, index) {
+                            final dayData = state.activityData[index];
+                            final int count = dayData['count'] ?? 0;
+                            final String date = dayData['date'] ?? '';
+                            final double opacity = count == 0 ? 0.1 : count <= 2 ? 0.4 : count <= 5 ? 0.7 : 1.0;
+                            return InkWell(
+                              onTap: () {
+                                _showDayActivityDialog(context, date, state.token ?? '');
+                              },
+                              borderRadius: BorderRadius.circular(2),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppTheme.accent.withValues(alpha: opacity),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Text('Less', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 10)),
+              const SizedBox(width: 4),
+              ...List.generate(5, (i) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 8, height: 8,
+                decoration: BoxDecoration(
+                  color: AppTheme.accent.withValues(alpha: (i + 1) * 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              )),
+              const SizedBox(width: 4),
+              Text('More', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 10)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title, {VoidCallback? onSeeAll}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        if (onSeeAll != null)
+          TextButton(
+            onPressed: onSeeAll,
+            child: Text('View all >', style: TextStyle(color: AppTheme.accent, fontSize: 12)),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInsightRow(BuildContext context, String tag, String message, Color color, IconData icon, {VoidCallback? onTap}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: onTap,
+        child: GlassCard(
+          padding: const EdgeInsets.all(16),
+          borderRadius: 16,
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(tag, style: GoogleFonts.jetBrainsMono(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(message, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textMain)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showListDialog(BuildContext context, String title, List<String> items, Color color) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.isDark ? const Color(0xFF1E1E24) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(title, style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: items.isEmpty
+                ? [const Text('No records found.')]
+                : items.map((it) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('• ', style: TextStyle(color: color, fontSize: 16)),
+                        Expanded(child: Text(it, style: TextStyle(color: AppTheme.textMain, fontSize: 13))),
+                      ],
+                    ),
+                  )).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close', style: TextStyle(color: AppTheme.accent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageBar(BuildContext context, String lang, double percentage, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(lang, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textMain)),
+              Text('${(percentage * 100).toInt()}%', style: GoogleFonts.jetBrainsMono(color: AppTheme.textSecondary)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: percentage,
+              backgroundColor: const Color(0xFF222222),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeHeader(BuildContext context, AppState state) {
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.accent,
+            border: Border.all(color: AppTheme.border, width: 1.0),
+            image: state.avatarUrl != null
+                ? DecorationImage(
+                    image: NetworkImage(state.avatarUrl!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: state.avatarUrl == null
+              ? const Icon(Icons.person, color: Colors.white, size: 24)
+              : null,
+        ),
+        const SizedBox(width: 16),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Welcome back,', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12, color: AppTheme.textSecondary)),
+            const SizedBox(height: 4),
+            Text(
+              state.username,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textMain,
+                  ),
+            ),
+          ],
+        ),
+        const Spacer(),
+        IconButton(
+          icon: Icon(
+            state.isDarkTheme ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+            color: AppTheme.accent,
+            size: 20,
+          ),
+          onPressed: () {
+            state.toggleTheme();
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showDayActivityDialog(BuildContext context, String date, String token) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.isDark ? const Color(0xFF1E1E24) : Colors.white,
+          title: Text('Activity Info — $date', style: TextStyle(color: AppTheme.textMain)),
+          content: FutureBuilder<Map<String, dynamic>>(
+            future: _fetchDayActivity(date, token),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SizedBox(
+                  height: 100,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (snapshot.hasError || !snapshot.hasData) {
+                return Text('Error loading details.', style: TextStyle(color: AppTheme.textSecondary));
+              }
+              final data = snapshot.data!;
+              final summary = data['summary'] ?? '';
+              final List<dynamic> details = data['details'] ?? [];
+              
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(summary, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textMain)),
+                  const SizedBox(height: 12),
+                  if (details.isEmpty)
+                    Text('No repository modifications, pull requests, or issues recorded on this day.', style: TextStyle(color: AppTheme.textSecondary))
+                  else
+                    ...details.map((d) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.check_circle_outline, color: AppTheme.accent, size: 14),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(d.toString(), style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                          ),
+                        ],
+                      ),
+                    )),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close', style: TextStyle(color: AppTheme.accent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> _fetchDayActivity(String date, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.apiBaseUrl}/github/day-activity?date=$date'),
+        headers: {
+          if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+    } catch (_) {}
+    return {
+      'summary': 'Failed to load details.',
+      'details': []
+    };
+  }
+
+  Widget _buildDnaSection(BuildContext context, AppState state) {
+    if (state.isLoadingDna) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final archetype = state.dnaArchetype ?? 'Builder';
+    final score = state.dnaScore ?? 86;
+    final desc = state.dnaDescription ?? 'You love shipping products quickly and prototyping fresh ideas.';
+    final strengths = state.dnaStrengths ?? ['Rapid Prototyping', 'Full Stack Development', 'MVP Building'];
+    final weaknesses = state.dnaWeaknesses ?? ['DevOps Pipelines', 'Automated Testing', 'Advanced System Design'];
+
+    String emoji = '🚀';
+    Color arcColor = AppTheme.accent;
+    if (archetype == 'Architect') {
+      emoji = '🧠';
+      arcColor = AppTheme.peach;
+    } else if (archetype == 'Hacker') {
+      emoji = '⚡';
+      arcColor = AppTheme.destructive;
+    } else if (archetype == 'Explorer') {
+      emoji = '🌎';
+      arcColor = AppTheme.blue;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        _buildSectionHeader(context, 'Developer DNA Engine'),
+        const SizedBox(height: 12),
+        GlassCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: arcColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          archetype.toUpperCase(),
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: arcColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Alignment Score: $score%',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                desc,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textMain,
+                  height: 1.4,
+                ),
+              ),
+              const Divider(height: 32, color: Colors.white12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'STRENGTHS',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.success,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...strengths.map((s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_rounded, color: AppTheme.success, size: 14),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  s,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'WEAKNESSES',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.destructive,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...weaknesses.map((w) => Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Row(
+                            children: [
+                              Icon(Icons.close_rounded, color: AppTheme.destructive, size: 14),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  w,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWeeklyReportSection(BuildContext context, AppState state) {
+    if (state.isLoadingWeeklyReport) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final explored = state.weeklyExplored ?? 3;
+    final skills = state.weeklySkills ?? 2;
+    final improvement = state.weeklyImprovement ?? 7;
+    final chartData = state.weeklyChartData ?? [12, 19, 3, 5, 2, 3, 10];
+    final maxVal = chartData.isNotEmpty ? chartData.reduce((curr, next) => curr > next ? curr : next) : 1;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        _buildSectionHeader(context, 'AI Weekly Growth Report'),
+        const SizedBox(height: 12),
+        GlassCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'THIS WEEK',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '+$explored Repos • +$skills Skills',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textMain,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.success.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Improved $improvement%',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.success,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 60,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(chartData.length, (i) {
+                    final val = chartData[i];
+                    final double heightPct = maxVal > 0 ? (val / maxVal) : 0.0;
+                    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: 14,
+                              height: 40 * heightPct + 4,
+                              decoration: BoxDecoration(
+                                color: AppTheme.accent.withValues(
+                                  alpha: heightPct.clamp(0.2, 1.0),
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          days[i],
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 9,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRoastSection(BuildContext context, AppState state) {
+    final roastText = state.profileRoast ?? "Your GitHub profile looks like a digital graveyard of unfinished tutorials. You have repositories with no READMEs and more generic boilerplates than a WordPress agency.";
+    final tips = state.roastTips ?? [
+      "Archive or delete repositories that are just cloned templates.",
+      "Write a proper README with screenshots for your top 3 repos.",
+      "Choose descriptive names instead of 'test-app' or 'demo-1'."
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('GitHub Profile Roast', style: Theme.of(context).textTheme.titleMedium),
+            if (state.isLoadingRoast)
+              const SizedBox(
+                width: 16, height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              TextButton.icon(
+                onPressed: () {
+                  state.fetchProfileRoast();
+                },
+                icon: const Icon(Icons.fireplace_rounded, size: 14),
+                label: Text(
+                  'ROAST ME',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.destructive,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(50, 30),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        GlassCard(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text('🔥', style: TextStyle(fontSize: 24)),
+                  const SizedBox(width: 12),
+                  Text(
+                    'BRUTAL REVIEW',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.destructive,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                roastText,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  fontStyle: FontStyle.italic,
+                  color: AppTheme.textMain,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'CLEANUP TIPS:',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...tips.map((t) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('•', style: TextStyle(color: AppTheme.accent, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        t,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showNotificationCenter(BuildContext context, AppState state) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              decoration: BoxDecoration(
+                color: AppTheme.isDark ? const Color(0xE6121214) : const Color(0xE6F8F9FA),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'NOTIFICATION CENTER',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textMain,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              state.markAllNotificationsAsRead();
+                            },
+                            child: Text(
+                              'Read All',
+                              style: TextStyle(color: AppTheme.accent, fontSize: 12),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              state.clearNotifications();
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              'Clear All',
+                              style: TextStyle(color: AppTheme.destructive, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: state.notifications.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No notifications yet.',
+                              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: state.notifications.length,
+                            itemBuilder: (context, index) {
+                              final notification = state.notifications[index];
+                              final isRead = notification['isRead'] ?? false;
+                              final type = notification['type'] ?? 'welcome';
+
+                              IconData icon = Icons.info_outline;
+                              Color color = AppTheme.accent;
+                              if (type == 'dna') {
+                                icon = Icons.psychology_rounded;
+                                color = AppTheme.success;
+                              } else if (type == 'roast') {
+                                icon = Icons.fireplace_rounded;
+                                color = AppTheme.destructive;
+                              } else if (type == 'weekly_report') {
+                                icon = Icons.trending_up_rounded;
+                                color = AppTheme.blue;
+                              } else if (type == 'opportunity') {
+                                icon = Icons.insights_rounded;
+                                color = AppTheme.peach;
+                              }
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: InkWell(
+                                  onTap: () {
+                                    state.markNotificationAsRead(notification['id']);
+                                    _showNotificationDetail(context, notification);
+                                  },
+                                  child: GlassCard(
+                                    padding: const EdgeInsets.all(16),
+                                    borderRadius: 16,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: color.withOpacity(0.15),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(icon, color: color, size: 20),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      notification['title'] ?? '',
+                                                      style: TextStyle(
+                                                        fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                                                        color: AppTheme.textMain,
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  if (!isRead)
+                                                    Container(
+                                                      width: 6, height: 6,
+                                                      decoration: const BoxDecoration(
+                                                        color: Colors.red,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                notification['body'] ?? '',
+                                                style: TextStyle(
+                                                  color: AppTheme.textSecondary,
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showNotificationDetail(BuildContext context, Map<String, dynamic> notification) {
+    final type = notification['type'] ?? 'welcome';
+    final extraData = notification['extraData'] ?? {};
+
+    Widget detailContent;
+
+    if (type == 'dna') {
+      final archetype = extraData['archetype'] ?? 'Builder';
+      final score = extraData['score'] ?? 86;
+      final desc = extraData['description'] ?? '';
+      final List<dynamic> strengths = extraData['strengths'] ?? [];
+      final List<dynamic> weaknesses = extraData['weaknesses'] ?? [];
+
+      detailContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ARCHETYPE: $archetype ($score% Match)',
+            style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.accent),
+          ),
+          const SizedBox(height: 12),
+          Text(desc, style: TextStyle(color: AppTheme.textMain, fontSize: 13, height: 1.4)),
+          const Divider(height: 24, color: Colors.white12),
+          Text('STRENGTHS:', style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.success)),
+          const SizedBox(height: 6),
+          ...strengths.map((s) => Text('• $s', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12))),
+          const SizedBox(height: 16),
+          Text('WEAKNESSES:', style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.destructive)),
+          const SizedBox(height: 6),
+          ...weaknesses.map((w) => Text('• $w', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12))),
+        ],
+      );
+    } else if (type == 'roast') {
+      final roast = extraData['roast'] ?? '';
+      final List<dynamic> tips = extraData['tips'] ?? [];
+
+      detailContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '🔥 BRUTAL PROFILE ROAST',
+            style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.destructive),
+          ),
+          const SizedBox(height: 12),
+          Text(roast, style: TextStyle(color: AppTheme.textMain, fontSize: 13, fontStyle: FontStyle.italic, height: 1.4)),
+          const Divider(height: 24, color: Colors.white12),
+          Text('CLEANUP CHECKLIST:', style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.accent)),
+          const SizedBox(height: 8),
+          ...tips.map((t) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('• ', style: TextStyle(color: AppTheme.accent)),
+                Expanded(child: Text(t, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12))),
+              ],
+            ),
+          )),
+        ],
+      );
+    } else if (type == 'weekly_report') {
+      final explored = extraData['repositories_explored'] ?? 3;
+      final skills = extraData['skills_learned'] ?? 2;
+      final improvement = extraData['improvement_percentage'] ?? 7;
+      final List<dynamic> chart = extraData['chart_data'] ?? [12, 19, 3, 5, 2, 3, 10];
+
+      detailContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '📈 GROWTH REPORT DETAILS',
+            style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.blue),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildMetricCard('Repos Explored', '+$explored', AppTheme.accent),
+              _buildMetricCard('Skills Learned', '+$skills', AppTheme.peach),
+              _buildMetricCard('Improvement', '+$improvement%', AppTheme.success),
+            ],
+          ),
+          const Divider(height: 32, color: Colors.white12),
+          Text('DAILY COMMIT BREAKDOWN (MON-SUN):', style: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppTheme.textSecondary)),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(chart.length, (i) {
+              final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+              return Column(
+                children: [
+                  Text('${chart[i]}', style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMain)),
+                  const SizedBox(height: 4),
+                  Text(days[i], style: TextStyle(color: AppTheme.textSecondary, fontSize: 10)),
+                ],
+              );
+            }),
+          ),
+        ],
+      );
+    } else if (type == 'opportunity') {
+      final List<dynamic> opportunities = extraData as List<dynamic>;
+
+      detailContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '💡 RECOMMENDED PROJECTS TO BUILD',
+            style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.peach),
+          ),
+          const SizedBox(height: 16),
+          ...opportunities.map((opp) {
+            final oTitle = opp['title'] ?? '';
+            final oWhy = opp['why'] ?? '';
+            final oStack = opp['tech_stack'] ?? '';
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(oTitle, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textMain, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Text(oWhy, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.3)),
+                  const SizedBox(height: 4),
+                  Text('Stack: $oStack', style: GoogleFonts.jetBrainsMono(color: AppTheme.accent, fontSize: 10)),
+                  const Divider(height: 16, color: Colors.white10),
+                ],
+              ),
+            );
+          }),
+        ],
+      );
+    } else {
+      detailContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            notification['title'] ?? '',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            notification['body'] ?? '',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.4),
+          ),
+        ],
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.isDark ? const Color(0xFF1E1E24) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: SingleChildScrollView(child: detailContent),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close', style: TextStyle(color: AppTheme.accent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMetricCard(String label, String val, Color col) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: col.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Text(val, style: GoogleFonts.jetBrainsMono(fontSize: 16, fontWeight: FontWeight.bold, color: col)),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
