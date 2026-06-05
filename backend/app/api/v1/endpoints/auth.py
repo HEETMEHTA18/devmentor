@@ -54,8 +54,11 @@ async def github_callback(code: str, request: Request, db: Session = Depends(get
         access_token = token_data.get('access_token')
         if not access_token:
             host_header = request.headers.get("host", "localhost:8000")
-            frontend_host = host_header.replace("8000", "8080")
-            return RedirectResponse(url=f'http://{frontend_host}/#/login?error=github_token_failed')
+            if "onrender.com" in host_header or "render.com" in host_header:
+                frontend_base = "https://web-delta-eight-17.vercel.app"
+            else:
+                frontend_base = f"http://{host_header.replace('8000', '8080')}"
+            return RedirectResponse(url=f'{frontend_base}/#/login?error=github_token_failed')
 
         # 2. Get user info from GitHub
         user_response = await client.get(
@@ -95,7 +98,11 @@ async def github_callback(code: str, request: Request, db: Session = Depends(get
 
         # 6. Redirect back to frontend
         host_header = request.headers.get("host", "localhost:8000")
-        frontend_host = host_header.replace("8000", "8080")
-        frontend_url = f'http://{frontend_host}/#/app?token={system_token}&username={login}'
+        if "onrender.com" in host_header or "render.com" in host_header:
+            frontend_base = "https://web-delta-eight-17.vercel.app"
+        else:
+            frontend_base = f"http://{host_header.replace('8000', '8080')}"
+        frontend_url = f'{frontend_base}/#/app?token={system_token}&username={login}'
         return RedirectResponse(url=frontend_url)
+
 
