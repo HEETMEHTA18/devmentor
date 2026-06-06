@@ -248,13 +248,13 @@ async def review_developer_resume(
         "mindset_upgrades": [
             "Shift from 'just code' to 'systems architect' thinking: Focus on scalability, monitoring, and edge-cases.",
             "Incorporate automated test-driven development (TDD) as a mandatory practice.",
-            "Publish and document code with clear setup guides to build open-source collaboration mindset."
+            "Publish and document code with clear setup guides to build open-source collaboration mindset.",
         ],
         "skill_upgrades": [
             "Take the backend developer assessment on skill.sh to identify blind spots in REST API practices.",
             "Build a full-scale multi-service project in Go or Rust to master low-level concurrency.",
-            "Study Docker/Kubernetes and setup automated multi-stage builds in GitHub Actions."
-        ]
+            "Study Docker/Kubernetes and setup automated multi-stage builds in GitHub Actions.",
+        ],
     }
 
 
@@ -266,7 +266,7 @@ async def upload_developer_resume(
 ):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
-    
+
     try:
         pdf_bytes = await file.read()
         reader = PdfReader(io.BytesIO(pdf_bytes))
@@ -275,14 +275,18 @@ async def upload_developer_resume(
             page_text = page.extract_text()
             if page_text:
                 resume_text += page_text + "\n"
-        
+
         if not resume_text.strip():
-            raise HTTPException(status_code=400, detail="Unable to extract text from the PDF file.")
-            
+            raise HTTPException(
+                status_code=400, detail="Unable to extract text from the PDF file."
+            )
+
     except Exception as e:
         logger.error(f"Error reading PDF: {e}")
-        raise HTTPException(status_code=500, detail="Failed to parse the PDF resume file.")
-    
+        raise HTTPException(
+            status_code=500, detail="Failed to parse the PDF resume file."
+        )
+
     # Run the exact same analysis on the extracted resume_text
     stmt = select(Repository).where(Repository.user_id == user_id)
     repos = db.scalars(stmt).all()
@@ -336,13 +340,13 @@ async def upload_developer_resume(
         "mindset_upgrades": [
             "Shift from 'just code' to 'systems architect' thinking: Focus on scalability, monitoring, and edge-cases.",
             "Incorporate automated test-driven development (TDD) as a mandatory practice.",
-            "Publish and document code with clear setup guides to build open-source collaboration mindset."
+            "Publish and document code with clear setup guides to build open-source collaboration mindset.",
         ],
         "skill_upgrades": [
             "Take the backend developer assessment on skill.sh to identify blind spots in REST API practices.",
             "Build a full-scale multi-service project in Go or Rust to master low-level concurrency.",
-            "Study Docker/Kubernetes and setup automated multi-stage builds in GitHub Actions."
-        ]
+            "Study Docker/Kubernetes and setup automated multi-stage builds in GitHub Actions.",
+        ],
     }
 
 
