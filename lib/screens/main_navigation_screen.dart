@@ -61,7 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (_isUpdatingUrl) return;
     _isUpdatingUrl = true;
     final router = GoRouter.of(context);
-    GoRouter.neglect(context, () {
+    Router.neglect(context, () {
       router.go(RoutePaths.appTab(index));
     });
     _isUpdatingUrl = false;
