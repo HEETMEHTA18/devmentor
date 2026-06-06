@@ -73,10 +73,13 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
             child: Opacity(
               opacity: isDark ? 0.15 : 0.25,
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage('/img.png'),
+                    image: const NetworkImage('/img.png'),
                     fit: BoxFit.cover,
+                    onError: (exception, stackTrace) {
+                      debugPrint('Background image error: $exception');
+                    },
                   ),
                 ),
               ),
