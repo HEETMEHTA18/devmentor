@@ -450,9 +450,35 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  void setGithubUsername(String newUsername) {
+  Future<void> setGithubUsername(String newUsername) async {
     githubUsername = newUsername.trim().replaceAll('@', '');
-    fetchGithubData(githubUsername);
+    notifyListeners();
+    await fetchGithubData(githubUsername);
+    
+    if (token != null) {
+      try {
+        final response = await http.post(
+          Uri.parse('${AppConfig.apiBaseUrl}/github/sync-username'),
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'username': githubUsername,
+          }),
+        );
+        if (response.statusCode == 200) {
+          debugPrint('Backend sync-username succeeded');
+          await fetchActivityData();
+          await fetchDeveloperDna();
+          await fetchProfileRoast();
+        } else {
+          debugPrint('Backend sync-username failed: ${response.body}');
+        }
+      } catch (e) {
+        debugPrint('Error syncing username to backend: $e');
+      }
+    }
   }
 
   void setGithubSession(String username, String sessionToken) {

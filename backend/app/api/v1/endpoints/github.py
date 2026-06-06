@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -7,6 +8,26 @@ from app.models.user import User
 from app.services.github_service import GithubService
 
 router = APIRouter()
+
+
+class SyncUsernameRequest(BaseModel):
+    username: str
+
+
+@router.post('/sync-username')
+async def sync_username(
+    payload: SyncUsernameRequest,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    try:
+        github_service = GithubService(db)
+        sync_result = await github_service.sync_public_github_data(user_id=user_id, username=payload.username)
+        return {'success': True, 'message': 'Public GitHub sync completed', 'details': sync_result}
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to sync public github data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync public GitHub data: {str(e)}")
 
 
 @router.post('/connect')
