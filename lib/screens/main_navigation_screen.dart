@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -89,6 +88,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }
       }
     } catch (_) {}
+  }
+
+  @override
+  void didUpdateWidget(covariant MainNavigationScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTabIndex != oldWidget.initialTabIndex) {
+      setState(() {
+        _selectedIndex = widget.initialTabIndex;
+      });
+      if (_pageController.hasClients && _pageController.page?.round() != _selectedIndex) {
+        _pageController.jumpToPage(_selectedIndex);
+      }
+    }
   }
 
   @override

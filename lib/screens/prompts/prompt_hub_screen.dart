@@ -7,7 +7,6 @@ import '../../core/theme/app_theme.dart';
 import '../../models/prompt_item.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/glass_card.dart';
-import '../../widgets/liquid_glass_background.dart';
 
 class PromptHubScreen extends StatefulWidget {
   const PromptHubScreen({super.key});
@@ -46,8 +45,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
       return matchesSearch && matchesWorkflow;
     }).toList();
 
-    return LiquidGlassBackground(
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text(
@@ -140,8 +138,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
               ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildCliStatusBanner(bool isDark) {
