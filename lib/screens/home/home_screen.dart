@@ -19,6 +19,7 @@ class HomeScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Dashboard', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
         actions: [
@@ -734,9 +735,62 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildDnaSection(BuildContext context, AppState state) {
     if (state.isLoadingDna) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator()),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          _buildSectionHeader(context, 'Developer DNA Engine'),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 16,
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 80,
+                          height: 10,
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  height: 12,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 200,
+                  height: 12,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
@@ -900,9 +954,44 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildWeeklyReportSection(BuildContext context, AppState state) {
     if (state.isLoadingWeeklyReport) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: Center(child: CircularProgressIndicator()),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          _buildSectionHeader(context, 'AI Weekly Growth Report'),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 150,
+                  height: 16,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(4, (index) => Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  )),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  height: 10,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     }
 
@@ -1014,6 +1103,59 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildRoastSection(BuildContext context, AppState state) {
+    if (state.isLoadingRoast) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('GitHub Profile Roast', style: Theme.of(context).textTheme.titleMedium),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('🔥', style: TextStyle(fontSize: 24)),
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 100,
+                      height: 14,
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  height: 12,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 12,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 180,
+                  height: 12,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     final roastText = state.profileRoast ?? "Your GitHub profile looks like a digital graveyard of unfinished tutorials. You have repositories with no READMEs and more generic boilerplates than a WordPress agency.";
     final tips = state.roastTips ?? [
       "Archive or delete repositories that are just cloned templates.",

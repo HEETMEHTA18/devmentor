@@ -63,6 +63,7 @@ class Roadmap(Base):
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey('users.id'), index=True)
     title: Mapped[str] = mapped_column(String(255))
     status: Mapped[str] = mapped_column(String(32), default='active')
+    milestones: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Recommendation(Base):

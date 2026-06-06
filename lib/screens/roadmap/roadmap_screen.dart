@@ -25,6 +25,10 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     _copilotRepoController.text = 'flutter/flutter';
     _copilotTitleController.text = 'Navigator pop memory leak';
     _copilotDescController.text = 'The navigator stack leaks routes when popped repeatedly.';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = Provider.of<AppState>(context, listen: false);
+      state.fetchRoadmap();
+    });
   }
 
   @override
@@ -58,6 +62,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           _activeTab == 0
@@ -69,6 +74,31 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                       : 'Open Source Copilot',
           style: GoogleFonts.inter(fontWeight: FontWeight.bold),
         ),
+        actions: _activeTab == 0
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.psychology_outlined),
+                  tooltip: 'Regenerate AI Roadmap',
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Generating custom AI career roadmap based on your profile...'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    await appState.regenerateRoadmap();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('AI Career Roadmap updated successfully!'),
+                          backgroundColor: AppTheme.success,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ]
+            : null,
       ),
       body: Stack(
         children: [
@@ -139,6 +169,10 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
   }
 
   Widget _buildCareerTab(BuildContext context, AppState appState) {
+    if (appState.isLoadingRoadmap) {
+      return _buildRoadmapSkeleton(context);
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
       child: Column(
@@ -147,25 +181,63 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
           const SizedBox(height: 10),
           _buildProgressHero(context, appState),
           const SizedBox(height: 40),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: appState.milestones.length,
-            itemBuilder: (context, index) {
-              final m = appState.milestones[index];
-              return _buildMilestone(
-                context,
-                index,
-                m.title,
-                m.description,
-                m.isCompleted ? AppTheme.success : (index == 1 ? AppTheme.accent : AppTheme.textSecondary),
-                m.isCompleted,
-                index == 1 ? ['REST API with Express', 'Auth', 'DB'] : [],
-                index == 1 ? 'express-api-starter' : null,
-                appState,
-              );
-            },
-          ),
+          if (appState.milestones.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 40),
+                child: Column(
+                  children: [
+                    Icon(Icons.route_outlined, size: 48, color: AppTheme.textSecondary.withValues(alpha: 0.3)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No milestones generated yet',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppTheme.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap the brain icon in the top right to generate your AI roadmap.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: appState.milestones.length,
+              itemBuilder: (context, index) {
+                final m = appState.milestones[index];
+                
+                final isCompleted = m.isCompleted;
+                int activeIndex = appState.milestones.indexWhere((element) => !element.isCompleted);
+                if (activeIndex == -1) activeIndex = 0;
+                final isActive = index == activeIndex;
+
+                final Color milestoneColor = isCompleted 
+                    ? AppTheme.success 
+                    : (isActive ? AppTheme.accent : AppTheme.textSecondary);
+                    
+                final String milestoneStatus = isCompleted 
+                    ? 'Completed' 
+                    : (isActive ? 'In Progress' : 'Planned');
+
+                return _buildMilestone(
+                  context,
+                  index,
+                  m.title,
+                  m.description,
+                  milestoneStatus,
+                  milestoneColor,
+                  isCompleted,
+                  [],
+                  null,
+                  appState,
+                );
+              },
+            ),
           const SizedBox(height: 40),
         ],
       ),
@@ -181,18 +253,29 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('YOUR JOURNEY', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 10)),
-                  const SizedBox(height: 8),
-                  Text('${state.milestones.length} milestones planned', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('PATHWAY', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 10)),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.roadmapTitle,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${(state.roadmapProgress * 100).toInt()}%', style: Theme.of(context).textTheme.displayMedium),
+                  Text(
+                    state.milestones.isEmpty ? '0%' : '${(state.roadmapProgress * 100).toInt()}%',
+                    style: Theme.of(context).textTheme.displayMedium,
+                  ),
                   Text('COMPLETE', style: GoogleFonts.jetBrainsMono(fontSize: 8, color: AppTheme.textSecondary)),
                 ],
               ),
@@ -202,7 +285,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(2),
             child: LinearProgressIndicator(
-              value: state.roadmapProgress,
+              value: state.milestones.isEmpty ? 0.0 : state.roadmapProgress,
               backgroundColor: const Color(0xFF222222),
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accent),
               minHeight: 4,
@@ -217,6 +300,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     BuildContext context,
     int index,
     String title,
+    String description,
     String status,
     Color color,
     bool isDone,
@@ -241,7 +325,11 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                   ),
                   child: isDone
                       ? const Icon(Icons.check, size: 20, color: Colors.black)
-                      : Icon(status == 'In Progress' ? Icons.play_arrow_rounded : Icons.lock_outline_rounded, size: 20, color: Colors.white),
+                      : Icon(
+                          status == 'In Progress' ? Icons.play_arrow_rounded : Icons.lock_outline_rounded,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                 ),
               ),
               Expanded(
@@ -266,47 +354,40 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(child: Text(title, style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold))),
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(isDone ? Icons.check_circle_outline : Icons.radio_button_unchecked, size: 14, color: isDone ? AppTheme.success : AppTheme.textSecondary),
+                          Icon(
+                            isDone ? Icons.check_circle_outline : Icons.radio_button_unchecked,
+                            size: 14,
+                            color: isDone ? AppTheme.success : AppTheme.textSecondary,
+                          ),
                           const SizedBox(width: 8),
-                          Text(status, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: isDone ? AppTheme.success : AppTheme.textSecondary, fontSize: 12)),
+                          Text(
+                            status,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: isDone ? AppTheme.success : AppTheme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                          ),
                         ],
                       ),
-                      if (tasks.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        ...tasks.map((task) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-                              Icon(isDone ? Icons.check : Icons.circle, size: 10, color: isDone ? AppTheme.success : AppTheme.textSecondary.withValues(alpha: 0.5)),
-                              const SizedBox(width: 12),
-                              Text(task, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: isDone ? AppTheme.textSecondary : AppTheme.textMain, fontSize: 13)),
-                            ],
-                          ),
-                        )),
-                      ],
-                      if (currentProject != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.accent.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.near_me_outlined, size: 16, color: AppTheme.accent),
-                              const SizedBox(width: 12),
-                              Text('Current:', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.accent, fontSize: 12)),
-                              const SizedBox(width: 8),
-                              Text(currentProject, style: GoogleFonts.jetBrainsMono(color: AppTheme.textMain, fontSize: 12, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          description,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
                         ),
                       ],
                     ],
@@ -314,6 +395,162 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoadmapSkeleton(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 10),
+          // Progress Hero Skeleton
+          GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: 160,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: 40,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
+          // Milestones List Skeleton
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 4,
+            itemBuilder: (context, index) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            width: 2,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 32),
+                        child: GlassCard(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 180 + (index * 15.0),
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                width: 80,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

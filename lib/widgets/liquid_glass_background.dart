@@ -5,8 +5,13 @@ import '../core/theme/app_theme.dart';
 
 class LiquidGlassBackground extends StatefulWidget {
   final Widget child;
+  final double transitionProgress;
 
-  const LiquidGlassBackground({super.key, required this.child});
+  const LiquidGlassBackground({
+    super.key,
+    required this.child,
+    this.transitionProgress = 0.0,
+  });
 
   @override
   State<LiquidGlassBackground> createState() => _LiquidGlassBackgroundState();
@@ -58,9 +63,24 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
       backgroundColor: baseBg,
       body: Stack(
         children: [
-          // 1. Base Solid Color
+          // 1a. Base Solid Color
           Positioned.fill(
             child: Container(color: baseBg),
+          ),
+
+          // 1b. Background Image Overlay (img.png)
+          Positioned.fill(
+            child: Opacity(
+              opacity: isDark ? 0.15 : 0.25,
+              child: Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage('/img.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
           ),
 
           // 2. Liquid Animated Orbs/Blobs
@@ -173,6 +193,24 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
               ),
             ),
           ),
+
+          // 3b. Transition Glass Layer (visible when swiping/transitioning)
+          if (widget.transitionProgress > 0.01)
+            Positioned.fill(
+              child: Opacity(
+                opacity: widget.transitionProgress.clamp(0.0, 1.0),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: widget.transitionProgress * 25.0,
+                    sigmaY: widget.transitionProgress * 25.0,
+                  ),
+                  child: Container(
+                    color: (isDark ? Colors.black : Colors.white)
+                        .withOpacity(widget.transitionProgress * 0.15),
+                  ),
+                ),
+              ),
+            ),
 
           // 4. Content Screen
           Positioned.fill(

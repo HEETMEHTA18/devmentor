@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/repository.dart';
@@ -20,6 +21,7 @@ class AppState extends ChangeNotifier {
     fetchPromptHistory();
     fetchPromptAnalytics();
     fetchPromptRecommendations();
+    fetchRoadmap();
   }
 
   // Prompt Intelligence Platform
@@ -228,10 +230,84 @@ class AppState extends ChangeNotifier {
     final m = milestones[index];
     milestones[index] = RoadmapMilestone(
       title: m.title,
-      description: m.isCompleted ? 'In Progress' : 'Completed',
+      description: m.description,
       isCompleted: !m.isCompleted,
     );
     notifyListeners();
+  }
+
+  bool isLoadingRoadmap = false;
+  String roadmapTitle = "Senior Developer Career Path";
+
+  Future<void> fetchRoadmap() async {
+    if (token == null) return;
+    isLoadingRoadmap = true;
+    notifyListeners();
+
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.apiBaseUrl}/roadmap/current'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        roadmapTitle = data['title'] ?? 'Senior Developer Career Path';
+        final List<dynamic> miles = data['milestones'] ?? [];
+        milestones = miles.map((m) {
+          return RoadmapMilestone(
+            title: m['title'] ?? '',
+            description: m['description'] ?? '',
+            isCompleted: m['isCompleted'] ?? false,
+          );
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching roadmap: $e');
+    } finally {
+      isLoadingRoadmap = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> regenerateRoadmap() async {
+    if (token == null) return;
+    isLoadingRoadmap = true;
+    notifyListeners();
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.apiBaseUrl}/roadmap/generate'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'goal': personalGoal,
+          'preferred_stack': preferredStack,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        roadmapTitle = data['title'] ?? 'Senior Developer Career Path';
+        final List<dynamic> miles = data['milestones'] ?? [];
+        milestones = miles.map((m) {
+          return RoadmapMilestone(
+            title: m['title'] ?? '',
+            description: m['description'] ?? '',
+            isCompleted: m['isCompleted'] ?? false,
+          );
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('Error regenerating roadmap: $e');
+    } finally {
+      isLoadingRoadmap = false;
+      notifyListeners();
+    }
   }
 
   // Chat
@@ -296,18 +372,38 @@ class AppState extends ChangeNotifier {
   }
 
   // Preferences
-  bool isDarkTheme = false; // Starts in Light Liquid Glass Theme!
+  String _themeModeSetting = 'dark'; // 'dark' is default
+  String get themeModeSetting => _themeModeSetting;
+
+  bool get isDarkTheme {
+    if (_themeModeSetting == 'system') {
+      return ui.PlatformDispatcher.instance.platformBrightness != ui.Brightness.light;
+    }
+    return _themeModeSetting == 'dark';
+  }
+
+  void setThemeMode(String mode) {
+    if (mode == 'dark' || mode == 'light' || mode == 'system') {
+      _themeModeSetting = mode;
+      notifyListeners();
+    }
+  }
+
+  void toggleTheme() {
+    if (isDarkTheme) {
+      _themeModeSetting = 'light';
+    } else {
+      _themeModeSetting = 'dark';
+    }
+    notifyListeners();
+  }
+
   String githubUsername = 'alexjohnson';
   bool pushNotifications = true;
   bool aiInsights = true;
   bool weeklyReport = false;
   bool shareAnalytics = true;
   bool twoFactorAuth = false;
-
-  void toggleTheme() {
-    isDarkTheme = !isDarkTheme;
-    notifyListeners();
-  }
 
   bool isLoading = false;
   String? avatarUrl;
@@ -494,6 +590,7 @@ class AppState extends ChangeNotifier {
     fetchPromptHistory();
     fetchPromptAnalytics();
     fetchPromptRecommendations();
+    fetchRoadmap();
   }
 
   void setEmailSession(String sessionToken) {
@@ -509,6 +606,7 @@ class AppState extends ChangeNotifier {
     fetchPromptHistory();
     fetchPromptAnalytics();
     fetchPromptRecommendations();
+    fetchRoadmap();
   }
 
 

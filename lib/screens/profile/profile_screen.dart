@@ -16,6 +16,7 @@ class ProfileScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Settings', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
       ),
@@ -66,9 +67,15 @@ class ProfileScreen extends StatelessWidget {
               ),
               _buildSettingItem(
                 context,
-                appState.isDarkTheme ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                appState.themeModeSetting == 'dark'
+                    ? Icons.dark_mode_outlined
+                    : (appState.themeModeSetting == 'light'
+                        ? Icons.light_mode_outlined
+                        : Icons.settings_brightness_outlined),
                 'Appearance',
-                trailing: appState.isDarkTheme ? 'Dark' : 'Light',
+                trailing: appState.themeModeSetting == 'dark'
+                    ? 'Dark'
+                    : (appState.themeModeSetting == 'light' ? 'Light' : 'Auto'),
                 onTap: () => _showAppearanceBottomSheet(context, appState),
               ),
             ]),
@@ -432,9 +439,11 @@ class ProfileScreen extends StatelessWidget {
                               ),
                         ),
                         const SizedBox(height: 20),
-                        _buildThemeOption(context, state, 'Liquid Glass (Light)', false, Icons.light_mode_rounded),
+                        _buildThemeOption(context, state, 'Liquid Glass (Light)', 'light', Icons.light_mode_rounded),
                         const SizedBox(height: 12),
-                        _buildThemeOption(context, state, 'Cosmic Glass (Dark)', true, Icons.dark_mode_rounded),
+                        _buildThemeOption(context, state, 'Cosmic Glass (Dark)', 'dark', Icons.dark_mode_rounded),
+                        const SizedBox(height: 12),
+                        _buildThemeOption(context, state, 'System Sync (Auto)', 'system', Icons.settings_brightness_rounded),
                       ],
                     ),
                   ),
@@ -451,15 +460,13 @@ class ProfileScreen extends StatelessWidget {
     BuildContext context,
     AppState appState,
     String label,
-    bool targetDark,
+    String targetMode,
     IconData icon,
   ) {
-    final isSelected = appState.isDarkTheme == targetDark;
+    final isSelected = appState.themeModeSetting == targetMode;
     return GestureDetector(
       onTap: () {
-        if (appState.isDarkTheme != targetDark) {
-          appState.toggleTheme();
-        }
+        appState.setThemeMode(targetMode);
         Navigator.pop(context);
       },
       child: Container(

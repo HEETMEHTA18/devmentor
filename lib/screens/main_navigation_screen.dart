@@ -22,6 +22,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
   late PageController _pageController;
+  double _pageOffset = 0.0;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -35,6 +36,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _selectedIndex);
+    _pageController.addListener(() {
+      if (_pageController.hasClients) {
+        setState(() {
+          _pageOffset = _pageController.page ?? 0.0;
+        });
+      }
+    });
   }
 
   @override
@@ -63,7 +71,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double diff = (_pageOffset - _pageOffset.round()).abs();
+    final double transitionProgress = (diff * 2.0).clamp(0.0, 1.0);
+
     return LiquidGlassBackground(
+      transitionProgress: transitionProgress,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,

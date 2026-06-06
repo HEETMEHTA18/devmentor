@@ -327,7 +327,18 @@ async def sync_github_prompts(
         db.add(user)
         db.commit()
         
-    # 3. Determine repository list
+    # 3. Pre-sync repositories from GitHub to the database to ensure we have the latest list!
+    try:
+        from app.services.github_service import GithubService
+        github_service = GithubService(db)
+        if access_token:
+            await github_service.sync_user_github_data(user_id=user_id, access_token=access_token)
+        elif github_username:
+            await github_service.sync_public_github_data(user_id=user_id, username=github_username)
+    except Exception as e:
+        logger.error(f"Error pre-syncing repositories in prompts sync: {e}")
+
+    # Determine repository list (now fresh!)
     repos_stmt = select(Repository).where(Repository.user_id == user_id)
     db_repos = db.scalars(repos_stmt).all()
     

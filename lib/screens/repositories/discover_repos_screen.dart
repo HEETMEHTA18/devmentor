@@ -57,6 +57,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           _activeTab == 0
