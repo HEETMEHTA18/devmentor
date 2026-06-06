@@ -35,7 +35,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    final appState = Provider.of<AppState>(context, listen: false);
+    _selectedIndex = appState.currentTabIndex;
     _pageController = PageController(initialPage: _selectedIndex);
+    _pageOffset = _selectedIndex.toDouble();
     _pageController.addListener(() {
       if (_pageController.hasClients) {
         setState(() {
@@ -86,6 +89,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             setState(() {
               _selectedIndex = index;
             });
+            Provider.of<AppState>(context, listen: false).setTabIndex(index);
           },
           children: _screens,
         ),
@@ -94,16 +98,51 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             padding: const EdgeInsets.only(left: 24, right: 24, bottom: 20),
             child: GlassCard(
               borderRadius: 30,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(0, 'HOME', Icons.grid_view_rounded),
-                  _buildNavItem(1, 'EXPLORE', Icons.explore_outlined),
-                  _buildNavItem(2, 'PROMPTS', Icons.psychology_outlined),
-                  _buildNavItem(3, 'ROADMAP', Icons.route_outlined),
-                  _buildNavItem(4, 'SETTINGS', Icons.settings_outlined),
-                ],
+              padding: EdgeInsets.zero,
+              child: SizedBox(
+                height: 70,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final totalWidth = constraints.maxWidth;
+                    final itemWidth = totalWidth / 5;
+                    return Stack(
+                      children: [
+                        // Sliding Glass Pill Indicator
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeOutBack,
+                          left: _selectedIndex * itemWidth + 8,
+                          top: 8,
+                          bottom: 8,
+                          width: itemWidth - 16,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppTheme.accent.withValues(alpha: 0.35),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // The Items on Top
+                        Positioned.fill(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildNavItem(0, 'HOME', Icons.grid_view_rounded, itemWidth),
+                              _buildNavItem(1, 'EXPLORE', Icons.explore_outlined, itemWidth),
+                              _buildNavItem(2, 'PROMPTS', Icons.psychology_outlined, itemWidth),
+                              _buildNavItem(3, 'ROADMAP', Icons.route_outlined, itemWidth),
+                              _buildNavItem(4, 'SETTINGS', Icons.settings_outlined, itemWidth),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -112,14 +151,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-
-  Widget _buildNavItem(int index, String label, IconData icon) {
+  Widget _buildNavItem(int index, String label, IconData icon, double width) {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedIndex = index;
         });
+        Provider.of<AppState>(context, listen: false).setTabIndex(index);
         _pageController.animateToPage(
           index,
           duration: const Duration(milliseconds: 350),
@@ -127,25 +166,29 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         );
       },
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
-            size: 24,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'JetBrains Mono',
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: SizedBox(
+        width: width,
+        height: 70,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
               color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
+              size: 24,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'JetBrains Mono',
+                fontSize: 9,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

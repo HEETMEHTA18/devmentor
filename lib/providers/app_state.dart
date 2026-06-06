@@ -396,6 +396,14 @@ class AppState extends ChangeNotifier {
   }
 
   // Preferences
+  int _currentTabIndex = 0;
+  int get currentTabIndex => _currentTabIndex;
+
+  void setTabIndex(int index) {
+    _currentTabIndex = index;
+    notifyListeners();
+  }
+
   String _themeModeSetting = 'dark'; // 'dark' is default
   String get themeModeSetting => _themeModeSetting;
 
