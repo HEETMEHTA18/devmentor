@@ -25,7 +25,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late PageController _pageController;
   double _pageOffset = 0.0;
   bool _isUpdatingUrl = false;
-  bool _isChangingPageInternally = false;
+  int? _targetPageIndex;
+  bool get _isChangingPageInternally => _targetPageIndex != null;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -38,8 +39,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    // Use the tab index from the URL (via router) as the initial tab.
-    // This ensures /app?tab=prompts opens directly on the Prompts tab.
     _selectedIndex = widget.initialTabIndex;
     _pageController = PageController(initialPage: _selectedIndex);
     _pageOffset = _selectedIndex.toDouble();
@@ -104,7 +103,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           _selectedIndex = widget.initialTabIndex;
         });
         if (_pageController.hasClients && _pageController.page?.round() != _selectedIndex) {
-          _pageController.jumpToPage(_selectedIndex);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _pageController.hasClients) {
+              _pageController.jumpToPage(_selectedIndex);
+            }
+          });
         }
       }
     }
@@ -124,16 +127,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           controller: _pageController,
           physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           onPageChanged: (index) {
-            _isChangingPageInternally = true;
-            setState(() {
-              _selectedIndex = index;
-            });
-            Provider.of<AppState>(context, listen: false).setTabIndex(index);
-            // Silently update the URL to match the swiped-to tab
-            _updateUrlSilently(index);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _isChangingPageInternally = false;
-            });
+            if (!_isChangingPageInternally) {
+              setState(() {
+                _selectedIndex = index;
+              });
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  Provider.of<AppState>(context, listen: false).setTabIndex(index);
+                  _updateUrlSilently(index);
+                }
+              });
+            }
           },
           children: _screens,
         ),
@@ -199,19 +203,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        _isChangingPageInternally = true;
+        if (_selectedIndex == index) return;
+        _targetPageIndex = index;
         setState(() {
           _selectedIndex = index;
         });
         Provider.of<AppState>(context, listen: false).setTabIndex(index);
-        _pageController.animateToPage(
-          index,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOutCubic,
-        ).then((_) {
-          _isChangingPageInternally = false;
-        });
-        // Silently update the URL to match the tapped tab
+        _pageController.jumpToPage(index);
+        _targetPageIndex = null;
         _updateUrlSilently(index);
       },
       behavior: HitTestBehavior.opaque,
