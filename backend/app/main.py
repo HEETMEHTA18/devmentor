@@ -56,13 +56,13 @@ async def request_timing_middleware(request: Request, call_next):
     response = await call_next(request)
     duration_ms = round((time.perf_counter() - start) * 1000, 2)
     response.headers["X-Process-Time-Ms"] = str(duration_ms)
-    
+
     # Inject security headers
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-    
+
     logger.info(
         "%s %s -> %s (%sms)",
         request.method,
