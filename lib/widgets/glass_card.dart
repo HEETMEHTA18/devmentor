@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../core/theme/app_theme.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -21,9 +20,14 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final double baseOpacity = opacity == 0.08 
-        ? (isDark ? 0.08 : 0.45) 
-        : opacity;
+    
+    // Apple-style dual-tone glass gradient colors
+    final Color topColor = isDark 
+        ? Colors.white.withValues(alpha: 0.07) 
+        : Colors.white.withValues(alpha: 0.65);
+    final Color bottomColor = isDark 
+        ? Colors.black.withValues(alpha: 0.35) 
+        : Colors.white.withValues(alpha: 0.15);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -35,21 +39,20 @@ class GlassCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: baseOpacity + 0.04),
-                Colors.white.withValues(alpha: baseOpacity - 0.02 > 0 ? baseOpacity - 0.02 : 0.01),
-              ],
+              colors: [topColor, bottomColor],
             ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: AppTheme.border,
-              width: 1.0,
+              color: isDark 
+                  ? Colors.white.withValues(alpha: 0.15) 
+                  : Colors.white.withValues(alpha: 0.45),
+              width: 0.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
           ),

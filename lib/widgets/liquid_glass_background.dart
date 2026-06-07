@@ -47,12 +47,12 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
       const Color(0xFFD3F4EC).withValues(alpha: 0.4),  // Soft Mint
     ];
 
-    // Dark Theme Liquid Colors (Sleek, dark carbon & zinc hues)
+    // Dark Theme Liquid Colors (Sleek, glowing, deep indigo, violet, and teal hues)
     final darkColors = [
-      const Color(0xFF27272A).withValues(alpha: 0.25), // Slate Gray
-      const Color(0xFF3F3F46).withValues(alpha: 0.2),  // Medium Gray
-      const Color(0xFF18181B).withValues(alpha: 0.35), // Carbon
-      const Color(0xFF52525B).withValues(alpha: 0.15), // Silver Gray
+      const Color(0xFF4F46E5).withValues(alpha: 0.18), // Deep Indigo
+      const Color(0xFF7C3AED).withValues(alpha: 0.15), // Royal Violet
+      const Color(0xFF06B6D4).withValues(alpha: 0.12), // Deep Teal
+      const Color(0xFFEC4899).withValues(alpha: 0.08), // Muted Pink
     ];
 
     final colors = isDark ? darkColors : lightColors;
@@ -65,24 +65,6 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
           // 1a. Base Solid Color
           Positioned.fill(
             child: Container(color: baseBg),
-          ),
-
-          // 1b. Background Image Overlay (img.png)
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.15 : 0.25,
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: const NetworkImage('/img.png'),
-                    fit: BoxFit.cover,
-                    onError: (exception, stackTrace) {
-                      debugPrint('Background image error: $exception');
-                    },
-                  ),
-                ),
-              ),
-            ),
           ),
 
           // 2. Liquid Animated Orbs/Blobs

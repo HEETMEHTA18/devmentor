@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/app_theme.dart';
@@ -59,10 +60,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void _updateUrlSilently(int index) {
     if (_isUpdatingUrl) return;
     _isUpdatingUrl = true;
-    final router = GoRouter.of(context);
-    Router.neglect(context, () {
-      router.go(RoutePaths.appTab(index));
-    });
+    try {
+      SystemNavigator.routeInformationUpdated(
+        uri: Uri.parse(RoutePaths.appTab(index)),
+        replace: true,
+      );
+    } catch (_) {}
     _isUpdatingUrl = false;
   }
 
