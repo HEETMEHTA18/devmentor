@@ -97,7 +97,6 @@ class HomeScreen extends StatelessWidget {
                 _buildDemoDataBanner(context, appState),
                 const SizedBox(height: 12),
                 _buildScoreSection(context, appState),
-                _buildAIMentorCard(context, appState),
                 const SizedBox(height: 32),
                 _buildActivityHeatmap(context, appState),
                 _buildDnaSection(context, appState),
