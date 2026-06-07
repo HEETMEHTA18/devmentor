@@ -23,6 +23,13 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final storedToken = prefs.getString('auth_token');
       final storedUsername = prefs.getString('github_username');
+      
+      pushNotifications = prefs.getBool('pref_notifications') ?? true;
+      aiInsights = prefs.getBool('pref_ai') ?? true;
+      weeklyReport = prefs.getBool('pref_report') ?? false;
+      shareAnalytics = prefs.getBool('pref_analytics') ?? true;
+      twoFactorAuth = prefs.getBool('pref_2fa') ?? false;
+
       if (storedToken != null && storedToken.isNotEmpty) {
         token = storedToken;
         if (storedUsername != null && storedUsername.isNotEmpty) {
@@ -1272,12 +1279,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void togglePreference(String key) {
-    if (key == 'notifications') pushNotifications = !pushNotifications;
-    if (key == 'ai') aiInsights = !aiInsights;
-    if (key == 'report') weeklyReport = !weeklyReport;
-    if (key == 'analytics') shareAnalytics = !shareAnalytics;
-    if (key == '2fa') twoFactorAuth = !twoFactorAuth;
+  void togglePreference(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (key == 'notifications') {
+      pushNotifications = !pushNotifications;
+      await prefs.setBool('pref_notifications', pushNotifications);
+    }
+    if (key == 'ai') {
+      aiInsights = !aiInsights;
+      await prefs.setBool('pref_ai', aiInsights);
+    }
+    if (key == 'report') {
+      weeklyReport = !weeklyReport;
+      await prefs.setBool('pref_report', weeklyReport);
+    }
+    if (key == 'analytics') {
+      shareAnalytics = !shareAnalytics;
+      await prefs.setBool('pref_analytics', shareAnalytics);
+    }
+    if (key == '2fa') {
+      twoFactorAuth = !twoFactorAuth;
+      await prefs.setBool('pref_2fa', twoFactorAuth);
+    }
     notifyListeners();
   }
 

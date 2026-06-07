@@ -197,7 +197,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       onPressed: state.isReviewingResume
                           ? null
                           : () async {
-                              final result = await FilePicker.pickFiles(
+                              final result = await FilePicker.platform.pickFiles(
                                 type: FileType.custom,
                                 allowedExtensions: ['pdf'],
                                 withData: true,

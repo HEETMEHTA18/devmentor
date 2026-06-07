@@ -135,7 +135,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 40),
             Center(
               child: Text(
-                'DEVMENTOR v1.0.0',
+                'DEVMENTOR v1.0.1',
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 10,
                   color: AppTheme.textSecondary.withOpacity(0.5),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
 import '../routes/route_paths.dart';
 import '../widgets/liquid_glass_background.dart';
@@ -28,6 +29,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int? _targetPageIndex;
   bool get _isChangingPageInternally => _targetPageIndex != null;
 
+  int _lastNotificationCount = 0;
+  String? _lastNotificationId;
+  late final AppState _appState;
+
   final List<Widget> _screens = [
     const HomeScreen(),
     const DiscoverReposScreen(),
@@ -50,12 +55,64 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       }
     });
 
+    _appState = Provider.of<AppState>(context, listen: false);
+    _lastNotificationCount = _appState.notifications.length;
+    if (_appState.notifications.isNotEmpty) {
+      _lastNotificationId = _appState.notifications.first['id'] as String?;
+    }
+    _appState.addListener(_onAppStateChanged);
+
     // Sync AppState with the initial tab from URL
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        Provider.of<AppState>(context, listen: false).setTabIndex(_selectedIndex);
+        _appState.setTabIndex(_selectedIndex);
       }
     });
+  }
+
+  void _onAppStateChanged() {
+    if (!mounted) return;
+    
+    if (_appState.notifications.length > _lastNotificationCount) {
+      final newNotification = _appState.notifications.first;
+      final newId = newNotification['id'] as String?;
+      
+      if (newId != _lastNotificationId) {
+        _lastNotificationId = newId;
+        _lastNotificationCount = _appState.notifications.length;
+        
+        if (_appState.pushNotifications) {
+          _showSimulatedPushNotification(
+            newNotification['title'] ?? 'New Notification',
+            newNotification['body'] ?? '',
+          );
+        }
+      }
+    } else {
+      _lastNotificationCount = _appState.notifications.length;
+      if (_appState.notifications.isNotEmpty) {
+        _lastNotificationId = _appState.notifications.first['id'] as String?;
+      } else {
+        _lastNotificationId = null;
+      }
+    }
+  }
+
+  void _showSimulatedPushNotification(String title, String body) {
+    final overlayState = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+    
+    overlayEntry = OverlayEntry(
+      builder: (context) => _SimulatedPushNotificationBanner(
+        title: title,
+        body: body,
+        onDismiss: () {
+          overlayEntry.remove();
+        },
+      ),
+    );
+    
+    overlayState.insert(overlayEntry);
   }
 
   /// Updates the browser URL bar to reflect the selected tab
@@ -72,6 +129,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   void dispose() {
+    _appState.removeListener(_onAppStateChanged);
     _pageController.dispose();
     super.dispose();
   }
@@ -238,6 +296,139 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SimulatedPushNotificationBanner extends StatefulWidget {
+  final String title;
+  final String body;
+  final VoidCallback onDismiss;
+
+  const _SimulatedPushNotificationBanner({
+    required this.title,
+    required this.body,
+    required this.onDismiss,
+  });
+
+  @override
+  State<_SimulatedPushNotificationBanner> createState() => _SimulatedPushNotificationBannerState();
+}
+
+class _SimulatedPushNotificationBannerState extends State<_SimulatedPushNotificationBanner> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _yAnimation;
+  late Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    _yAnimation = Tween<double>(begin: -100, end: 0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+
+    _controller.forward();
+
+    // Auto dismiss after 3.5 seconds
+    Future.delayed(const Duration(milliseconds: 3500), () {
+      if (mounted) {
+        _controller.reverse().then((_) {
+          widget.onDismiss();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Positioned(
+          top: MediaQuery.of(context).padding.top + 12 + _yAnimation.value,
+          left: 16,
+          right: 16,
+          child: Opacity(
+            opacity: _opacityAnimation.value,
+            child: Material(
+              color: Colors.transparent,
+              child: GlassCard(
+                borderRadius: 20,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accent.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.accent.withOpacity(0.3), width: 1.5),
+                        ),
+                        child: Icon(
+                          Icons.notifications_active_rounded,
+                          color: AppTheme.accent,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: GoogleFonts.outfit(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textMain,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.body,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close_rounded, size: 18, color: AppTheme.textSecondary),
+                        onPressed: () {
+                          _controller.reverse().then((_) {
+                            widget.onDismiss();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

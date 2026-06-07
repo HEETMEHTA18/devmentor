@@ -778,6 +778,61 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildDnaSection(BuildContext context, AppState state) {
+    if (!state.aiInsights) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          _buildSectionHeader(context, 'Developer DNA Engine'),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline_rounded, color: AppTheme.peach.withOpacity(0.8), size: 40),
+                  const SizedBox(height: 16),
+                  Text(
+                    'AI Insights Disabled',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Developer DNA analysis is currently disabled in your Settings preferences.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      state.togglePreference('ai');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.peach.withOpacity(0.2),
+                      foregroundColor: AppTheme.peach,
+                      side: BorderSide(color: AppTheme.peach.withOpacity(0.4)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: Text('Enable AI Insights', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     if (state.isLoadingDna) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -997,6 +1052,61 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildWeeklyReportSection(BuildContext context, AppState state) {
+    if (!state.weeklyReport) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          _buildSectionHeader(context, 'AI Weekly Growth Report'),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline_rounded, color: AppTheme.accent.withOpacity(0.8), size: 40),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Weekly Report Disabled',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'AI Weekly Progress and Growth reports are disabled in Settings.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      state.togglePreference('report');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accent.withOpacity(0.2),
+                      foregroundColor: AppTheme.accent,
+                      side: BorderSide(color: AppTheme.accent.withOpacity(0.4)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: Text('Enable Weekly Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     if (state.isLoadingWeeklyReport) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1147,6 +1257,47 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildRoastSection(BuildContext context, AppState state) {
+    if (!state.aiInsights) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 32),
+          Text('GitHub Profile Roast', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.lock_outline_rounded, color: AppTheme.peach.withOpacity(0.8), size: 40),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Profile Roast Locked',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Profile roast generation requires AI Insights to be enabled in Settings.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     if (state.isLoadingRoast) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,

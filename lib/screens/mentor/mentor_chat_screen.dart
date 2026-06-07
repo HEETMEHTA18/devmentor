@@ -9,6 +9,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/mentor_message.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/liquid_glass_background.dart';
+import '../../utils/speech_helper.dart';
 
 class MentorChatScreen extends StatefulWidget {
   const MentorChatScreen({super.key});
@@ -116,10 +117,72 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                   ),
                 ),
               ),
+              _buildSuggestionChips(appState),
               _buildInputArea(appState),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestionChips(AppState state) {
+    final suggestions = [
+      '🔥 Roast my code',
+      '🗺️ Explain my roadmap',
+      '💼 Mock interview prep',
+      '💻 Suggest a project',
+      '📐 Explain design patterns',
+    ];
+
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: suggestions.length,
+        itemBuilder: (context, index) {
+          final text = suggestions[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ActionChip(
+              visualDensity: VisualDensity.compact,
+              label: Text(
+                text,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textMain,
+                ),
+              ),
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: AppTheme.border,
+                  width: 1.0,
+                ),
+              ),
+              onPressed: () {
+                String cleanText = text;
+                if (text.startsWith('🔥 ')) {
+                  cleanText = 'Roast my current code quality';
+                } else if (text.startsWith('🗺️ ')) {
+                  cleanText = 'Explain my current roadmap milestone and what to do next';
+                } else if (text.startsWith('💼 ')) {
+                  cleanText = 'Give me a challenging technical mock interview question';
+                } else if (text.startsWith('💻 ')) {
+                  cleanText = 'Suggest a real-world coding project based on my stack';
+                } else if (text.startsWith('📐 ')) {
+                  cleanText = 'Explain a key software engineering design pattern with an example';
+                }
+                state.sendMessage(cleanText);
+                _scrollToBottom();
+              },
+            ),
+          );
+        },
       ),
     );
   }
@@ -167,47 +230,93 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                 width: 1.0,
               ),
             ),
-            child: MarkdownBody(
-              data: msg.content,
-              onTapLink: (text, href, title) async {
-                if (href != null) {
-                  final url = Uri.parse(href);
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  }
-                }
-              },
-              styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-                p: TextStyle(
-                  color: isUser ? Colors.white : AppTheme.textMain,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
-                a: TextStyle(
-                  color: isUser ? Colors.white : AppTheme.accent,
-                  decoration: TextDecoration.underline,
-                  fontWeight: FontWeight.bold,
-                ),
-                code: TextStyle(
-                  backgroundColor: isUser 
-                      ? Colors.white.withValues(alpha: 0.2) 
-                      : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
-                  fontFamily: 'monospace',
-                  fontSize: 13,
-                  color: isUser ? Colors.white : AppTheme.textMain,
-                ),
-                codeblockDecoration: BoxDecoration(
-                  color: isUser 
-                      ? Colors.white.withValues(alpha: 0.1) 
-                      : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isUser 
-                        ? Colors.white.withValues(alpha: 0.2) 
-                        : AppTheme.border,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MarkdownBody(
+                  data: msg.content,
+                  onTapLink: (text, href, title) async {
+                    if (href != null) {
+                      final url = Uri.parse(href);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    }
+                  },
+                  styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                    p: TextStyle(
+                      color: isUser ? Colors.white : AppTheme.textMain,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                    a: TextStyle(
+                      color: isUser ? Colors.white : AppTheme.accent,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    code: TextStyle(
+                      backgroundColor: isUser 
+                          ? Colors.white.withValues(alpha: 0.2) 
+                          : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      color: isUser ? Colors.white : AppTheme.textMain,
+                    ),
+                    codeblockDecoration: BoxDecoration(
+                      color: isUser 
+                          ? Colors.white.withValues(alpha: 0.1) 
+                          : (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03)),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isUser 
+                            ? Colors.white.withValues(alpha: 0.2) 
+                            : AppTheme.border,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                if (!isUser) ...[
+                  const SizedBox(height: 6),
+                  const Divider(color: Colors.white24, height: 1),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.copy_rounded, size: 14),
+                          color: AppTheme.textSecondary,
+                          tooltip: 'Copy Response',
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: msg.content));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Copied response to clipboard'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 12),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.volume_up_rounded, size: 14),
+                          color: AppTheme.textSecondary,
+                          tooltip: 'Read Aloud',
+                          onPressed: () {
+                            SpeechHelper.speak(msg.content);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),

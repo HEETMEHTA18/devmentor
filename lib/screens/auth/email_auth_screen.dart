@@ -76,8 +76,19 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
       if (response.statusCode == 200) {
         final token = data['access_token'];
         if (token != null) {
-          // Save session token in AppState
           final appState = Provider.of<AppState>(context, listen: false);
+          
+          if (appState.twoFactorAuth) {
+            final verified = await _show2FADialog(context);
+            if (!verified) {
+              setState(() {
+                _isLoading = false;
+              });
+              return;
+            }
+          }
+          
+          // Save session token in AppState
           appState.setEmailSession(token);
 
           // Navigate directly to App Navigation Shell
@@ -373,5 +384,128 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
         ),
       ),
     );
+  }
+
+  Future<bool> _show2FADialog(BuildContext context) async {
+    final codeController = TextEditingController();
+    bool? success = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: AppTheme.surface.withValues(alpha: 0.95),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: BorderSide(color: AppTheme.border, width: 1.5),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.security_rounded, color: AppTheme.accent, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    '2FA Verification',
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Please enter the 6-digit security code from your authenticator app.',
+                    style: GoogleFonts.inter(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: codeController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    style: GoogleFonts.jetBrainsMono(
+                      color: AppTheme.textMain,
+                      fontSize: 24,
+                      letterSpacing: 8,
+                    ),
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      hintText: '000000',
+                      hintStyle: TextStyle(
+                        color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                        letterSpacing: 8,
+                      ),
+                      counterText: '',
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: AppTheme.accent, width: 2),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: AppTheme.border),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Demo code: 123456',
+                    style: GoogleFonts.inter(
+                      color: AppTheme.accent.withValues(alpha: 0.7),
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.inter(color: AppTheme.textSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (codeController.text == '123456') {
+                      Navigator.of(context).pop(true);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Invalid code. Please try again.'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Verify',
+                    style: GoogleFonts.inter(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return success ?? false;
   }
 }
