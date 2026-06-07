@@ -17,13 +17,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToOnboarding();
+    _navigateToApp();
   }
 
-  Future<void> _navigateToOnboarding() async {
+  Future<void> _navigateToApp() async {
     await Future.delayed(const Duration(milliseconds: 3000));
     if (!mounted) return;
-    context.go(RoutePaths.onboarding);
+    context.go(RoutePaths.app);
   }
 
   @override

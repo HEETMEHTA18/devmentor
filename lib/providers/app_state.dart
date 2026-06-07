@@ -16,6 +16,7 @@ class AppState extends ChangeNotifier {
   }
 
   bool showLinkGitHubPrompt = false;
+  bool isPreferencesLoaded = false;
 
   Future<void> initPreferences() async {
     try {
@@ -39,6 +40,9 @@ class AppState extends ChangeNotifier {
       debugPrint('Error restoring shared preferences: $e');
       githubUsername = 'alexjohnson';
       _triggerFallbackFetches();
+    } finally {
+      isPreferencesLoaded = true;
+      notifyListeners();
     }
   }
 

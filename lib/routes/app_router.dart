@@ -8,9 +8,39 @@ import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/splash/splash_screen.dart';
 import 'route_paths.dart';
 
-GoRouter createAppRouter() {
+import '../providers/app_state.dart';
+
+GoRouter createAppRouter(AppState appState) {
   return GoRouter(
     initialLocation: RoutePaths.splash,
+    refreshListenable: appState,
+    redirect: (context, state) {
+      // 1. Wait for preferences to be loaded from storage
+      if (!appState.isPreferencesLoaded) {
+        return null; // Stay where we are until preferences load
+      }
+
+      final isLoggedIn = appState.token != null && appState.token!.isNotEmpty;
+      final matchedLocation = state.matchedLocation;
+
+      // 2. Redirect logic
+      if (isLoggedIn) {
+        // Logged in user cannot access onboarding, splash, login, or email auth pages.
+        if (matchedLocation == RoutePaths.splash ||
+            matchedLocation == RoutePaths.onboarding ||
+            matchedLocation == RoutePaths.login ||
+            matchedLocation == RoutePaths.emailAuth) {
+          return RoutePaths.app; // Redirect to home dashboard
+        }
+      } else {
+        // Non-logged in user cannot access dashboard or AI mentor pages.
+        if (matchedLocation == RoutePaths.app || matchedLocation == RoutePaths.mentor) {
+          return RoutePaths.onboarding; // Redirect to onboarding
+        }
+      }
+
+      return null; // No redirect
+    },
     routes: [
       GoRoute(
         path: RoutePaths.splash,

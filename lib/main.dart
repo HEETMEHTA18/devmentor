@@ -17,10 +17,22 @@ void main() {
   );
 }
 
-class DevMentorApp extends StatelessWidget {
+class DevMentorApp extends StatefulWidget {
   const DevMentorApp({super.key});
 
-  static final GoRouter _router = createAppRouter();
+  @override
+  State<DevMentorApp> createState() => _DevMentorAppState();
+}
+
+class _DevMentorAppState extends State<DevMentorApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final appState = p.Provider.of<AppState>(context, listen: false);
+    _router = createAppRouter(appState);
+  }
 
   @override
   Widget build(BuildContext context) {
