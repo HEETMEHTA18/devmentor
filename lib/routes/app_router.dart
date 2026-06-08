@@ -63,6 +63,10 @@ GoRouter createAppRouter(AppState appState) {
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
+        path: '/app',
+        redirect: (context, state) => state.uri.replace(path: RoutePaths.app).toString(),
+      ),
+      GoRoute(
         path: RoutePaths.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),

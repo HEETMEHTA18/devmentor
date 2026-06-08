@@ -2,7 +2,7 @@
     "name": "DevMentor – AI Developer Coach",
     "short_name": "DevMentor",
     "description": "Your AI-powered developer mentoring and career growth companion. Track GitHub contributions, get AI coaching, and level up your tech career.",
-    "start_url": "/app",
+    "start_url": "/",
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait-primary",
@@ -49,7 +49,7 @@
         {
             "name": "My Roadmap",
             "short_name": "Roadmap",
-            "url": "/app?tab=roadmap",
+            "url": "/?tab=roadmap",
             "icons": [{"src": "icons/Icon-192.png", "sizes": "192x192"}]
         }
     ]
