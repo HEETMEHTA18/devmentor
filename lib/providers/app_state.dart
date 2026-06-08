@@ -56,6 +56,7 @@ class AppState extends ChangeNotifier {
 
   void _triggerFallbackFetches() {
     fetchGithubData(githubUsername);
+    if (token == null) return;
     fetchActivityData();
     fetchDeveloperDna();
     fetchProfileRoast();

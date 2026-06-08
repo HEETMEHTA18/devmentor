@@ -138,6 +138,13 @@ async def generic_exception_handler(request: Request, exc: Exception):
     return response
 
 
+@app.get("/")
+def read_root():
+    return {
+        "message": "Welcome to DevMentor API. Visit /docs or /redoc for interactive API documentation."
+    }
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
