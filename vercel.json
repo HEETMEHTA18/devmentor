@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "git": {
+    "deploymentEnabled": false
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
