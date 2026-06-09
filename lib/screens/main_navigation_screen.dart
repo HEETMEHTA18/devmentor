@@ -459,13 +459,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                               top: 8,
                               bottom: 8,
                               width: itemWidth - 16,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: AppTheme.accent.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: AppTheme.accent.withValues(alpha: 0.35),
-                                    width: 1.5,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(22),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 22,
+                                    sigmaY: 22,
+                                  ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          Colors.white.withValues(alpha: 0.22),
+                                          AppTheme.accent.withValues(alpha: 0.14),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(22),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.35),
+                                        width: 1.2,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppTheme.accent.withValues(alpha: 0.18),
+                                          blurRadius: 18,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -673,4 +696,3 @@ class _SimulatedPushNotificationBannerState extends State<_SimulatedPushNotifica
     );
   }
 }
-
