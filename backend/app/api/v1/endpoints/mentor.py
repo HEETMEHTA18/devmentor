@@ -1,3 +1,5 @@
+import logging
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -9,10 +11,69 @@ from app.core.config import settings
 from app.models.entities import Repository, TechNews, GithubProfile
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+PROVIDER_AUTO = "auto"
+PROVIDER_STUB = "stub"
+SUPPORTED_AI_PROVIDERS = ("groq", "gemini")
 
 
 class MentorMessageRequest(BaseModel):
     message: str
+    context_window_tokens: int | None = None
+    client_context: str | None = None
+
+
+def _normalize_ai_provider() -> str:
+    provider = (settings.ai_provider or PROVIDER_AUTO).strip().lower()
+    if provider in (*SUPPORTED_AI_PROVIDERS, PROVIDER_AUTO, PROVIDER_STUB):
+        return provider
+
+    logger.warning("Unsupported AI_PROVIDER=%s; falling back to auto", provider)
+    return PROVIDER_AUTO
+
+
+def _available_ai_providers() -> list[str]:
+    providers = []
+    if settings.groq_api_key:
+        providers.append("groq")
+    if settings.gemini_api_key:
+        providers.append("gemini")
+    return providers
+
+
+def _selected_ai_providers() -> list[str]:
+    provider = _normalize_ai_provider()
+    available = _available_ai_providers()
+    if provider == PROVIDER_STUB:
+        return []
+    if provider == PROVIDER_AUTO:
+        return available
+    if provider not in available:
+        logger.warning(
+            "AI_PROVIDER=%s was selected but its API key is not configured; falling back to available providers",
+            provider,
+        )
+        return available
+    return [provider] + [candidate for candidate in available if candidate != provider]
+
+
+def _provider_status() -> dict:
+    selected = _selected_ai_providers()
+    return {
+        "mode": _normalize_ai_provider(),
+        "configured": {
+            "groq": bool(settings.groq_api_key),
+            "gemini": bool(settings.gemini_api_key),
+        },
+        "available": _available_ai_providers(),
+        "selected": selected[0] if selected else PROVIDER_STUB,
+        "fallback_order": selected,
+        "models": {
+            "groq": settings.groq_model,
+            "gemini": settings.gemini_model,
+        },
+    }
 
 
 async def search_github_repositories(
@@ -67,6 +128,11 @@ async def search_github_repositories(
 
             logging.getLogger(__name__).error(f"Error calling GitHub Search API: {e}")
     return []
+
+
+@router.get("/provider/status")
+async def mentor_provider_status():
+    return _provider_status()
 
 
 @router.post("/chat")
@@ -142,6 +208,13 @@ async def mentor_chat(
     else:
         news_context = "\nNo real-time tech news scanned yet.\n"
 
+    requested_context_window = max(
+        1000, min(payload.context_window_tokens or 8000, 128000)
+    )
+    client_context = (payload.client_context or "").strip()
+    if len(client_context) > 12000:
+        client_context = client_context[:12000] + "\n[Client context truncated]"
+
     # 5. Build the system prompt with strict concise plaintext rules
     system_prompt = (
         "You are DevMentor, a highly specialized developer growth coach. Your role is strictly to analyze "
@@ -159,6 +232,8 @@ async def mentor_chat(
         "what's happening in tech, or roadmaps, you MUST use the real data provided below to answer them. DO NOT "
         "make up mock names or links. Provide the real repository names, stars, descriptions, and hyperlinks.\n\n"
         f"Context - Synced User Repositories: {repo_list_str}\n"
+        f"Requested Context Window Budget: {requested_context_window} tokens\n"
+        f"Client Provided Context:\n{client_context or 'No extra client context supplied.'}\n"
         f"{github_context}"
         f"{news_context}\n"
         "Always recommend actionable learning steps based on these real-time tech trends and repositories."
@@ -172,15 +247,14 @@ async def mentor_chat(
         # Replace common markdown list markers with clean dashes if needed
         return cleaned.strip()
 
-    # 6. Call AI API
-    if settings.groq_api_key:
+    async def call_groq() -> str | None:
         url = "https://api.groq.com/openai/v1/chat/completions"
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
                     url,
                     json={
-                        "model": "llama-3.1-8b-instant",
+                        "model": settings.groq_model,
                         "messages": [
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": payload.message},
@@ -190,29 +264,20 @@ async def mentor_chat(
                         "Authorization": f"Bearer {settings.groq_api_key}",
                         "Content-Type": "application/json",
                     },
-                    timeout=30.0,
+                    timeout=settings.ai_request_timeout_seconds,
                 )
                 if response.status_code == 200:
                     data = response.json()
-                    reply = data["choices"][0]["message"]["content"]
-                    return {
-                        "user_id": user_id,
-                        "assistant_message": clean_response(reply),
-                    }
+                    return data["choices"][0]["message"]["content"]
                 else:
-                    import logging
-
-                    logging.getLogger(__name__).error(
-                        f"Groq API error: {response.text}"
-                    )
+                    logger.error("Groq API error: %s", response.text)
             except Exception as e:
-                import logging
+                logger.error("Error calling Groq: %s", e)
+        return None
 
-                logging.getLogger(__name__).error(f"Error calling Groq: {e}")
-
-    api_key = settings.gemini_api_key
-    if api_key:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
+    async def call_gemini() -> str | None:
+        api_key = settings.gemini_api_key
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.gemini_model}:generateContent?key={api_key}"
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
@@ -229,30 +294,28 @@ async def mentor_chat(
                         ]
                     },
                     headers={"Content-Type": "application/json"},
-                    timeout=30.0,
+                    timeout=settings.ai_request_timeout_seconds,
                 )
                 if response.status_code == 200:
                     data = response.json()
                     try:
-                        reply = data["candidates"][0]["content"]["parts"][0]["text"]
-                        return {
-                            "user_id": user_id,
-                            "assistant_message": clean_response(reply),
-                        }
+                        return data["candidates"][0]["content"]["parts"][0]["text"]
                     except (KeyError, IndexError):
-                        import logging
-
-                        logging.getLogger(__name__).error("Malformed Gemini response")
+                        logger.error("Malformed Gemini response")
                 else:
-                    import logging
-
-                    logging.getLogger(__name__).error(
-                        f"Gemini API error: {response.text}"
-                    )
+                    logger.error("Gemini API error: %s", response.text)
             except Exception as e:
-                import logging
+                logger.error("Error calling Gemini: %s", e)
+        return None
 
-                logging.getLogger(__name__).error(f"Error calling Gemini: {e}")
+    # 6. Call AI API
+    for provider in _selected_ai_providers():
+        reply = await call_groq() if provider == "groq" else await call_gemini()
+        if reply:
+            return {
+                "user_id": user_id,
+                "assistant_message": clean_response(reply),
+            }
 
     # Ultimate fallback if no keys exist or if both API calls failed
     return {

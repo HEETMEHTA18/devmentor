@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/prompt_item.dart';
 import '../../providers/app_state.dart';
@@ -19,7 +18,10 @@ class PromptHubScreen extends StatefulWidget {
 class _PromptHubScreenState extends State<PromptHubScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _playgroundController = TextEditingController();
+  final TextEditingController _loopIdeaController = TextEditingController();
   String _selectedWorkflow = 'All';
+  String _loopMode = 'Build';
+  List<String> _generatedLoopPrompts = [];
 
   @override
   void initState() {
@@ -108,7 +110,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
           _buildCliStatusBanner(isDark),
           const SizedBox(height: 20),
 
-          _buildLiquidGlassGuide(isDark),
+          _buildPromptLoopBuilder(isDark),
           const SizedBox(height: 25),
 
           // Metrics Summary Section
@@ -225,21 +227,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
     );
   }
 
-  Widget _buildLiquidGlassGuide(bool isDark) {
-    const resources = [
-      ('liquid_glass_widgets', 'https://pub.dev/packages/liquid_glass_widgets'),
-      ('adaptive_platform_ui', 'https://pub.dev/packages/adaptive_platform_ui'),
-      (
-        'cupertino_liquid_glass',
-        'https://pub.dev/packages/cupertino_liquid_glass',
-      ),
-      ('liquid_glass_easy', 'https://pub.dev/packages/liquid_glass_easy'),
-      (
-        'Flutter platform view notes',
-        'https://alaminkarno.medium.com/can-we-build-liquid-glass-in-flutter-a-lunch-break-dive-into-platform-views-e33cd23d0cbb',
-      ),
-    ];
-
+  Widget _buildPromptLoopBuilder(bool isDark) {
     return GlassCard(
       borderRadius: 24,
       child: Padding(
@@ -276,7 +264,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Liquid Glass for Flutter',
+                        'Prompt Loop Builder',
                         style: GoogleFonts.outfit(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -285,7 +273,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Build Apple-style iOS 26 glass using community UI kits, native bridge components, or a lightweight shader-free BackdropFilter recipe.',
+                        'Drop a rough idea, dictate it with voice, or paste a tiny prompt. DevMentor turns it into a Ralph-style agent loop you can run repeatedly.',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           height: 1.45,
@@ -298,250 +286,191 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
               ],
             ),
             const SizedBox(height: 18),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 680;
-                final cards = [
-                  _buildGlassOption(
-                    icon: Icons.widgets_rounded,
-                    title: 'Complete UI Kit',
-                    label: 'Recommended',
-                    description:
-                        'Use liquid_glass_widgets for a zero-dependency app-wide overhaul with background isolation, z-ordering, edge fading, and adaptive performance handling.',
-                    isDark: isDark,
-                  ),
-                  _buildGlassOption(
-                    icon: Icons.phone_iphone_rounded,
-                    title: 'Native Bridge',
-                    label: 'iOS fidelity',
-                    description:
-                        'Use adaptive_platform_ui when you need true UIKit materials and the closest native iOS 26 visual match.',
-                    isDark: isDark,
-                  ),
-                  _buildGlassOption(
-                    icon: Icons.layers_rounded,
-                    title: 'Lightweight Recipe',
-                    label: 'Cross-platform',
-                    description:
-                        'Combine ClipRRect, BackdropFilter, gradients, borders, and transparent containers for smooth glassmorphism across web and mobile.',
-                    isDark: isDark,
-                  ),
-                ];
-
-                if (isWide) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: cards
-                        .map(
-                          (card) => Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                right: card == cards.last ? 0 : 12,
-                              ),
-                              child: card,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                }
-
-                return Column(
-                  children: cards
-                      .map(
-                        (card) => Padding(
-                          padding: EdgeInsets.only(
-                            bottom: card == cards.last ? 0 : 12,
-                          ),
-                          child: card,
-                        ),
-                      )
-                      .toList(),
-                );
-              },
-            ),
-            const SizedBox(height: 18),
-            _buildGlassCodeRecipe(isDark),
-            const SizedBox(height: 18),
-            Text(
-              'Package shortlist',
-              style: GoogleFonts.outfit(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textMain,
-              ),
-            ),
-            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: resources.map((resource) {
-                return ActionChip(
-                  avatar: Icon(
-                    Icons.open_in_new_rounded,
-                    size: 16,
-                    color: AppTheme.accent,
+              children: ['Build', 'Debug', 'Research', 'Ship'].map((mode) {
+                final selected = _loopMode == mode;
+                return ChoiceChip(
+                  label: Text(mode),
+                  selected: selected,
+                  selectedColor: AppTheme.accent.withValues(alpha: 0.22),
+                  backgroundColor: isDark
+                      ? const Color(0x12FFFFFF)
+                      : const Color(0x24FFFFFF),
+                  side: BorderSide(
+                    color: selected
+                        ? AppTheme.accent
+                        : AppTheme.border.withValues(alpha: 0.7),
                   ),
-                  label: Text(resource.$1),
                   labelStyle: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppTheme.textMain,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? AppTheme.accent : AppTheme.textSecondary,
                   ),
-                  backgroundColor: isDark
-                      ? const Color(0x18FFFFFF)
-                      : const Color(0x16FFFFFF),
-                  side: BorderSide(
-                    color: AppTheme.border.withValues(alpha: 0.6),
-                  ),
-                  onPressed: () => _openResource(resource.$2),
+                  onSelected: (_) => setState(() => _loopMode = mode),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Pick native iOS bridging for pixel-perfect Liquid Glass. Pick package or custom Flutter glass when cross-platform parity matters more.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                height: 1.45,
-                color: AppTheme.textSecondary,
+            const SizedBox(height: 14),
+            TextField(
+              controller: _loopIdeaController,
+              minLines: 3,
+              maxLines: 5,
+              style: TextStyle(color: AppTheme.textMain, fontSize: 14),
+              decoration: InputDecoration(
+                hintText:
+                    'Example: Build an agent loop that scans my Flutter app, fixes UX issues, writes tests, and prepares release notes.',
+                hintStyle: TextStyle(
+                  color: AppTheme.textSecondary.withValues(alpha: 0.68),
+                  fontSize: 13,
+                ),
+                filled: true,
+                fillColor: isDark
+                    ? const Color(0x14FFFFFF)
+                    : const Color(0x28FFFFFF),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: AppTheme.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: AppTheme.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: AppTheme.accent),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlassOption({
-    required IconData icon,
-    required String title,
-    required String label,
-    required String description,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0x10FFFFFF) : const Color(0x40FFFFFF),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.border.withValues(alpha: 0.55)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: AppTheme.accent, size: 19),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textMain,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _generatePromptLoop,
+                    icon: const Icon(Icons.all_inclusive_rounded, size: 18),
+                    label: Text(
+                      'GENERATE LOOP',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 10),
+                IconButton.filledTonal(
+                  onPressed: _startLoopVoiceCapture,
+                  tooltip: 'Dictate idea',
+                  icon: const Icon(Icons.mic_rounded),
+                ),
+              ],
+            ),
+            if (_generatedLoopPrompts.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Text(
+                    'Generated agent loop',
+                    style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: 'Copy loop',
+                    icon: Icon(Icons.copy_rounded, color: AppTheme.accent),
+                    onPressed: () {
+                      Clipboard.setData(
+                        ClipboardData(text: _generatedLoopPrompts.join('\n\n')),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Prompt loop copied')),
+                      );
+                    },
+                  ),
+                ],
               ),
+              ..._generatedLoopPrompts.asMap().entries.map((entry) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0x12FFFFFF)
+                          : const Color(0x30FFFFFF),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.border.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${entry.key + 1}.',
+                          style: GoogleFonts.jetBrainsMono(
+                            color: AppTheme.accent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            entry.value,
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              height: 1.45,
+                              color: AppTheme.textMain,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label.toUpperCase(),
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.accent,
-              letterSpacing: 1.1,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              height: 1.4,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGlassCodeRecipe(bool isDark) {
-    const recipe = '''
-ClipRRect(
-  borderRadius: BorderRadius.circular(28),
-  child: BackdropFilter(
-    filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-    child: Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withValues(alpha: 0.22),
-            Colors.white.withValues(alpha: 0.06),
           ],
         ),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: content,
-    ),
-  ),
-)''';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xCC09090B) : const Color(0xCCF8FAFC),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.border.withValues(alpha: 0.55)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.code_rounded,
-                color: AppTheme.secondaryAccent,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Lightweight Flutter structure',
-                style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textMain,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          SelectableText(
-            recipe,
-            style: GoogleFonts.firaCode(
-              fontSize: 11.5,
-              height: 1.45,
-              color: AppTheme.textMain,
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _openResource(String url) async {
-    final uri = Uri.parse(url);
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open $url')));
+  void _generatePromptLoop() {
+    final idea = _loopIdeaController.text.trim();
+    if (idea.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add a rough idea first')),
+      );
+      return;
     }
+
+    final mode = _loopMode.toLowerCase();
+    setState(() {
+      _generatedLoopPrompts = [
+        'Planner agent: Convert this $mode goal into measurable acceptance criteria, risks, dependencies, and a 5-step execution plan. Goal: $idea',
+        'Context agent: Scan the relevant files, docs, routes, APIs, and tests. Return only facts, file paths, and unknowns that block implementation.',
+        'Builder agent: Implement the smallest production-ready change that satisfies the plan. Preserve existing behavior, style, accessibility, and platform constraints.',
+        'Reviewer agent: Inspect the diff for regressions, missing edge cases, security issues, App Store readiness, and unclear user experience. Return blocking findings first.',
+        'Verifier agent: Run the most relevant checks, summarize pass/fail output, and produce release notes plus the next loop input if more work remains.',
+      ];
+    });
+  }
+
+  void _startLoopVoiceCapture() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Voice capture is available through browser dictation where supported. Tap the field and use your keyboard microphone.',
+        ),
+      ),
+    );
   }
 
   Widget _buildMetricsDashboard(AppState state, bool isDark) {
