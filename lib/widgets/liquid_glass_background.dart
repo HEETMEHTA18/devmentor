@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'moving_ascii_background.dart';
+
 
 class LiquidGlassBackground extends StatefulWidget {
   final Widget child;
@@ -176,6 +178,11 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
                 color: Colors.transparent,
               ),
             ),
+          ),
+
+          // 3.5. Moving ASCII Background
+          Positioned.fill(
+            child: MovingAsciiBackground(isDark: isDark),
           ),
 
           // 3b. Transition Glass Layer (visible when swiping/transitioning)
