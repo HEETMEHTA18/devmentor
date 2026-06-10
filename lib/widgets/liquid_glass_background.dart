@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'moving_ascii_background.dart';
 
@@ -40,6 +41,7 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
 
     // Light Theme Liquid Colors (Soft, vibrant pastels)
     final lightColors = [
@@ -59,6 +61,53 @@ class _LiquidGlassBackgroundState extends State<LiquidGlassBackground>
 
     final colors = isDark ? darkColors : lightColors;
     final baseBg = isDark ? const Color(0xFF0A0A0F) : const Color(0xFFF4F7FC);
+
+    if (isMobileBrowser) {
+      return Scaffold(
+        backgroundColor: baseBg,
+        body: Stack(
+          children: [
+            // Static smooth gradient for mobile web performance (no ticking background or high sigma blur)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isDark
+                        ? [
+                            const Color(0xFF100F1E),
+                            const Color(0xFF0A0A0F),
+                          ]
+                        : [
+                            const Color(0xFFEAF2FB),
+                            const Color(0xFFF4F7FC),
+                          ],
+                  ),
+                ),
+              ),
+            ),
+
+            // 3b. Transition Layer (using simple opacity on mobile web instead of heavy blur)
+            if (widget.transitionProgress > 0.01)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: widget.transitionProgress.clamp(0.0, 1.0),
+                  child: Container(
+                    color: (isDark ? Colors.black : Colors.white)
+                        .withValues(alpha: widget.transitionProgress * 0.3),
+                  ),
+                ),
+              ),
+
+            // 4. Content Screen
+            Positioned.fill(
+              child: widget.child,
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: baseBg,

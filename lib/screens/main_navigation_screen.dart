@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -273,6 +274,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
     // Apple HIG: light haptic response on tab selection
     HapticFeedback.lightImpact();
     
+    final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+    if (isMobileBrowser) {
+      setState(() {
+        _selectedIndex = index;
+      });
+      _appState.setSelectedTab(index);
+      _updateUrlSilently(index);
+      return;
+    }
+    
     // Trigger transition overlay shutter animation
     _transitionController.forward(from: 0.0);
     
@@ -430,6 +441,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+
     return AnimatedBuilder(
       animation: _transitionAnimation,
       builder: (context, child) {
@@ -465,16 +478,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                     borderRadius: BorderRadius.circular(38),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(
-                        sigmaX: isDark ? 20.0 : 15.0,
-                        sigmaY: isDark ? 20.0 : 15.0,
+                        sigmaX: isMobileBrowser ? 0.0 : (isDark ? 20.0 : 15.0),
+                        sigmaY: isMobileBrowser ? 0.0 : (isDark ? 20.0 : 15.0),
                       ),
                       child: Container(
                         height: 76,
                         decoration: BoxDecoration(
-                          color: (isDark ? Colors.black : Colors.white).withValues(alpha: isDark ? 0.18 : 0.22),
+                          color: (isDark ? Colors.black : Colors.white).withValues(
+                            alpha: isMobileBrowser ? 0.90 : (isDark ? 0.18 : 0.22),
+                          ),
                           borderRadius: BorderRadius.circular(38),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.25),
+                            color: Colors.white.withValues(
+                              alpha: isMobileBrowser ? 0.20 : (isDark ? 0.15 : 0.25),
+                            ),
                             width: 1.5,
                           ),
                           gradient: LinearGradient(

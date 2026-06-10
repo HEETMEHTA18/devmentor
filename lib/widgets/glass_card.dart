@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class GlassCard extends StatelessWidget {
@@ -20,27 +21,34 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+    final double activeBlur = isMobileBrowser ? 0.0 : blur;
+
     // Apple-style dual-tone glass gradient colors
     final Color topColor = isDark 
-        ? Colors.white.withValues(alpha: 0.07) 
-        : Colors.white.withValues(alpha: 0.65);
+        ? Colors.white.withValues(alpha: isMobileBrowser ? 0.15 : 0.07) 
+        : Colors.white.withValues(alpha: isMobileBrowser ? 0.92 : 0.65);
     final Color bottomColor = isDark 
-        ? Colors.black.withValues(alpha: 0.35) 
-        : Colors.white.withValues(alpha: 0.15);
+        ? Colors.black.withValues(alpha: isMobileBrowser ? 0.85 : 0.35) 
+        : Colors.white.withValues(alpha: isMobileBrowser ? 0.80 : 0.15);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        filter: ImageFilter.blur(sigmaX: activeBlur, sigmaY: activeBlur),
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [topColor, bottomColor],
-            ),
+            color: isMobileBrowser
+                ? (isDark ? const Color(0xFF1E1E2E) : Colors.white).withValues(alpha: 0.90)
+                : null,
+            gradient: isMobileBrowser
+                ? null
+                : LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [topColor, bottomColor],
+                  ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: isDark 
