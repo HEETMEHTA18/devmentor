@@ -19,8 +19,11 @@ class HomeScreen extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     if (appState.showLinkGitHubPrompt) {
-      appState.showLinkGitHubPrompt = false; // Reset to prevent loop
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted || !appState.showLinkGitHubPrompt) {
+          return;
+        }
+        appState.showLinkGitHubPrompt = false;
         _showLinkGitHubDialog(context, appState);
       });
     }

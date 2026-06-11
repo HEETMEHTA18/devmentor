@@ -472,6 +472,7 @@ async def get_prompt_recommendations(
 
 class GithubSyncRequest(BaseModel):
     github_username: Optional[str] = None
+    repo_sources: Optional[list[dict[str, str]]] = None
 
 
 @router.post("/sync-github")
@@ -523,60 +524,70 @@ async def sync_github_prompts(
         db.add(user)
         db.commit()
 
-    # 3. Pre-sync repositories from GitHub to the database to ensure we have the latest list!
-    try:
-        from app.services.github_service import GithubService
-
-        github_service = GithubService(db)
-        if access_token:
-            await github_service.sync_user_github_data(
-                user_id=user_id, access_token=access_token
-            )
-        elif github_username:
-            await github_service.sync_public_github_data(
-                user_id=user_id, username=github_username
-            )
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error pre-syncing repositories in prompts sync: {e}")
-
-    # Determine repository list (now fresh!)
-    repos_stmt = select(Repository).where(Repository.user_id == user_id)
-    db_repos = db.scalars(repos_stmt).all()
-
     repo_list = []
-    if db_repos:
-        for repo in db_repos:
-            repo_list.append(
-                {"owner": repo.owner, "name": repo.name, "full_name": repo.full_name}
-            )
-    else:
-        # Fetch public repositories dynamically using GitHub API
-        async with httpx.AsyncClient() as client:
-            headers = {"User-Agent": "DevMentor-App"}
-            if access_token:
-                headers["Authorization"] = f"Bearer {access_token}"
-            try:
-                # Fetch up to 100 public repositories
-                api_url = (
-                    f"https://api.github.com/users/{github_username}/repos?per_page=100"
+    if payload and payload.repo_sources:
+        for repo in payload.repo_sources:
+            owner = (repo.get("owner") or "").strip()
+            name = (repo.get("name") or "").strip()
+            full_name = (repo.get("full_name") or f"{owner}/{name}").strip("/")
+            if owner and name:
+                repo_list.append(
+                    {"owner": owner, "name": name, "full_name": full_name}
                 )
-                res = await client.get(api_url, headers=headers, timeout=12.0)
-                if res.status_code == 200:
-                    repos_data = res.json()
-                    for r_data in repos_data:
-                        owner = r_data.get("owner", {}).get("login", github_username)
-                        name = r_data.get("name", "")
-                        full_name = r_data.get("full_name", f"{owner}/{name}")
-                        repo_list.append(
-                            {"owner": owner, "name": name, "full_name": full_name}
-                        )
-                else:
-                    logger.warning(
-                        f"Failed to fetch public repos for {github_username}: {res.status_code} {res.text}"
+    else:
+        # 3. Pre-sync repositories from GitHub to the database to ensure we have the latest list!
+        try:
+            from app.services.github_service import GithubService
+
+            github_service = GithubService(db)
+            if access_token:
+                await github_service.sync_user_github_data(
+                    user_id=user_id, access_token=access_token
+                )
+            elif github_username:
+                await github_service.sync_public_github_data(
+                    user_id=user_id, username=github_username
+                )
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error pre-syncing repositories in prompts sync: {e}")
+
+        # Determine repository list (now fresh!)
+        repos_stmt = select(Repository).where(Repository.user_id == user_id)
+        db_repos = db.scalars(repos_stmt).all()
+
+        if db_repos:
+            for repo in db_repos:
+                repo_list.append(
+                    {"owner": repo.owner, "name": repo.name, "full_name": repo.full_name}
+                )
+        else:
+            # Fetch public repositories dynamically using GitHub API
+            async with httpx.AsyncClient() as client:
+                headers = {"User-Agent": "DevMentor-App"}
+                if access_token:
+                    headers["Authorization"] = f"Bearer {access_token}"
+                try:
+                    # Fetch up to 100 public repositories
+                    api_url = (
+                        f"https://api.github.com/users/{github_username}/repos?per_page=100"
                     )
-            except Exception as e:
-                logger.error(f"Error fetching public repos for {github_username}: {e}")
+                    res = await client.get(api_url, headers=headers, timeout=12.0)
+                    if res.status_code == 200:
+                        repos_data = res.json()
+                        for r_data in repos_data:
+                            owner = r_data.get("owner", {}).get("login", github_username)
+                            name = r_data.get("name", "")
+                            full_name = r_data.get("full_name", f"{owner}/{name}")
+                            repo_list.append(
+                                {"owner": owner, "name": name, "full_name": full_name}
+                            )
+                    else:
+                        logger.warning(
+                            f"Failed to fetch public repos for {github_username}: {res.status_code} {res.text}"
+                        )
+                except Exception as e:
+                    logger.error(f"Error fetching public repos for {github_username}: {e}")
 
     if not repo_list:
         return {

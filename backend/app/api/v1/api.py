@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     auth,
     github,
     mentor,
+    notifications,
     recommendations,
     repositories,
     roadmap,
@@ -28,3 +29,6 @@ api_router.include_router(
 )
 api_router.include_router(advanced.router, prefix="/advanced", tags=["advanced"])
 api_router.include_router(prompts.router, prefix="/prompts", tags=["prompts"])
+api_router.include_router(
+    notifications.router, prefix="/notifications", tags=["notifications"]
+)

@@ -108,7 +108,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
 
     _transitionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 220),
     );
 
     _transitionAnimation = TweenSequence<double>([
@@ -511,8 +511,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                               children: [
                                 // Sliding Glass Pill Indicator
                                 AnimatedPositioned(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOutBack, // bouncy spring curve
+                                  duration: const Duration(milliseconds: 220),
+                                  curve: Curves.easeOutCubic,
                                   left: _selectedIndex * itemWidth + 8,
                                   top: 10,
                                   bottom: 10,

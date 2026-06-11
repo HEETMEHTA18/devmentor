@@ -7,6 +7,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/app_state.dart';
 import 'routes/app_router.dart';
+import 'services/push_notification_service.dart';
 
 void main() {
   usePathUrlStrategy();
@@ -35,6 +36,9 @@ class _DevMentorAppState extends State<DevMentorApp> {
     super.initState();
     final appState = p.Provider.of<AppState>(context, listen: false);
     _router = createAppRouter(appState);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PushNotificationService.bootstrap(appState);
+    });
   }
 
   @override

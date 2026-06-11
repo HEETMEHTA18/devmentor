@@ -32,40 +32,46 @@ class GlassCard extends StatelessWidget {
         ? Colors.black.withValues(alpha: isMobileBrowser ? 0.85 : 0.35) 
         : Colors.white.withValues(alpha: isMobileBrowser ? 0.80 : 0.15);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: activeBlur, sigmaY: activeBlur),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: isMobileBrowser
-                ? (isDark ? const Color(0xFF1E1E2E) : Colors.white).withValues(alpha: 0.90)
-                : null,
-            gradient: isMobileBrowser
-                ? null
-                : LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [topColor, bottomColor],
-                  ),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: isDark 
-                  ? Colors.white.withValues(alpha: 0.15) 
-                  : Colors.white.withValues(alpha: 0.45),
-              width: 0.8,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+    final card = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: isMobileBrowser
+            ? (isDark ? const Color(0xFF1E1E2E) : Colors.white).withValues(alpha: 0.90)
+            : null,
+        gradient: isMobileBrowser
+            ? null
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [topColor, bottomColor],
               ),
-            ],
-          ),
-          child: child,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: isDark 
+              ? Colors.white.withValues(alpha: 0.15) 
+              : Colors.white.withValues(alpha: 0.45),
+          width: 0.8,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: child,
+    );
+
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: activeBlur > 0
+            ? BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: activeBlur, sigmaY: activeBlur),
+                child: card,
+              )
+            : card,
       ),
     );
   }

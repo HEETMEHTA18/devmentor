@@ -15,6 +15,9 @@ class AppState extends ChangeNotifier {
     initPreferences();
   }
 
+  static const String _githubPromptsOwner = 'HeetMehta18';
+  static const String _githubPromptsRepo = 'AutoDevs';
+
   bool showLinkGitHubPrompt = false;
   bool isPreferencesLoaded = false;
   final ValueNotifier<int> authStateNotifier = ValueNotifier<int>(0);
@@ -24,6 +27,9 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final storedToken = prefs.getString('auth_token');
       final storedUsername = prefs.getString('github_username');
+      final storedDisplayName = prefs.getString('profile_display_name');
+      final storedAvatarUrl = prefs.getString('github_avatar_url');
+      final storedLoginTimestamp = prefs.getString('login_timestamp');
       
       pushNotifications = prefs.getBool('pref_notifications') ?? true;
       aiInsights = prefs.getBool('pref_ai') ?? true;
@@ -36,23 +42,212 @@ class AppState extends ChangeNotifier {
         token = storedToken;
         if (storedUsername != null && storedUsername.isNotEmpty) {
           githubUsername = storedUsername;
-        } else {
-          githubUsername = 'alexjohnson';
         }
+        if (storedDisplayName != null && storedDisplayName.isNotEmpty) {
+          username = storedDisplayName;
+        } else if (githubUsername.isNotEmpty) {
+          username = githubUsername;
+        }
+        if (storedAvatarUrl != null && storedAvatarUrl.isNotEmpty) {
+          avatarUrl = storedAvatarUrl;
+        }
+        sessionLoginTimestamp = storedLoginTimestamp;
         await fetchUserProfile();
       } else {
-        githubUsername = 'alexjohnson';
+        _setGuestProfile();
         _triggerFallbackFetches();
       }
+      await loadCachedGithubPromptsMarkdown();
+      await loadPromptRepoSources();
       await loadChatHistory();
     } catch (e) {
       debugPrint('Error restoring shared preferences: $e');
-      githubUsername = 'alexjohnson';
+      _setGuestProfile();
       _triggerFallbackFetches();
     } finally {
       isPreferencesLoaded = true;
       notifyListeners();
       authStateNotifier.value++;
+    }
+  }
+
+  void _setGuestProfile() {
+    token = null;
+    username = 'Alex Johnson';
+    githubUsername = 'alexjohnson';
+    avatarUrl = null;
+    sessionLoginTimestamp = null;
+    showLinkGitHubPrompt = false;
+  }
+
+  Future<void> _persistSessionSnapshot() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (token != null && token!.isNotEmpty) {
+        await prefs.setString('auth_token', token!);
+      }
+      await prefs.setString('github_username', githubUsername);
+      await prefs.setString('profile_display_name', username);
+      await prefs.setString('login_timestamp', sessionLoginTimestamp ?? DateTime.now().toIso8601String());
+      if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+        await prefs.setString('github_avatar_url', avatarUrl!);
+      } else {
+        await prefs.remove('github_avatar_url');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> loadCachedGithubPromptsMarkdown() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedMarkdown = prefs.getString('github_prompts_markdown_cache');
+      final cachedUpdatedAt = prefs.getInt('github_prompts_markdown_updated_at');
+      if (cachedMarkdown != null && cachedMarkdown.isNotEmpty) {
+        githubPromptsMarkdown = cachedMarkdown;
+        if (cachedUpdatedAt != null) {
+          githubPromptsMarkdownUpdatedAt = DateTime.fromMillisecondsSinceEpoch(cachedUpdatedAt);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading cached prompts.md: $e');
+    }
+  }
+
+  Future<void> loadPromptRepoSources() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('prompt_repo_sources');
+      if (raw == null || raw.isEmpty) {
+        promptRepoSources = [
+          {'owner': _githubPromptsOwner, 'name': _githubPromptsRepo},
+        ];
+        return;
+      }
+
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        final sources = <Map<String, String>>[];
+        for (final item in decoded) {
+          if (item is Map) {
+            final owner = (item['owner'] ?? '').toString().trim();
+            final name = (item['name'] ?? '').toString().trim();
+            if (owner.isNotEmpty && name.isNotEmpty) {
+              sources.add({'owner': owner, 'name': name});
+            }
+          }
+        }
+        promptRepoSources = sources.isEmpty
+            ? [
+                {'owner': _githubPromptsOwner, 'name': _githubPromptsRepo},
+              ]
+            : sources;
+      }
+    } catch (e) {
+      debugPrint('Error loading prompt repo sources: $e');
+      promptRepoSources = [
+        {'owner': _githubPromptsOwner, 'name': _githubPromptsRepo},
+      ];
+    }
+  }
+
+  Future<void> savePromptRepoSources() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('prompt_repo_sources', jsonEncode(promptRepoSources));
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  void addPromptRepoSource(String owner, String name) {
+    final normalizedOwner = owner.trim();
+    final normalizedName = name.trim();
+    if (normalizedOwner.isEmpty || normalizedName.isEmpty) {
+      return;
+    }
+
+    final exists = promptRepoSources.any(
+      (repo) => repo['owner'] == normalizedOwner && repo['name'] == normalizedName,
+    );
+    if (exists) {
+      return;
+    }
+
+    promptRepoSources = [
+      ...promptRepoSources,
+      {'owner': normalizedOwner, 'name': normalizedName},
+    ];
+    savePromptRepoSources();
+  }
+
+  void removePromptRepoSource(int index) {
+    if (index < 0 || index >= promptRepoSources.length) {
+      return;
+    }
+
+    promptRepoSources = List<Map<String, String>>.from(promptRepoSources)..removeAt(index);
+    if (promptRepoSources.isEmpty) {
+      promptRepoSources = [
+        {'owner': _githubPromptsOwner, 'name': _githubPromptsRepo},
+      ];
+    }
+    savePromptRepoSources();
+  }
+
+  Future<String> refreshGithubPromptsMarkdown({bool force = false}) async {
+    if (isLoadingGithubPromptsMarkdown) {
+      return 'prompts.md is already syncing.';
+    }
+
+    if (token == null) {
+      return 'Sign in to sync prompts.md from GitHub.';
+    }
+
+    final now = DateTime.now();
+    if (!force && githubPromptsMarkdownUpdatedAt != null && now.difference(githubPromptsMarkdownUpdatedAt!).inMinutes < 30) {
+      return 'Using recent prompts.md cache.';
+    }
+
+    isLoadingGithubPromptsMarkdown = true;
+    notifyListeners();
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.github.com/repos/$_githubPromptsOwner/$_githubPromptsRepo/contents/.autodevs/prompts.md'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'DevMentor-App',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final encodedContent = (data['content'] as String? ?? '').replaceAll('\n', '').replaceAll('\r', '');
+        if (encodedContent.isEmpty) {
+          return 'GitHub returned an empty prompts.md file.';
+        }
+
+        final markdownBytes = base64Decode(encodedContent);
+        final markdownText = utf8.decode(markdownBytes);
+        githubPromptsMarkdown = markdownText;
+        githubPromptsMarkdownUpdatedAt = now;
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('github_prompts_markdown_cache', markdownText);
+          await prefs.setInt('github_prompts_markdown_updated_at', now.millisecondsSinceEpoch);
+        } catch (_) {}
+
+        return 'prompts.md synced from GitHub.';
+      }
+
+      return 'Failed to load prompts.md: ${response.statusCode}';
+    } catch (e) {
+      debugPrint('Error syncing prompts.md: $e');
+      return 'Failed to load prompts.md: $e';
+    } finally {
+      isLoadingGithubPromptsMarkdown = false;
+      notifyListeners();
     }
   }
 
@@ -83,6 +278,12 @@ class AppState extends ChangeNotifier {
   bool isLoadingPromptAnalytics = false;
   bool isLoadingPromptRecommendations = false;
   bool isSubmittingPromptEvent = false;
+  bool isLoadingGithubPromptsMarkdown = false;
+  String? githubPromptsMarkdown;
+  DateTime? githubPromptsMarkdownUpdatedAt;
+  List<Map<String, String>> promptRepoSources = [
+    {'owner': _githubPromptsOwner, 'name': _githubPromptsRepo},
+  ];
 
   List<Map<String, dynamic>> activityData = List.generate(70, (index) {
     final date = DateTime.now().subtract(Duration(days: 69 - index));
@@ -646,6 +847,7 @@ class AppState extends ChangeNotifier {
   bool shareAnalytics = true;
   bool twoFactorAuth = false;
   bool githubUsernameLocked = false;
+  String? sessionLoginTimestamp;
 
   bool isLoading = false;
   String? avatarUrl;
@@ -662,7 +864,7 @@ class AppState extends ChangeNotifier {
       
       if (userResponse.statusCode == 200) {
         final userData = jsonDecode(userResponse.body);
-        username = userData['name'] ?? userData['login'] ?? 'Alex Johnson';
+        username = userData['name'] ?? userData['login'] ?? username;
         repos = userData['public_repos'] ?? 0;
         avatarUrl = userData['avatar_url'];
       }
@@ -797,6 +999,9 @@ class AppState extends ChangeNotifier {
       await prefs.setString('github_username', githubUsername);
     } catch (_) {}
 
+    sessionLoginTimestamp ??= DateTime.now().toIso8601String();
+    await _persistSessionSnapshot();
+
     await fetchGithubData(githubUsername);
     
     if (token != null) {
@@ -835,9 +1040,12 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  void setGithubSession(String username, String sessionToken) async {
+  Future<void> setGithubSession(String username, String sessionToken, {String? displayName, String? avatar}) async {
     token = sessionToken;
     githubUsername = username.trim().replaceAll('@', '');
+    this.username = (displayName != null && displayName.isNotEmpty) ? displayName : githubUsername;
+    avatarUrl = avatar;
+    sessionLoginTimestamp = DateTime.now().toIso8601String();
     showLinkGitHubPrompt = false;
     githubUsernameLocked = true;
     notifyListeners();
@@ -847,6 +1055,11 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', sessionToken);
       await prefs.setString('github_username', githubUsername);
+      await prefs.setString('profile_display_name', username);
+      await prefs.setString('login_timestamp', sessionLoginTimestamp!);
+      if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+        await prefs.setString('github_avatar_url', avatarUrl!);
+      }
       await prefs.setBool('pref_github_locked', true);
     } catch (_) {}
 
@@ -888,8 +1101,9 @@ class AppState extends ChangeNotifier {
       if (response.statusCode == 200) {
         final userData = jsonDecode(response.body);
         final String? linkedUsername = userData['username'];
-        username = userData['name'] ?? 'Alex Johnson';
-        avatarUrl = userData['avatar_url'];
+        username = userData['name'] ?? userData['login'] ?? username;
+        avatarUrl = userData['avatar_url'] ?? avatarUrl;
+        sessionLoginTimestamp = DateTime.now().toIso8601String();
 
         if (linkedUsername != null && linkedUsername.isNotEmpty) {
           githubUsername = linkedUsername;
@@ -898,6 +1112,11 @@ class AppState extends ChangeNotifier {
           try {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('github_username', githubUsername);
+            await prefs.setString('profile_display_name', username);
+            await prefs.setString('login_timestamp', sessionLoginTimestamp!);
+            if (avatarUrl != null && avatarUrl!.isNotEmpty) {
+              await prefs.setString('github_avatar_url', avatarUrl!);
+            }
           } catch (_) {}
 
           fetchGithubData(githubUsername);
@@ -923,16 +1142,15 @@ class AppState extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error fetching user profile: $e');
-      githubUsername = 'alexjohnson';
-      _triggerFallbackFetches();
+      if (token != null) {
+        await _persistSessionSnapshot();
+        _triggerFallbackFetches();
+      }
     }
   }
 
   Future<void> clearSession() async {
-    token = null;
-    githubUsername = 'alexjohnson';
-    avatarUrl = null;
-    showLinkGitHubPrompt = false;
+    _setGuestProfile();
     notifyListeners();
     authStateNotifier.value++;
 
@@ -940,6 +1158,11 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       await prefs.remove('github_username');
+      await prefs.remove('profile_display_name');
+      await prefs.remove('github_avatar_url');
+      await prefs.remove('login_timestamp');
+      await prefs.remove('github_prompts_markdown_cache');
+      await prefs.remove('github_prompts_markdown_updated_at');
       await prefs.remove('dna_response_cache');
       await prefs.remove('dna_cache_timestamp');
       await prefs.remove('roast_response_cache');
@@ -1517,6 +1740,7 @@ class AppState extends ChangeNotifier {
         },
         body: jsonEncode({
           'github_username': githubUsername,
+          'repo_sources': promptRepoSources,
         }),
       );
 

@@ -120,6 +120,21 @@ class TechNews(Base):
     scanned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class PushDevice(Base):
+    __tablename__ = "push_devices"
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid4())
+    )
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), index=True)
+    platform: Mapped[str] = mapped_column(String(32), default="web")
+    token: Mapped[str] = mapped_column(String(1024), unique=True, index=True)
+    device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class PromptHistory(Base):
     __tablename__ = "prompt_histories"
     id: Mapped[str] = mapped_column(
