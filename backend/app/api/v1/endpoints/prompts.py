@@ -531,9 +531,7 @@ async def sync_github_prompts(
             name = (repo.get("name") or "").strip()
             full_name = (repo.get("full_name") or f"{owner}/{name}").strip("/")
             if owner and name:
-                repo_list.append(
-                    {"owner": owner, "name": name, "full_name": full_name}
-                )
+                repo_list.append({"owner": owner, "name": name, "full_name": full_name})
     else:
         # 3. Pre-sync repositories from GitHub to the database to ensure we have the latest list!
         try:
@@ -559,7 +557,11 @@ async def sync_github_prompts(
         if db_repos:
             for repo in db_repos:
                 repo_list.append(
-                    {"owner": repo.owner, "name": repo.name, "full_name": repo.full_name}
+                    {
+                        "owner": repo.owner,
+                        "name": repo.name,
+                        "full_name": repo.full_name,
+                    }
                 )
         else:
             # Fetch public repositories dynamically using GitHub API
@@ -569,14 +571,14 @@ async def sync_github_prompts(
                     headers["Authorization"] = f"Bearer {access_token}"
                 try:
                     # Fetch up to 100 public repositories
-                    api_url = (
-                        f"https://api.github.com/users/{github_username}/repos?per_page=100"
-                    )
+                    api_url = f"https://api.github.com/users/{github_username}/repos?per_page=100"
                     res = await client.get(api_url, headers=headers, timeout=12.0)
                     if res.status_code == 200:
                         repos_data = res.json()
                         for r_data in repos_data:
-                            owner = r_data.get("owner", {}).get("login", github_username)
+                            owner = r_data.get("owner", {}).get(
+                                "login", github_username
+                            )
                             name = r_data.get("name", "")
                             full_name = r_data.get("full_name", f"{owner}/{name}")
                             repo_list.append(
@@ -587,12 +589,15 @@ async def sync_github_prompts(
                             f"Failed to fetch public repos for {github_username}: {res.status_code} {res.text}"
                         )
                 except Exception as e:
-                    logger.error(f"Error fetching public repos for {github_username}: {e}")
-
+                    logger.error(
+                        f"Error fetching public repos for {github_username}: {e}"
+                    )
     if not repo_list:
         return {
             "success": True,
-            "message": f"No repositories found for GitHub user '{github_username}' to scan.",
+            "message": (
+                f"No repositories found for GitHub user '{github_username}' to scan."
+            ),
             "imported_count": 0,
         }
 
