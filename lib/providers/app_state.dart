@@ -983,6 +983,133 @@ This is simulated offline prompts.md content.
     notifyListeners();
 
     try {
+      // 1. Try to fetch through backend public-stats proxy to bypass client-side CORS issues
+      try {
+        final backendUri = Uri.parse('${AppConfig.apiBaseUrl}/github/public-stats/$ghUsername');
+        final response = await http.get(backendUri);
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          username = data['name'] ?? data['login'] ?? username;
+          repos = data['public_repos'] ?? 0;
+          avatarUrl = data['avatar_url'];
+          final int totalStars = data['total_stars'] ?? 0;
+          final int commitsCount = data['total_commits'] ?? 0;
+          final List<dynamic> reposData = data['repos'] ?? [];
+
+          List<Repository> newRepos = [];
+          Map<String, int> langCounts = {};
+
+          for (var r in reposData) {
+            final String? lang = r['language'];
+            if (lang != null && lang.isNotEmpty) {
+              langCounts[lang] = (langCounts[lang] ?? 0) + 1;
+            }
+
+            newRepos.add(Repository(
+              name: r['name'] ?? '',
+              owner: r['owner']?['login'] ?? '',
+              description: r['description'] ?? 'No description provided.',
+              difficulty: (r['stargazers_count'] as num) > 50 ? 'Advanced' : ((r['stargazers_count'] as num) > 5 ? 'Intermediate' : 'Beginner'),
+              impactScore: ((r['stargazers_count'] as num) * 5 + 40).clamp(40, 100).toInt(),
+              tags: lang != null ? [lang] : ['Repo'],
+              whyRecommended: 'Based on your GitHub activity and repository engagement.',
+            ));
+          }
+
+          stars = totalStars;
+          commits = commitsCount > 0 ? commitsCount : (reposData.length * 15);
+
+          if (newRepos.isNotEmpty) {
+            allRepositories = newRepos;
+          }
+
+          // Calculate dynamic Developer Score with real commits
+          developerScore = double.parse(((totalStars * 0.2 + reposData.length * 0.3 + commits * 0.01 + 3.0).clamp(1.0, 10.0)).toStringAsFixed(1));
+
+          // Determine strengths and gaps dynamically
+          strengths = [];
+          gaps = [];
+
+          if (totalStars > 10) {
+            strengths.add('Popular repositories (Total stars: $totalStars)');
+          } else {
+            gaps.add('Increase repo visibility and stargazers');
+          }
+
+          bool hasBackend = false;
+          bool hasFrontend = false;
+          for (var lang in langCounts.keys) {
+            final l = lang.toLowerCase();
+            if (l == 'typescript' || l == 'javascript' || l == 'html' || l == 'css' || l == 'dart') {
+              hasFrontend = true;
+            }
+            if (l == 'go' || l == 'rust' || l == 'python' || l == 'java' || l == 'c#' || l == 'ruby') {
+              hasBackend = true;
+            }
+          }
+
+          if (hasBackend) {
+            strengths.add('Solid backend development knowledge');
+          } else {
+            gaps.add('Backend experience is holding back your score');
+          }
+
+          if (hasFrontend) {
+            strengths.add('Strong UI/frontend development foundation');
+          } else {
+            gaps.add('Lack of frontend/UI application projects');
+          }
+
+          if (strengths.isEmpty) {
+            strengths.add('Clean repository setup');
+          }
+          if (gaps.isEmpty) {
+            gaps.add('Learn system architecture & cloud deployment');
+          }
+
+          // Dynamically update milestones based on languages
+          if (langCounts.isNotEmpty) {
+            final sortedLangs = langCounts.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+            final primaryLang = sortedLangs.first.key;
+
+            milestones = [
+              RoadmapMilestone(
+                title: 'Master $primaryLang Core & Patterns',
+                description: 'Completed',
+                isCompleted: true,
+              ),
+              RoadmapMilestone(
+                title: 'Build Distributed Systems with $primaryLang',
+                description: 'In Progress',
+                isCompleted: false,
+              ),
+              RoadmapMilestone(
+                title: 'CI/CD Pipelines & Automated Testing',
+                description: 'Next — 1 month',
+                isCompleted: false,
+              ),
+              RoadmapMilestone(
+                title: 'System Design & Scalability',
+                description: 'Next — 3 months',
+                isCompleted: false,
+              ),
+              RoadmapMilestone(
+                title: 'Deploy to Cloud & Production Monitoring',
+                description: 'Next — 5 months',
+                isCompleted: false,
+              ),
+            ];
+          }
+          isLoading = false;
+          notifyListeners();
+          return;
+        }
+      } catch (e) {
+        debugPrint('Backend public-stats proxy failed, using direct fallback: $e');
+      }
+
+      // 2. Fallback to direct HTTP calls (works on mobile/desktop, fails gracefully on Web)
       int commitsCount = 0;
       final commitsUri = Uri.parse('https://api.github.com/search/commits?q=author:$ghUsername');
       try {
