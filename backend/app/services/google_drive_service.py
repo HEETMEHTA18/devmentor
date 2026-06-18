@@ -67,7 +67,7 @@ class GoogleDriveService:
         Falls back to local file sync if Google integration is not authenticated.
         """
         is_pdf = filename.lower().endswith(".pdf")
-        
+
         # Save to local google_drive_sync folder in the workspace first
         workspace_dir = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -75,9 +75,10 @@ class GoogleDriveService:
         sync_dir = os.path.join(workspace_dir, "google_drive_sync")
         os.makedirs(sync_dir, exist_ok=True)
         file_path = os.path.join(sync_dir, filename)
-        
+
         if is_pdf:
             from app.services.pdf_generator_service import PDFGeneratorService
+
             try:
                 upload_bytes = PDFGeneratorService.markdown_to_pdf(content)
             except Exception as e:
@@ -124,10 +125,14 @@ class GoogleDriveService:
             body = (
                 b"\r\n--" + boundary + b"\r\n"
                 b"Content-Type: application/json; charset=UTF-8\r\n\r\n"
-                + json.dumps(metadata).encode("utf-8") + b"\r\n"
-                b"--" + boundary + b"\r\n"
+                + json.dumps(metadata).encode("utf-8")
+                + b"\r\n"
+                b"--"
+                + boundary
+                + b"\r\n"
                 + f"Content-Type: {mime_type}\r\n\r\n".encode()
-                + upload_bytes + b"\r\n"
+                + upload_bytes
+                + b"\r\n"
                 b"--" + boundary + b"--\r\n"
             )
             async with httpx.AsyncClient() as client:
