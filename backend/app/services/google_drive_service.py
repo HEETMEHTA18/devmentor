@@ -58,6 +58,59 @@ class GoogleDriveService:
         return profile.access_token
 
     @classmethod
+    async def get_or_create_resumes_folder(cls, access_token: str) -> str | None:
+        """
+        Retrieves the folder ID for 'resumes_devmentor', creating it if it doesn't exist.
+        """
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        folder_name = "resumes_devmentor"
+
+        # 1. Search for existing folder
+        try:
+            query = f"mimeType = 'application/vnd.google-apps.folder' and name = '{folder_name}' and trashed = false"
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://www.googleapis.com/drive/v3/files",
+                    params={"q": query, "fields": "files(id)"},
+                    headers=headers,
+                    timeout=10.0,
+                )
+                if response.status_code == 200:
+                    files = response.json().get("files", [])
+                    if files:
+                        return files[0]["id"]
+        except Exception as e:
+            logger.error(
+                f"Error searching for '{folder_name}' folder in Google Drive: {e}"
+            )
+
+        # 2. Create the folder if it wasn't found
+        try:
+            folder_metadata = {
+                "name": folder_name,
+                "mimeType": "application/vnd.google-apps.folder",
+            }
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://www.googleapis.com/drive/v3/files",
+                    headers=headers,
+                    json=folder_metadata,
+                    timeout=10.0,
+                )
+                if response.status_code == 200:
+                    return response.json().get("id")
+                else:
+                    logger.error(
+                        f"Failed to create Google Drive folder: {response.status_code} - {response.text}"
+                    )
+        except Exception as e:
+            logger.error(f"Error creating '{folder_name}' folder in Google Drive: {e}")
+
+        return None
+
+    @classmethod
     async def upload_file_to_drive(
         cls, user_id: str, filename: str, content: str, db: Session
     ) -> dict:
@@ -77,9 +130,9 @@ class GoogleDriveService:
         file_path = os.path.join(sync_dir, filename)
 
         if is_pdf:
-            from app.services.pdf_generator_service import PDFGeneratorService
-
             try:
+                from app.services.pdf_generator_service import PDFGeneratorService
+
                 upload_bytes = PDFGeneratorService.markdown_to_pdf(content)
             except Exception as e:
                 logger.error(f"Failed to generate PDF: {e}")
@@ -114,9 +167,14 @@ class GoogleDriveService:
                 "synced_at": "Just now (local)",
             }
 
+        # Resolve resumes_devmentor folder
+        folder_id = await cls.get_or_create_resumes_folder(access_token)
+
         try:
             mime_type = "application/pdf" if is_pdf else "text/markdown"
             metadata = {"name": filename, "mimeType": mime_type}
+            if folder_id:
+                metadata["parents"] = [folder_id]
             boundary = b"google_drive_upload_boundary_devmentor"
             headers = {
                 "Authorization": f"Bearer {access_token}",
