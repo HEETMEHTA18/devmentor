@@ -450,45 +450,45 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
             ),
             bottomNavigationBar: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(38),
+                    borderRadius: BorderRadius.circular(28),
                     boxShadow: [
+                      // Deep ambient shadow
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
-                        blurRadius: 24,
-                        offset: const Offset(0, 10),
+                        color: Colors.black.withValues(alpha: isDark ? 0.50 : 0.12),
+                        blurRadius: 32,
+                        offset: const Offset(0, 12),
+                        spreadRadius: -4,
+                      ),
+                      // Tight shadow for depth
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(38),
+                    borderRadius: BorderRadius.circular(28),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(
-                        sigmaX: isMobileBrowser ? 0.0 : (isDark ? 20.0 : 15.0),
-                        sigmaY: isMobileBrowser ? 0.0 : (isDark ? 20.0 : 15.0),
+                        sigmaX: isMobileBrowser ? 0.0 : (isDark ? 40.0 : 30.0),
+                        sigmaY: isMobileBrowser ? 0.0 : (isDark ? 40.0 : 30.0),
                       ),
                       child: Container(
-                        height: 76,
+                        height: 68,
                         decoration: BoxDecoration(
-                          color: (isDark ? Colors.black : Colors.white).withValues(
-                            alpha: isMobileBrowser ? 0.90 : (isDark ? 0.18 : 0.22),
-                          ),
-                          borderRadius: BorderRadius.circular(38),
+                          color: isMobileBrowser
+                              ? (isDark ? const Color(0xFF1C1C1E) : Colors.white).withValues(alpha: 0.92)
+                              : (isDark ? const Color(0xFF1C1C1E) : Colors.white).withValues(alpha: isDark ? 0.25 : 0.55),
+                          borderRadius: BorderRadius.circular(28),
                           border: Border.all(
                             color: Colors.white.withValues(
-                              alpha: isMobileBrowser ? 0.20 : (isDark ? 0.15 : 0.25),
+                              alpha: isMobileBrowser ? 0.12 : (isDark ? 0.18 : 0.45),
                             ),
-                            width: 1.5,
-                          ),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Colors.white.withValues(alpha: isDark ? 0.12 : 0.25),
-                              Colors.white.withValues(alpha: isDark ? 0.03 : 0.08),
-                            ],
+                            width: 0.5,
                           ),
                         ),
                         child: LayoutBuilder(
@@ -497,55 +497,50 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                             final itemWidth = totalWidth / 5;
                             return Stack(
                               children: [
-                                // Sliding Glass Pill Indicator
+                                // iOS Liquid Glass Pill Indicator
                                 AnimatedPositioned(
-                                  duration: const Duration(milliseconds: 380),
-                                  curve: Curves.easeOutBack,
-                                  left: _selectedIndex * itemWidth + 8,
-                                  top: 10,
-                                  bottom: 10,
-                                  width: itemWidth - 16,
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.easeOutCubic,
+                                  left: _selectedIndex * itemWidth + 6,
+                                  top: 6,
+                                  bottom: 6,
+                                  width: itemWidth - 12,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          AppTheme.accent.withValues(alpha: isDark ? 0.35 : 0.22),
-                                          AppTheme.accent.withValues(alpha: isDark ? 0.15 : 0.08),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(28),
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.12)
+                                          : Colors.white.withValues(alpha: 0.70),
+                                      borderRadius: BorderRadius.circular(22),
                                       border: Border.all(
-                                        color: Colors.white.withValues(alpha: isDark ? 0.40 : 0.50),
-                                        width: 1.5,
+                                        color: Colors.white.withValues(alpha: isDark ? 0.20 : 0.60),
+                                        width: 0.5,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppTheme.accent.withValues(alpha: isDark ? 0.45 : 0.20),
-                                          blurRadius: 14,
-                                          spreadRadius: -1,
+                                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
                                         ),
+                                        // Inner specular glow
                                         BoxShadow(
-                                          color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.25),
-                                          blurRadius: 4,
-                                          offset: const Offset(-2, -2),
-                                          spreadRadius: 0,
+                                          color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.30),
+                                          blurRadius: 1,
+                                          spreadRadius: -1,
                                         ),
                                       ],
                                     ),
                                   ),
                                 ),
-                                // The Items on Top
+                                // Nav Items
                                 Positioned.fill(
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
-                                      _buildNavItem(0, 'HOME', Icons.grid_view_rounded, itemWidth),
-                                      _buildNavItem(1, 'EXPLORE', Icons.explore_outlined, itemWidth),
-                                      _buildNavItem(2, 'PROMPTS', Icons.psychology_outlined, itemWidth),
-                                      _buildNavItem(3, 'ROADMAP', Icons.route_outlined, itemWidth),
-                                      _buildNavItem(4, 'SETTINGS', Icons.settings_outlined, itemWidth),
+                                      _buildNavItem(0, 'Home', Icons.home_rounded, itemWidth),
+                                      _buildNavItem(1, 'Explore', Icons.explore_rounded, itemWidth),
+                                      _buildNavItem(2, 'Prompts', Icons.auto_awesome_rounded, itemWidth),
+                                      _buildNavItem(3, 'Roadmap', Icons.route_rounded, itemWidth),
+                                      _buildNavItem(4, 'Settings', Icons.settings_rounded, itemWidth),
                                     ],
                                   ),
                                 ),
@@ -570,45 +565,37 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
     final isSelected = _selectedIndex == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return InkWell(
+    return GestureDetector(
       onTap: () => _onTabSelected(index),
-      borderRadius: BorderRadius.circular(28),
-      highlightColor: Colors.transparent,
-      splashColor: AppTheme.accent.withValues(alpha: 0.08),
-      child: Container(
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
         width: width,
-        height: 76,
-        alignment: Alignment.center,
+        height: 68,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedScale(
-              scale: isSelected ? 1.22 : 0.90,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.elasticOut,
+              scale: isSelected ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
               child: Icon(
                 icon,
                 color: isSelected
-                    ? (isDark ? Colors.white : AppTheme.accent)
-                    : (isDark ? Colors.white70 : AppTheme.textSecondary).withValues(alpha: 0.6),
-                size: 24,
+                    ? (isDark ? Colors.white : const Color(0xFF007AFF))
+                    : (isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93)),
+                size: 22,
               ),
             ),
-            const SizedBox(height: 4),
-            AnimatedScale(
-              scale: isSelected ? 1.05 : 0.95,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.elasticOut,
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'JetBrains Mono',
-                  fontSize: 9,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected
-                      ? (isDark ? Colors.white : AppTheme.accent)
-                      : (isDark ? Colors.white70 : AppTheme.textSecondary).withValues(alpha: 0.6),
-                ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'SF Pro Text',
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? (isDark ? Colors.white : const Color(0xFF007AFF))
+                    : (isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93)),
               ),
             ),
           ],
