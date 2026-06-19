@@ -200,8 +200,14 @@ def test_autodev_session_telemetry_flow():
 def test_research_github_search():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("subprocess.run") as mock_run, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
-        mock_run.return_value = MagicMock(returncode=0, stdout='[{"fullName": "test/repo", "description": "Test description", "stargazersCount": 5, "url": "https://github.com/test/repo"}]')
+
+    with patch("subprocess.run") as mock_run, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout='[{"fullName": "test/repo", "description": "Test description", "stargazersCount": 5, "url": "https://github.com/test/repo"}]',
+        )
         mock_gemini.return_value = "AI analysis summary"
 
         response = client.post(
@@ -220,8 +226,13 @@ def test_research_github_search():
 def test_research_github_url():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("httpx.AsyncClient.get") as mock_get, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
-        mock_get.return_value = MagicMock(status_code=200, text="Mock scraped repo contents")
+
+    with patch("httpx.AsyncClient.get") as mock_get, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
+        mock_get.return_value = MagicMock(
+            status_code=200, text="Mock scraped repo contents"
+        )
         mock_gemini.return_value = "AI repo summary"
 
         response = client.post(
@@ -239,10 +250,19 @@ def test_research_github_url():
 def test_research_youtube():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("subprocess.run") as mock_run, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini, patch("os.path.exists", return_value=True), patch("builtins.open", create=True) as mock_open:
-        mock_run.return_value = MagicMock(returncode=0, stdout='{"title": "Test Title", "description": "Test Desc"}')
+
+    with patch("subprocess.run") as mock_run, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini, patch("os.path.exists", return_value=True), patch(
+        "builtins.open", create=True
+    ) as mock_open:
+        mock_run.return_value = MagicMock(
+            returncode=0, stdout='{"title": "Test Title", "description": "Test Desc"}'
+        )
         mock_gemini.return_value = "AI youtube summary"
-        mock_open.return_value.__enter__.return_value.read.return_value = "WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nHello YouTube"
+        mock_open.return_value.__enter__.return_value.read.return_value = (
+            "WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nHello YouTube"
+        )
 
         response = client.post(
             "/api/v1/research/youtube",
@@ -258,8 +278,13 @@ def test_research_youtube():
 def test_research_reddit():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("httpx.AsyncClient.get") as mock_get, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
-        mock_get.return_value = MagicMock(status_code=200, text="Mock scraped Reddit contents")
+
+    with patch("httpx.AsyncClient.get") as mock_get, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
+        mock_get.return_value = MagicMock(
+            status_code=200, text="Mock scraped Reddit contents"
+        )
         mock_gemini.return_value = "AI reddit summary"
 
         response = client.post(
@@ -277,9 +302,17 @@ def test_research_reddit():
 def test_research_rss():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("feedparser.parse") as mock_parse, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
+
+    with patch("feedparser.parse") as mock_parse, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
         mock_entry = MagicMock()
-        mock_entry.get.side_effect = lambda k, default=None: {"title": "Test Feed Entry", "link": "https://example.com/entry", "published": "2026-06-19", "summary": "Sample summary"}.get(k, default)
+        mock_entry.get.side_effect = lambda k, default=None: {
+            "title": "Test Feed Entry",
+            "link": "https://example.com/entry",
+            "published": "2026-06-19",
+            "summary": "Sample summary",
+        }.get(k, default)
         mock_parse.return_value = MagicMock(entries=[mock_entry])
         mock_gemini.return_value = "AI rss summary"
 
@@ -298,8 +331,14 @@ def test_research_rss():
 def test_research_project_analysis():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("subprocess.run") as mock_run, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
-        mock_run.return_value = MagicMock(returncode=0, stdout='[{"fullName": "test/repo", "description": "Test description", "stargazersCount": 5, "url": "https://github.com/test/repo"}]')
+
+    with patch("subprocess.run") as mock_run, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout='[{"fullName": "test/repo", "description": "Test description", "stargazersCount": 5, "url": "https://github.com/test/repo"}]',
+        )
         mock_gemini.return_value = "AI project plan"
 
         response = client.post(
@@ -317,8 +356,14 @@ def test_research_project_analysis():
 def test_research_learning_path():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("subprocess.run") as mock_run, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
-        mock_run.return_value = MagicMock(returncode=0, stdout='[{"fullName": "test/repo", "description": "Test description", "stargazersCount": 5, "url": "https://github.com/test/repo"}]')
+
+    with patch("subprocess.run") as mock_run, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout='[{"fullName": "test/repo", "description": "Test description", "stargazersCount": 5, "url": "https://github.com/test/repo"}]',
+        )
         mock_gemini.return_value = "AI learning guide"
 
         response = client.post(
@@ -336,7 +381,10 @@ def test_research_learning_path():
 def test_research_digest():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
-    with patch("feedparser.parse") as mock_parse, patch("app.api.v1.endpoints.research.call_gemini") as mock_gemini:
+
+    with patch("feedparser.parse") as mock_parse, patch(
+        "app.api.v1.endpoints.research.call_gemini"
+    ) as mock_gemini:
         mock_parse.return_value = MagicMock(entries=[])
         mock_gemini.return_value = "AI general updates digest"
 
