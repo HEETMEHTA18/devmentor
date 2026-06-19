@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/config/app_config.dart';
 
 import 'package:provider/provider.dart';
@@ -105,6 +106,7 @@ class HomeScreen extends StatelessWidget {
                 _buildDnaSection(context, appState),
                 _buildWeeklyReportSection(context, appState),
                 _buildRoastSection(context, appState),
+                _buildAgentDigestSection(context, appState),
                 const SizedBox(height: 32),
                 _buildSectionHeader(context, 'AI Insights', onSeeAll: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1405,7 +1407,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                  )).toList(),
+                  )),
                 ],
               ],
             ],
@@ -1413,6 +1415,364 @@ class HomeScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  // ─────────────────────────────────────────────────
+  // 24/7 AI Research Agent — Digest Section
+  // ─────────────────────────────────────────────────
+  Widget _buildAgentDigestSection(BuildContext context, AppState state) {
+    final digest = state.whatsNewDigest;
+    final isDark = AppTheme.isDark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        // Section Header
+        Row(
+          children: [
+            // Animated pulse dot
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.4, end: 1.0),
+              duration: const Duration(seconds: 1),
+              curve: Curves.easeInOut,
+              builder: (context, value, child) => Opacity(
+                opacity: value,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppTheme.success,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: AppTheme.success.withValues(alpha: 0.6), blurRadius: 6, spreadRadius: 1),
+                    ],
+                  ),
+                ),
+              ),
+              onEnd: () {},
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '24/7 AI RESEARCH AGENT',
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.success,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => state.fetchWhatsNewDigest(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppTheme.success.withValues(alpha: 0.4)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.refresh_rounded, size: 12, color: AppTheme.success),
+                    const SizedBox(width: 4),
+                    Text(
+                      'REFRESH',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.success,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (state.isLoadingWhatsNewDigest)
+          GlassCard(
+            borderRadius: 20,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.success),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Agent scanning GitHub & YouTube…',
+                      style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else if (digest == null)
+          GestureDetector(
+            onTap: () => state.fetchWhatsNewDigest(),
+            child: GlassCard(
+              borderRadius: 20,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(Icons.radar_rounded, color: AppTheme.accent, size: 26),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Agent Ready',
+                            style: GoogleFonts.outfit(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textMain,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Tap to fetch the latest GitHub & YouTube tech digest',
+                            style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppTheme.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          GlassCard(
+            borderRadius: 20,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // AI Digest Summary
+                  if ((digest['digest'] as String? ?? '').isNotEmpty) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.auto_awesome_rounded, size: 14, color: AppTheme.accent),
+                        const SizedBox(width: 6),
+                        Text(
+                          'AI SUMMARY',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.accent,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0x0AFFFFFF) : const Color(0x08000000),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTheme.border.withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        digest['digest'] as String,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: AppTheme.textMain,
+                          height: 1.55,
+                        ),
+                        maxLines: 6,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // GitHub Trending
+                  if ((digest['github'] as List?)?.isNotEmpty == true) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.code_rounded, size: 14, color: AppTheme.textSecondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'TRENDING ON GITHUB',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ...((digest['github'] as List).take(3).map((item) {
+                      final repo = item as Map<String, dynamic>;
+                      return GestureDetector(
+                        onTap: () async {
+                          final url = Uri.tryParse(repo['url'] as String? ?? '');
+                          if (url != null) await launchUrl(url, mode: LaunchMode.externalApplication);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0x0DFFFFFF) : const Color(0x06000000),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.border.withValues(alpha: 0.15)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.star_rounded, size: 14, color: AppTheme.peach),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${repo['stars'] ?? 0}',
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.peach,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  '${repo['owner']}/${repo['name']}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textMain,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Icon(Icons.open_in_new_rounded, size: 13, color: AppTheme.textSecondary),
+                            ],
+                          ),
+                        ),
+                      );
+                    })),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // YouTube Trending
+                  if ((digest['youtube'] as List?)?.isNotEmpty == true) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.play_circle_outline_rounded, size: 14, color: AppTheme.destructive),
+                        const SizedBox(width: 6),
+                        Text(
+                          'TRENDING ON YOUTUBE',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ...((digest['youtube'] as List).take(3).map((item) {
+                      final video = item as Map<String, dynamic>;
+                      return GestureDetector(
+                        onTap: () async {
+                          final url = Uri.tryParse(video['url'] as String? ?? '');
+                          if (url != null) await launchUrl(url, mode: LaunchMode.externalApplication);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0x0DFFFFFF) : const Color(0x06000000),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.border.withValues(alpha: 0.15)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.play_arrow_rounded, size: 16, color: AppTheme.destructive),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      video['title'] as String? ?? '',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppTheme.textMain,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      video['channel'] as String? ?? '',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.open_in_new_rounded, size: 13, color: AppTheme.textSecondary),
+                            ],
+                          ),
+                        ),
+                      );
+                    })),
+                  ],
+
+                  // Timestamp
+                  if ((digest['timestamp'] as String?) != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Last updated: ${_formatTimestamp(digest['timestamp'] as String)}',
+                      style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatTimestamp(String iso) {
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      final now = DateTime.now();
+      final diff = now.difference(dt);
+      if (diff.inMinutes < 1) return 'Just now';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      return '${diff.inDays}d ago';
+    } catch (_) {
+      return iso;
+    }
   }
 
   Widget _buildRoastSection(BuildContext context, AppState state) {

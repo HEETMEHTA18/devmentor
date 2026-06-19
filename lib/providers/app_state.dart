@@ -9,6 +9,7 @@ import '../models/mentor_message.dart';
 import '../core/config/app_config.dart';
 import '../models/prompt_item.dart';
 import '../utils/cookie_manager.dart';
+import '../core/utils/web_helper.dart' as web_helper;
 
 
 class AppState extends ChangeNotifier {
@@ -59,6 +60,14 @@ class AppState extends ChangeNotifier {
       twoFactorAuth = prefs.getBool('pref_2fa') ?? false;
       githubUsernameLocked = prefs.getBool('pref_github_locked') ?? false;
 
+      // Immediately load cached GitHub statistics to avoid mock/zero flashes on app reopen
+      commits = prefs.getInt('cached_commits') ?? 0;
+      stars = prefs.getInt('cached_stars') ?? 0;
+      repos = prefs.getInt('cached_repos') ?? 0;
+      developerScore = prefs.getDouble('cached_developer_score') ?? 0.0;
+      strengths = prefs.getStringList('cached_strengths') ?? [];
+      gaps = prefs.getStringList('cached_gaps') ?? [];
+
       if (storedToken != null && storedToken.isNotEmpty) {
         token = storedToken;
         if (storedUsername != null && storedUsername.isNotEmpty) {
@@ -74,10 +83,18 @@ class AppState extends ChangeNotifier {
         }
         sessionLoginTimestamp = storedLoginTimestamp;
         await fetchUserProfile();
+        await fetchWhatsNewDigest();
       } else {
         _setGuestProfile();
         _triggerFallbackFetches();
       }
+      await fetchWhatsNewDigest();
+      try {
+        final cachedWhatsNew = prefs.getString('whats_new_digest_cache');
+        if (cachedWhatsNew != null) {
+          whatsNewDigest = jsonDecode(cachedWhatsNew);
+        }
+      } catch (_) {}
       await loadCachedGithubPromptsMarkdown();
       await loadPromptRepoSources();
       await loadChatHistory();
@@ -94,11 +111,25 @@ class AppState extends ChangeNotifier {
 
   void _setGuestProfile() {
     token = null;
-    username = 'Alex Johnson';
-    githubUsername = 'alexjohnson';
-    avatarUrl = null;
+    // Preserve any real username/avatar that was restored from cache/cookie
+    // Only fall back to a placeholder if there's no cached identity at all
+    if (username.isEmpty) username = 'Developer';
+    if (githubUsername.isEmpty) githubUsername = '';
+    avatarUrl = avatarUrl;
     sessionLoginTimestamp = null;
     showLinkGitHubPrompt = false;
+  }
+
+  Future<void> _saveCachedGithubStats() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('cached_commits', commits);
+      await prefs.setInt('cached_stars', stars);
+      await prefs.setInt('cached_repos', repos);
+      await prefs.setDouble('cached_developer_score', developerScore);
+      await prefs.setStringList('cached_strengths', strengths);
+      await prefs.setStringList('cached_gaps', gaps);
+    } catch (_) {}
   }
 
   Future<void> _persistSessionSnapshot() async {
@@ -357,8 +388,10 @@ This is simulated offline prompts.md content.
   }
 
   void _triggerFallbackFetches() {
-    fetchGithubData(githubUsername);
-    fetchFollowingActivity();
+    if (githubUsername.isNotEmpty) {
+      fetchGithubData(githubUsername);
+      fetchFollowingActivity();
+    }
     if (token == null) return;
     fetchActivityData();
     fetchDeveloperDna();
@@ -494,6 +527,10 @@ This is simulated offline prompts.md content.
   // Weekly Tech News Digest Cache
   String? weeklyTechDigest;
   bool isLoadingTechDigest = false;
+
+  // 24/7 Research Agent Whats New
+  Map<String, dynamic>? whatsNewDigest;
+  bool isLoadingWhatsNewDigest = false;
 
 
   // Notifications List & Methods
@@ -1140,6 +1177,7 @@ This is simulated offline prompts.md content.
             ];
           }
           isLoading = false;
+          await _saveCachedGithubStats();
           notifyListeners();
           return;
         }
@@ -1295,6 +1333,7 @@ This is simulated offline prompts.md content.
       debugPrint('Error fetching GitHub data: $e');
     } finally {
       isLoading = false;
+      await _saveCachedGithubStats();
       notifyListeners();
     }
   }
@@ -1350,6 +1389,7 @@ This is simulated offline prompts.md content.
             debugPrint('Error parsing sync response: $parseError');
           }
 
+          await _saveCachedGithubStats();
           notifyListeners();
           
           await fetchActivityData();
@@ -1519,6 +1559,7 @@ This is simulated offline prompts.md content.
                 developerScore = (details['developer_score'] as num).toDouble();
               }
               debugPrint('Profile sync metrics: stars=$stars, commits=$commits, repos=$repos, score=$developerScore');
+              await _saveCachedGithubStats();
               notifyListeners();
             }
           } catch (syncErr) {
@@ -1559,6 +1600,13 @@ This is simulated offline prompts.md content.
 
   Future<void> clearSession() async {
     _setGuestProfile();
+    // Clear in-memory cached stats as well
+    commits = 0;
+    stars = 0;
+    repos = 0;
+    developerScore = 0.0;
+    strengths = [];
+    gaps = [];
     notifyListeners();
     authStateNotifier.value++;
 
@@ -1577,6 +1625,12 @@ This is simulated offline prompts.md content.
       await prefs.remove('roast_cache_timestamp');
       await prefs.remove('weekly_report_response_cache');
       await prefs.remove('weekly_report_cache_timestamp');
+      await prefs.remove('cached_commits');
+      await prefs.remove('cached_stars');
+      await prefs.remove('cached_repos');
+      await prefs.remove('cached_developer_score');
+      await prefs.remove('cached_strengths');
+      await prefs.remove('cached_gaps');
 
       deleteCookie('auth_token');
       deleteCookie('github_username');
@@ -2739,6 +2793,70 @@ This is simulated offline prompts.md content.
       researchError = e.toString();
     } finally {
       isResearching = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchWhatsNewDigest() async {
+    isLoadingWhatsNewDigest = true;
+    notifyListeners();
+
+    // 1. Immediately serve from cached data so UI never shows empty
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedRaw = prefs.getString('whats_new_digest_cache');
+      if (cachedRaw != null && whatsNewDigest == null) {
+        whatsNewDigest = jsonDecode(cachedRaw);
+        notifyListeners();
+      }
+    } catch (_) {}
+
+    // 2. Fetch fresh digest from backend (no token required — endpoint is public)
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConfig.apiBaseUrl}/research/whats-new'),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        whatsNewDigest = data;
+
+        // Check if we should trigger a push notification
+        final digestText = data['digest'] ?? '';
+        final prefs = await SharedPreferences.getInstance();
+        final lastDigest = prefs.getString('last_whats_new_digest');
+
+        if (digestText.isNotEmpty && digestText != lastDigest) {
+          await prefs.setString('last_whats_new_digest', digestText);
+
+          // Add to local notifications list
+          notifications.insert(0, {
+            'id': 'whats_new_${DateTime.now().millisecondsSinceEpoch}',
+            'title': 'New GitHub & YouTube Digest',
+            'body': 'Your 24/7 Agent found new trends. Click to view.',
+            'timestamp': DateTime.now(),
+            'isRead': false,
+            'type': 'whats_new',
+            'extraData': data,
+          });
+
+          // Show browser notification if supported
+          web_helper.showBrowserNotification(
+            'New GitHub & YouTube Digest',
+            'Your 24/7 Agent found new trends. Click to view.',
+          );
+        }
+
+        // Cache the latest response in SharedPreferences
+        await prefs.setString('whats_new_digest_cache', jsonEncode(data));
+      }
+    } catch (e) {
+      debugPrint('Error fetching whats new digest: $e');
+    } finally {
+      isLoadingWhatsNewDigest = false;
       notifyListeners();
     }
   }

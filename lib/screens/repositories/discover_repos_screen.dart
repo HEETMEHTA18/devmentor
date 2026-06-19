@@ -8,6 +8,7 @@ import '../../widgets/animated_copy_button.dart';
 import '../../providers/app_state.dart';
 import '../../models/repository.dart';
 import '../mentor/mentor_chat_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DiscoverReposScreen extends StatefulWidget {
   const DiscoverReposScreen({super.key});
@@ -349,13 +350,15 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
   }
 
   Widget _buildActivityCard(BuildContext context, Map<String, dynamic> event, bool isDark) {
-    final actor = event['actor'] ?? {};
-    final repo = event['repo'] ?? {};
-    final type = event['type'] ?? 'PushEvent';
-    final action = event['action'] ?? '';
-    final title = event['title'] ?? 'Activity';
-    final body = event['body'] ?? '';
-    final createdAtStr = event['created_at'] ?? '';
+    final String actorLogin = event['actor_name'] ?? (event['actor']?['login'] ?? 'Unknown');
+    final String actorAvatar = event['actor_avatar'] ?? (event['actor']?['avatar_url'] ?? '');
+    final String repoName = event['repo_name'] ?? (event['repo']?['name'] ?? 'Unknown Repo');
+    final String eventType = event['type'] ?? 'PushEvent';
+    final String actionType = event['action_type'] ?? '';
+    final String action = event['action'] ?? '';
+    final String title = event['title'] ?? 'Activity';
+    final String body = event['description'] ?? (event['body'] ?? '');
+    final String createdAtStr = event['created_at'] ?? '';
 
     DateTime? date;
     if (createdAtStr.isNotEmpty) {
@@ -374,14 +377,27 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       }
     }
 
+    // Build redirection URL dynamically
+    String targetUrl = 'https://github.com';
+    if (repoName.isNotEmpty && repoName != 'Unknown Repo') {
+      targetUrl = 'https://github.com/$repoName';
+      final issueMatch = RegExp(r'issue #(\d+)').firstMatch(title);
+      final prMatch = RegExp(r'pull request #(\d+)').firstMatch(title);
+      if (issueMatch != null) {
+        targetUrl = 'https://github.com/$repoName/issues/${issueMatch.group(1)}';
+      } else if (prMatch != null) {
+        targetUrl = 'https://github.com/$repoName/pull/${prMatch.group(1)}';
+      }
+    }
+
     // Event type styling
     IconData eventIcon = Icons.commit_rounded;
     String typeLabel = 'pushed to';
     Color badgeColor = const Color(0xFF8957E5);
     String badgeLabel = 'Push';
 
-    if (type == 'PullRequestEvent') {
-      if (action == 'merged') {
+    if (eventType == 'PullRequestEvent' || actionType == 'pr') {
+      if (action == 'merged' || title.toLowerCase().contains('merged')) {
         typeLabel = 'merged a PR in';
         eventIcon = Icons.merge_rounded;
         badgeColor = const Color(0xFF8957E5);
@@ -392,16 +408,36 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         badgeColor = const Color(0xFF3FB950);
         badgeLabel = 'Open';
       }
-    } else if (type == 'ReleaseEvent') {
+    } else if (eventType == 'ReleaseEvent' || actionType == 'release') {
       typeLabel = 'published a release for';
       eventIcon = Icons.new_releases_rounded;
       badgeColor = const Color(0xFFFF9500);
       badgeLabel = 'Release';
-    } else if (type == 'WatchEvent') {
+    } else if (eventType == 'WatchEvent' || actionType == 'star') {
       typeLabel = 'starred';
       eventIcon = Icons.star_rounded;
       badgeColor = const Color(0xFFE3B341);
       badgeLabel = 'Star';
+    } else if (eventType == 'IssueCommentEvent' || actionType == 'comment') {
+      typeLabel = 'commented in';
+      eventIcon = Icons.comment_rounded;
+      badgeColor = const Color(0xFF007AFF);
+      badgeLabel = 'Comment';
+    } else if (eventType == 'IssuesEvent' || actionType == 'issue') {
+      typeLabel = 'updated an issue in';
+      eventIcon = Icons.info_outline_rounded;
+      badgeColor = const Color(0xFFFF453A);
+      badgeLabel = 'Issue';
+    } else if (eventType == 'ForkEvent' || actionType == 'fork') {
+      typeLabel = 'forked';
+      eventIcon = Icons.fork_right_rounded;
+      badgeColor = const Color(0xFF5856D6);
+      badgeLabel = 'Fork';
+    } else if (eventType == 'CreateEvent' || actionType == 'create') {
+      typeLabel = 'created';
+      eventIcon = Icons.add_circle_outline_rounded;
+      badgeColor = const Color(0xFF34C759);
+      badgeLabel = 'Create';
     }
 
     return GlassCard(
@@ -414,14 +450,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           Row(
             children: [
               CircleAvatar(
-                backgroundImage: actor['avatar_url'] != null
-                    ? NetworkImage(actor['avatar_url'])
-                    : null,
+                backgroundImage: actorAvatar.isNotEmpty ? NetworkImage(actorAvatar) : null,
                 radius: 16,
                 backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
-                child: actor['avatar_url'] == null
-                    ? const Icon(Icons.person, size: 16)
-                    : null,
+                child: actorAvatar.isEmpty ? const Icon(Icons.person, size: 16) : null,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -430,12 +462,12 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textMain),
                     children: [
                       TextSpan(
-                        text: actor['login'] ?? 'Unknown',
+                        text: actorLogin,
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       TextSpan(text: ' $typeLabel '),
                       TextSpan(
-                        text: repo['name'] ?? '',
+                        text: repoName,
                         style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.accent),
                       ),
                     ],
@@ -463,7 +495,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 children: [
                   // Repo name
                   Text(
-                    repo['name'] ?? '',
+                    repoName,
                     style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 6),
@@ -475,6 +507,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   // Badge row
                   const SizedBox(height: 10),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -501,7 +534,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   if (body.isNotEmpty) ...[
                     const SizedBox(height: 10),
                     Text(
-                      'Summary',
+                      'Detail',
                       style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textMain),
                     ),
                     const SizedBox(height: 4),
@@ -511,12 +544,60 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Read more  ›',
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.accent),
-                    ),
                   ],
+                  // Action buttons row
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () async {
+                          final Uri uri = Uri.parse(targetUrl);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new_rounded, size: 14),
+                        label: Text(
+                          'GitHub',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppTheme.textSecondary,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _activeTab = 5; // Switch to Research Agent Tab
+                            _researchSubTab = 0; // Select GitHub Research
+                            _researchUrlController.text = targetUrl;
+                          });
+                          final state = Provider.of<AppState>(context, listen: false);
+                          state.clearRateLimit();
+                          state.fetchResearchData('github', {'url': targetUrl});
+                        },
+                        icon: const Icon(Icons.psychology_rounded, size: 14, color: Colors.black),
+                        label: Text(
+                          'Deep Analyze',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accent,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

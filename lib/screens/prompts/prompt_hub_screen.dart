@@ -8,6 +8,7 @@ import '../../models/prompt_item.dart';
 import '../../providers/app_state.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/animated_copy_button.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class PromptHubScreen extends StatefulWidget {
   const PromptHubScreen({super.key});
@@ -102,6 +103,10 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
         body: ListView(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
           children: [
+            // 24/7 Deep Research Agent Status
+            _buildResearchAgentBanner(state, isDark),
+            const SizedBox(height: 16),
+
             // CLI banner indicator
             _buildCliStatusBanner(isDark),
             const SizedBox(height: 20),
@@ -267,6 +272,160 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
           ],
         ),
       );
+  }
+
+  Widget _buildResearchAgentBanner(AppState state, bool isDark) {
+    final digest = state.whatsNewDigest;
+    final digestText = digest?['digest'] as String?;
+    final timestamp = digest?['timestamp'] as String?;
+    DateTime? ts;
+    if (timestamp != null) {
+      try {
+        ts = DateTime.parse(timestamp).toLocal();
+      } catch (_) {}
+    }
+
+    return GlassCard(
+      borderRadius: 20,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [const Color(0xFF1A2A3A), const Color(0xFF0D1B2A)]
+                : [const Color(0xFFE8F4FD), const Color(0xFFF0F8FF)],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(18.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Pulsing green dot
+                  _PulsingDot(color: AppTheme.success),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '24/7 Deep Research Agent',
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textMain,
+                          ),
+                        ),
+                        Text(
+                          ts != null
+                              ? 'Last synced ${_timeAgo(ts)}'
+                              : 'Active — scanning GitHub & YouTube',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: AppTheme.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (state.isLoadingWhatsNewDigest)
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accent),
+                    )
+                  else
+                    IconButton(
+                      icon: Icon(Icons.refresh_rounded, color: AppTheme.accent, size: 20),
+                      tooltip: 'Refresh digest',
+                      onPressed: () => state.fetchWhatsNewDigest(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
+              if (digestText != null && digestText.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.accent.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: Text(
+                    digestText.length > 220
+                        ? '${digestText.substring(0, 220)}...'
+                        : digestText,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Tap refresh to load the latest GitHub & YouTube trends digest from your AI research agent.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              if (digest != null) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _buildTrendChip(Icons.code_rounded, '${(digest['github'] as List?)?.length ?? 0} GitHub Repos', AppTheme.accent),
+                    const SizedBox(width: 8),
+                    _buildTrendChip(Icons.play_circle_outline_rounded, '${(digest['youtube'] as List?)?.length ?? 0} YT Videos', const Color(0xFFFF0000)),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
+    );
+  }
+
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 
   Widget _buildCliStatusBanner(bool isDark) {
@@ -621,7 +780,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
             else
               Container(
                 width: double.infinity,
-                constraints: const BoxConstraints(maxHeight: 240),
+                constraints: const BoxConstraints(maxHeight: 300),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0x12FFFFFF) : const Color(0x08FFFFFF),
@@ -629,12 +788,23 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                   border: Border.all(color: AppTheme.border.withValues(alpha: 0.25)),
                 ),
                 child: SingleChildScrollView(
-                  child: SelectableText(
-                    filteredLines.isEmpty ? 'No matching lines found.' : filteredLines.join('\n'),
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11.5,
-                      height: 1.45,
-                      color: AppTheme.textMain,
+                  child: MarkdownBody(
+                    data: filteredLines.isEmpty ? '*No matching lines found.*' : filteredLines.join('\n'),
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: GoogleFonts.inter(fontSize: 13, color: AppTheme.textMain, height: 1.5),
+                      h1: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.accent),
+                      h2: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.secondaryAccent),
+                      h3: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textMain),
+                      code: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        color: AppTheme.accent,
+                        backgroundColor: isDark ? const Color(0x1AFFFFFF) : const Color(0x0A000000),
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: isDark ? const Color(0x1A000000) : const Color(0x0A000000),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
@@ -1265,14 +1435,21 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: AppTheme.success.withValues(alpha: 0.3)),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                prompt.refinedPrompt,
-                                style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textMain, height: 1.4),
+                          child: MarkdownBody(
+                            data: prompt.refinedPrompt,
+                            selectable: true,
+                            styleSheet: MarkdownStyleSheet(
+                              p: GoogleFonts.inter(fontSize: 14, color: AppTheme.textMain, height: 1.55),
+                              code: GoogleFonts.jetBrainsMono(
+                                fontSize: 12,
+                                color: AppTheme.success,
+                                backgroundColor: isDark ? const Color(0x1AFFFFFF) : const Color(0x0A000000),
                               ),
-                            ],
+                              codeblockDecoration: BoxDecoration(
+                                color: isDark ? const Color(0x1A000000) : const Color(0x0A000000),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -1598,5 +1775,56 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
     if (score >= 70) return 'B';
     if (score >= 60) return 'C';
     return 'D';
+  }
+}
+
+/// A small pulsing dot widget that visually indicates a live/active status
+class _PulsingDot extends StatefulWidget {
+  final Color color;
+  const _PulsingDot({required this.color});
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+  late Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
+    _scale = Tween<double>(begin: 0.85, end: 1.3).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _opacity = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) => Opacity(
+        opacity: _opacity.value,
+        child: Transform.scale(
+          scale: _scale.value,
+          child: Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: widget.color,
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: widget.color.withValues(alpha: 0.5), blurRadius: 6, spreadRadius: 1)],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

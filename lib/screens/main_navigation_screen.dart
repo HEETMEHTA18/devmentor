@@ -147,6 +147,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
             _selectedIndex = 0;
           });
           _appState.setSelectedTab(0);
+        } else {
+          _checkAndShowNotificationPrompt();
         }
       } catch (_) {}
     });
@@ -265,6 +267,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
         _showWalkthrough = false;
       });
       _onTabSelected(0);
+      _checkAndShowNotificationPrompt();
     }
   }
 
@@ -601,6 +604,120 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
           ],
         ),
       ),
+    );
+  }
+
+  void _checkAndShowNotificationPrompt() async {
+    if (!kIsWeb) return;
+    final status = getNotificationPermissionStatus();
+    debugPrint("DEBUG NOTIFICATION STATUS: $status");
+    if (status != 'granted') {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          _showNotificationPermissionDialog();
+        }
+      });
+    }
+  }
+
+  void _showNotificationPermissionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: GlassCard(
+            borderRadius: 24,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.notifications_active_outlined, color: AppTheme.accent, size: 36),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'STAY UPDATED',
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textMain,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Enable push notifications to receive real-time updates from your 24/7 AI Research Agent and live GitHub activity feeds.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'LATER',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          Navigator.pop(context);
+                          final granted = await requestNotificationPermissionGesture();
+                          if (granted) {
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(
+                                content: const Text('Notifications enabled successfully!'),
+                                backgroundColor: AppTheme.success,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accent,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'ENABLE',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

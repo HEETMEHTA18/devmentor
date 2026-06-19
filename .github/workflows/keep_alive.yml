@@ -1,0 +1,41 @@
+name: Keep Render Backend Active 24/7
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Runs every 10 minutes
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Health Endpoint (with retry)
+        run: |
+          BACKEND_URL="https://devmentor-jmjh.onrender.com/health"
+          MAX_RETRIES=3
+          RETRY_DELAY=15
+
+          echo "Pinging DevMentor API at $BACKEND_URL..."
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            HTTP_CODE=$(curl -s -o /tmp/ping_response.txt -w "%{http_code}" \
+              --max-time 45 --connect-timeout 15 \
+              -X GET "$BACKEND_URL" 2>/dev/null)
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "✅ Backend is awake! HTTP $HTTP_CODE (attempt $i/$MAX_RETRIES)"
+              cat /tmp/ping_response.txt
+              exit 0
+            else
+              echo "⚠️  Attempt $i/$MAX_RETRIES: Backend returned HTTP $HTTP_CODE"
+              if [ "$i" -lt "$MAX_RETRIES" ]; then
+                echo "   Retrying in ${RETRY_DELAY}s..."
+                sleep $RETRY_DELAY
+              fi
+            fi
+          done
+
+          echo "❌ Backend did not respond after $MAX_RETRIES attempts."
+          # Don't fail the workflow — Render spin-up can take >50s on free tier
+          exit 0

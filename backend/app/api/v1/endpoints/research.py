@@ -11,7 +11,7 @@ from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_user_id, get_optional_user_id, get_db
 from app.core.config import settings
 from app.models.entities import ResearchSession, ResearchResult, WeeklyDigest, Roadmap
 import redis
@@ -813,3 +813,156 @@ async def get_weekly_digest(
         "digest": new_digest.digest_text,
         "created_at": new_digest.created_at,
     }
+
+
+@router.get("/whats-new")
+async def get_whats_new(
+    request: Request,
+    user_id: Optional[str] = Depends(get_optional_user_id),
+    db: Session = Depends(get_db),
+):
+    # Use user_id if authenticated, otherwise fall back to IP for rate limiting
+    rate_limit_key = user_id or (
+        request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+        or (request.client.host if request.client else "guest")
+    )
+    check_rate_limit(request, rate_limit_key)
+
+    cache_key = "research:whats_new"
+    cached = get_cache(cache_key)
+    if cached:
+        return cached
+
+    # 1. Fetch GitHub trends
+    github_items = []
+    try:
+        import datetime as dt
+
+        date_limit = (dt.date.today() - dt.timedelta(days=7)).isoformat()
+
+        async with httpx.AsyncClient() as client:
+            headers = {
+                "Accept": "application/vnd.github.v3+json",
+                "User-Agent": "DevMentor-App",
+            }
+            gh_res = await client.get(
+                f"https://api.github.com/search/repositories?q=stars:>50+created:>{date_limit}&sort=stars&order=desc",
+                headers=headers,
+                timeout=10.0,
+            )
+            if gh_res.status_code == 200:
+                data = gh_res.json()
+                for item in data.get("items", [])[:5]:
+                    github_items.append(
+                        {
+                            "name": item.get("name", ""),
+                            "owner": item.get("owner", {}).get("login", ""),
+                            "description": item.get("description", "")
+                            or "No description",
+                            "stars": item.get("stargazers_count", 0),
+                            "url": item.get("html_url", ""),
+                        }
+                    )
+    except Exception as e:
+        logger.error(f"Error fetching GitHub trends in whats-new: {e}")
+
+    if not github_items:
+        github_items = [
+            {
+                "name": "fastapi",
+                "owner": "tiangolo",
+                "description": "FastAPI framework, high performance, easy to learn, fast to code, ready for production",
+                "stars": 75000,
+                "url": "https://github.com/tiangolo/fastapi",
+            },
+            {
+                "name": "flutter",
+                "owner": "flutter",
+                "description": "Flutter makes it easy and fast to build beautiful apps for mobile and beyond",
+                "stars": 160000,
+                "url": "https://github.com/flutter/flutter",
+            },
+            {
+                "name": "transformers",
+                "owner": "huggingface",
+                "description": "State-of-the-art Machine Learning for PyTorch, TensorFlow, and JAX.",
+                "stars": 125000,
+                "url": "https://github.com/huggingface/transformers",
+            },
+        ]
+
+    # 2. Fetch YouTube trends via search feed
+    youtube_items = []
+    try:
+        import xml.etree.ElementTree as ET
+
+        async with httpx.AsyncClient() as client:
+            yt_res = await client.get(
+                "https://www.youtube.com/feeds/videos.xml?search_query=programming+tutorial",
+                timeout=10.0,
+            )
+            if yt_res.status_code == 200:
+                root = ET.fromstring(yt_res.content)
+                ns = {"atom": "http://www.w3.org/2005/Atom"}
+                for entry in root.findall("atom:entry", ns)[:5]:
+                    title_elem = entry.find("atom:title", ns)
+                    link_elem = entry.find("atom:link", ns)
+                    author_elem = entry.find("atom:author/atom:name", ns)
+
+                    title = title_elem.text if title_elem is not None else ""
+                    url = (
+                        link_elem.attrib.get("href", "")
+                        if link_elem is not None
+                        else ""
+                    )
+                    author = (
+                        author_elem.text
+                        if author_elem is not None
+                        else "Tech Channel"
+                    )
+
+                    if title and url:
+                        youtube_items.append(
+                            {"title": title, "url": url, "channel": author}
+                        )
+    except Exception as e:
+        logger.error(f"Error fetching YouTube trends in whats-new: {e}")
+
+    if not youtube_items:
+        youtube_items = [
+            {
+                "title": "System Design for Beginners",
+                "channel": "ByteByteGo",
+                "url": "https://youtube.com",
+            },
+            {
+                "title": "Gemini 2.5 Coding Tutorial",
+                "channel": "Google Devs",
+                "url": "https://youtube.com",
+            },
+            {
+                "title": "FastAPI + PWA Integration Guide",
+                "channel": "Devmentor",
+                "url": "https://youtube.com",
+            },
+        ]
+
+    # 3. Call Gemini to create a rich summary and research digest
+    system_prompt = (
+        "You are an expert technical research agent. Analyze the following list of active GitHub repositories "
+        "and YouTube video feeds. Write a professional, high-fidelity developer summary explaining what's new "
+        "and trending. Format the output with clear bullet points. Keep it engaging, insightful, and strictly under 250 words."
+    )
+    user_prompt = f"GitHub repositories:\n{json.dumps(github_items)}\n\nYouTube Videos:\n{json.dumps(youtube_items)}"
+    ai_digest = await call_gemini(system_prompt, user_prompt)
+
+    result = {
+        "github": github_items,
+        "youtube": youtube_items,
+        "digest": ai_digest,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+    set_cache(cache_key, result, 3600)
+    return result
+
