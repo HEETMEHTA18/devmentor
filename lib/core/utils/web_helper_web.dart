@@ -16,7 +16,7 @@ void requestNotificationPermission() {
 String getNotificationPermissionStatus() {
   try {
     if (html.Notification.supported) {
-      return html.Notification.permission;
+      return html.Notification.permission ?? 'unsupported';
     }
   } catch (_) {}
   return 'unsupported';
