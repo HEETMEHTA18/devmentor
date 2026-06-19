@@ -1810,7 +1810,7 @@ class _PulsingDotState extends State<_PulsingDot> with SingleTickerProviderState
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) => Opacity(
+      builder: (context2, child2) => Opacity(
         opacity: _opacity.value,
         child: Transform.scale(
           scale: _scale.value,
