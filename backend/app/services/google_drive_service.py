@@ -142,12 +142,13 @@ class GoogleDriveService:
                 logger.error(f"Failed to generate PDF: {e}")
                 # Fallback to plain text
                 upload_bytes = content.encode("utf-8")
-                safe_filename = safe_filename.replace(".pdf", ".txt")
+                safe_filename = os.path.basename(safe_filename.replace(".pdf", ".txt"))
                 file_path = os.path.join(sync_dir, safe_filename)
                 is_pdf = False
         else:
             upload_bytes = content.encode("utf-8")
 
+        file_path = os.path.normpath(file_path)
         try:
             if is_pdf:
                 with open(file_path, "wb") as f:

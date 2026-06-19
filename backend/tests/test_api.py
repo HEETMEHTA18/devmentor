@@ -260,14 +260,17 @@ def test_research_youtube():
     headers = get_auth_headers()
     from unittest.mock import patch, MagicMock
 
-    with patch("subprocess.run") as mock_run, patch(
+    with patch("yt_dlp.YoutubeDL") as mock_ydl, patch(
         "app.api.v1.endpoints.research.call_gemini"
     ) as mock_gemini, patch("os.path.exists", return_value=True), patch(
         "builtins.open", create=True
     ) as mock_open:
-        mock_run.return_value = MagicMock(
-            returncode=0, stdout='{"title": "Test Title", "description": "Test Desc"}'
-        )
+        mock_ydl_instance = MagicMock()
+        mock_ydl.return_value.__enter__.return_value = mock_ydl_instance
+        mock_ydl_instance.extract_info.return_value = {
+            "title": "Test Title",
+            "description": "Test Desc",
+        }
         mock_gemini.return_value = "AI youtube summary"
         mock_open.return_value.__enter__.return_value.read.return_value = (
             "WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nHello YouTube"

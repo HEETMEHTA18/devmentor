@@ -4,6 +4,7 @@ import logging
 import re
 import os
 import httpx
+import yt_dlp
 from typing import List, Optional
 from datetime import datetime
 
@@ -380,63 +381,64 @@ async def research_youtube(
 
     safe_url = f"https://www.youtube.com/watch?v={video_id}"
     subtitle_path = f"/tmp/yt_{video_id}"
-    cmd = [
-        ".venv/bin/yt-dlp",
-        "--write-auto-sub",
-        "--sub-lang",
-        "en",
-        "--skip-download",
-        "-o",
-        subtitle_path,
-        safe_url,
-    ]
 
-    subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-
-    vtt_file = f"{subtitle_path}.en.vtt"
     raw_subtitles = ""
-    if os.path.exists(vtt_file):
-        try:
-            with open(vtt_file, "r") as f:
-                vtt_content = f.read()
+    try:
+        ydl_opts = {
+            "writesubtitles": True,
+            "writeautomaticsub": True,
+            "subtitleslangs": ["en"],
+            "skip_download": True,
+            "outtmpl": subtitle_path,
+            "quiet": True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([safe_url])
 
-            lines = vtt_content.splitlines()
-            cleaned_lines = []
-            last_line = ""
-            for line in lines:
-                line = line.strip()
-                if (
-                    not line
-                    or line.startswith("WEBVTT")
-                    or line.startswith("Kind:")
-                    or line.startswith("Language:")
-                    or "-->" in line
-                ):
-                    continue
-                line = re.sub(r"<[^>]+>", "", line).strip()
-                if not line:
-                    continue
-                if line == last_line:
-                    continue
-                cleaned_lines.append(line)
-                last_line = line
-            raw_subtitles = " ".join(cleaned_lines)
+        vtt_file = f"{subtitle_path}.en.vtt"
+        vtt_file = os.path.normpath(vtt_file)
+        if os.path.exists(vtt_file):
+            try:
+                with open(vtt_file, "r") as f:
+                    vtt_content = f.read()
 
-            os.remove(vtt_file)
-        except Exception:
-            pass
+                lines = vtt_content.splitlines()
+                cleaned_lines = []
+                last_line = ""
+                for line in lines:
+                    line = line.strip()
+                    if (
+                        not line
+                        or line.startswith("WEBVTT")
+                        or line.startswith("Kind:")
+                        or line.startswith("Language:")
+                        or "-->" in line
+                    ):
+                        continue
+                    line = re.sub(r"<[^>]+>", "", line).strip()
+                    if not line:
+                        continue
+                    if line == last_line:
+                        continue
+                    cleaned_lines.append(line)
+                    last_line = line
+                raw_subtitles = " ".join(cleaned_lines)
+
+                os.remove(vtt_file)
+            except Exception:
+                pass
+    except Exception:
+        logger.exception("yt-dlp subtitle download failed")
 
     video_info_str = ""
     try:
-        info_cmd = [".venv/bin/yt-dlp", "-j", safe_url]
-        res = subprocess.run(info_cmd, capture_output=True, text=True, timeout=15)
-        if res.returncode == 0:
-            info = json.loads(res.stdout)
-            video_info_str = (
-                f"Title: {info.get('title')}\nDescription:\n{info.get('description')}"
-            )
+        ydl_opts = {"quiet": True}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(safe_url, download=False)
+            if info:
+                video_info_str = f"Title: {info.get('title')}\nDescription:\n{info.get('description')}"
     except Exception:
-        pass
+        logger.exception("yt-dlp info fetch failed")
 
     if not raw_subtitles and not video_info_str:
         raise HTTPException(
