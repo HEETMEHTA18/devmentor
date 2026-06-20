@@ -129,9 +129,11 @@ class GoogleDriveService:
         workspace_dir = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         )
-        sync_dir = os.path.join(workspace_dir, "google_drive_sync")
+        sync_dir = os.path.abspath(os.path.join(workspace_dir, "google_drive_sync"))
         os.makedirs(sync_dir, exist_ok=True)
-        file_path = os.path.join(sync_dir, safe_filename)
+        file_path = os.path.abspath(os.path.join(sync_dir, safe_filename))
+        if not file_path.startswith(sync_dir):
+            raise ValueError("Path traversal detected")
 
         if is_pdf:
             try:
@@ -143,12 +145,13 @@ class GoogleDriveService:
                 # Fallback to plain text
                 upload_bytes = content.encode("utf-8")
                 safe_filename = os.path.basename(safe_filename.replace(".pdf", ".txt"))
-                file_path = os.path.join(sync_dir, safe_filename)
+                file_path = os.path.abspath(os.path.join(sync_dir, safe_filename))
+                if not file_path.startswith(sync_dir):
+                    raise ValueError("Path traversal detected")
                 is_pdf = False
         else:
             upload_bytes = content.encode("utf-8")
 
-        file_path = os.path.normpath(file_path)
         try:
             if is_pdf:
                 with open(file_path, "wb") as f:

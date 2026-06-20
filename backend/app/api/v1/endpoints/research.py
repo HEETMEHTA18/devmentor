@@ -379,8 +379,11 @@ async def research_youtube(
     db.commit()
     db.refresh(session_obj)
 
-    safe_url = f"https://www.youtube.com/watch?v={video_id}"
-    subtitle_path = f"/tmp/yt_{video_id}"
+    safe_video_id = os.path.basename(video_id)
+    safe_url = f"https://www.youtube.com/watch?v={safe_video_id}"
+    subtitle_path = os.path.abspath(f"/tmp/yt_{safe_video_id}")
+    if not subtitle_path.startswith(os.path.abspath("/tmp")):
+        raise ValueError("Path traversal detected")
 
     raw_subtitles = ""
     try:
@@ -395,8 +398,9 @@ async def research_youtube(
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([safe_url])
 
-        vtt_file = f"{subtitle_path}.en.vtt"
-        vtt_file = os.path.normpath(vtt_file)
+        vtt_file = os.path.abspath(f"{subtitle_path}.en.vtt")
+        if not vtt_file.startswith(os.path.abspath("/tmp")):
+            raise ValueError("Path traversal detected")
         if os.path.exists(vtt_file):
             try:
                 with open(vtt_file, "r") as f:
