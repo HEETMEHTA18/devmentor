@@ -321,15 +321,19 @@ class AppState extends ChangeNotifier {
     final exists = promptRepoSources.any(
       (repo) => repo['owner'] == normalizedOwner && repo['name'] == normalizedName,
     );
-    if (exists) {
-      return;
+    if (!exists) {
+      promptRepoSources = [
+        ...promptRepoSources,
+        {'owner': normalizedOwner, 'name': normalizedName},
+      ];
+      savePromptRepoSources();
     }
 
-    promptRepoSources = [
-      ...promptRepoSources,
-      {'owner': normalizedOwner, 'name': normalizedName},
-    ];
-    savePromptRepoSources();
+    selectedRepoOwner = normalizedOwner;
+    selectedRepoName = normalizedName;
+    loadCachedGithubPromptsMarkdown(owner: normalizedOwner, repo: normalizedName).then((_) {
+      refreshGithubPromptsMarkdown(owner: normalizedOwner, repo: normalizedName, force: true);
+    });
   }
 
   void removePromptRepoSource(int index) {
@@ -2706,6 +2710,67 @@ This is simulated offline prompts.md content.
     } finally {
       isLoadingPromptHistory = false;
       notifyListeners();
+    }
+  Future<String> refinePrompt(String promptId) async {
+    if (token == null) {
+      // Mock Refinement
+      await Future.delayed(const Duration(seconds: 1));
+      final index = promptHistory.indexWhere((p) => p.id == promptId);
+      if (index != -1) {
+        final current = promptHistory[index];
+        promptHistory[index] = PromptItem(
+          id: current.id,
+          originalPrompt: current.originalPrompt,
+          refinedPrompt: '// Refined with AI:\n${current.originalPrompt}\n\n1. Enhanced readability\n2. Clear intent/context parameters',
+          score: 85,
+          technologies: current.technologies.isEmpty ? ['Flutter', 'Dart'] : current.technologies,
+          workflow: current.workflow == 'Development' ? 'Feature Building' : current.workflow,
+          projectName: current.projectName,
+          createdAt: current.createdAt,
+        );
+        notifyListeners();
+      }
+      return 'Success';
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.apiBaseUrl}/prompts/$promptId/refine'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final index = promptHistory.indexWhere((p) => p.id == promptId);
+        if (index != -1) {
+          promptHistory[index] = PromptItem(
+            id: data['id']?.toString() ?? '',
+            originalPrompt: data['original_prompt'] ?? '',
+            refinedPrompt: data['refined_prompt'] ?? '',
+            score: data['score'] ?? 0,
+            technologies: data['technologies'] != null
+                ? List<String>.from(data['technologies'])
+                : <String>[],
+            workflow: data['workflow'] ?? 'Development',
+            projectName: data['project_name'],
+            createdAt: data['created_at'] != null
+                ? DateTime.parse(data['created_at'])
+                : DateTime.now(),
+          );
+          notifyListeners();
+        }
+        fetchPromptAnalytics(force: true);
+        return 'Success';
+      } else {
+        final data = jsonDecode(response.body);
+        final String? msg = data['error']?['message'] ?? data['detail'];
+        return msg ?? 'Server returned error ${response.statusCode}';
+      }
+    } catch (e) {
+      return '$e';
     }
   }
 

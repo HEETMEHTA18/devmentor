@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -1288,12 +1289,16 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    state.weeklyAchievements!,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: AppTheme.textMain,
-                      height: 1.4,
+                  MarkdownBody(
+                    data: state.weeklyAchievements!,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: AppTheme.textMain,
+                        height: 1.4,
+                      ),
+                      listBullet: TextStyle(color: AppTheme.accent),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1516,15 +1521,16 @@ class HomeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: AppTheme.border.withValues(alpha: 0.2)),
                       ),
-                      child: Text(
-                        digest['digest'] as String,
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5,
-                          color: AppTheme.textMain,
-                          height: 1.55,
+                      child: MarkdownBody(
+                        data: digest['digest'] as String,
+                        selectable: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            color: AppTheme.textMain,
+                            height: 1.55,
+                          ),
                         ),
-                        maxLines: 6,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -1852,15 +1858,17 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                roastText,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  fontStyle: FontStyle.italic,
-                  color: AppTheme.textMain,
-                  height: 1.4,
+              MarkdownBody(
+                data: roastText,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                    color: AppTheme.textMain,
+                    height: 1.4,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

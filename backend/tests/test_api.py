@@ -16,6 +16,8 @@ client = TestClient(app)
 def setup_module():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    import app.api.v1.endpoints.research as research
+    research.redis_client = None
 
 
 def test_health_check():
@@ -426,3 +428,57 @@ def test_research_digest():
         data = response.json()
         assert data["topic"] == "general"
         assert data["digest"] == "AI general updates digest"
+
+
+def test_refine_prompt_endpoint():
+    headers = get_auth_headers()
+    from unittest.mock import patch
+
+    # 1. Create a prompt history entry first
+    event_response = client.post(
+        "/api/v1/prompts/event",
+        json={
+            "original_prompt": "Optimize this database query select count from table",
+            "project_name": "db-opt",
+        },
+        headers=headers,
+    )
+    if event_response.status_code != 200:
+        print("ERROR BODY:", event_response.json())
+    assert event_response.status_code == 200
+    prompt_data = event_response.json()
+    prompt_id = prompt_data["id"]
+    assert prompt_data["refined_prompt"] == ""
+    assert prompt_data["score"] == 0
+
+    # 2. Call the refine endpoint with mocked call_ai_json
+    with patch("app.api.v1.endpoints.prompts.call_ai_json") as mock_call:
+        mock_call.return_value = {
+            "refined_prompt": "Use indexed subquery or COUNT(1) to avoid sequential scan.",
+            "score": 85,
+            "technologies": ["PostgreSQL", "SQL"],
+            "workflow": "Database"
+        }
+
+        refine_response = client.post(
+            f"/api/v1/prompts/{prompt_id}/refine",
+            headers=headers,
+        )
+        assert refine_response.status_code == 200
+        res_data = refine_response.json()
+        assert "refined_prompt" in res_data
+        assert res_data["score"] == 85
+        assert "PostgreSQL" in res_data["technologies"]
+
+    # 3. Retrieve prompt detail to verify it is persisted
+    history_response = client.get(
+        "/api/v1/prompts/history",
+        headers=headers,
+    )
+    assert history_response.status_code == 200
+    history_list = history_response.json()
+    matched = [p for p in history_list if p["id"] == prompt_id]
+    assert len(matched) == 1
+    assert matched[0]["refined_prompt"] == "Use indexed subquery or COUNT(1) to avoid sequential scan."
+    assert matched[0]["score"] == 85
+

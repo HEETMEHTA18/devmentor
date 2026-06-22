@@ -124,39 +124,11 @@ async def receive_prompt_event(
             if not original_prompt.strip():
                 raise HTTPException(status_code=400, detail="Prompt cannot be empty")
 
-            ai_prompt = (
-                f"You are a Prompt Intelligence Analyzer. Analyze the following prompt used by a developer:\n\n"
-                f"Prompt: {original_prompt}\n"
-                f"Project Name Context: {project_name or 'N/A'}\n"
-                f"File Context: {payload.file_context or 'N/A'}\n\n"
-                f"Perform the following tasks:\n"
-                f"1. Refine and upgrade the original prompt to be much more clear, professional, structured (with instructions/placeholders) and effective for an AI coding assistant.\n"
-                f"2. Score the original prompt from 0 to 100 based on its clarity, specificity, context, and structural quality.\n"
-                f"3. Extract technologies, languages, libraries or frameworks referenced or relevant (e.g. Flutter, FastAPI, python, react). Return as a list of names.\n"
-                f"4. Detect the developer workflow category. Choose exactly one from: Debugging, Refactoring, Feature Building, Testing, DevOps, Architecture, Documentation.\n\n"
-                f"Return your response strictly as a JSON object with these exact keys:\n"
-                f"{{\n"
-                f'  "refined_prompt": "upgraded prompt content here",\n'
-                f'  "score": 85,\n'
-                f'  "technologies": ["Python", "FastAPI"],\n'
-                f'  "workflow": "Feature Building"\n'
-                f"}}"
-            )
-
-            ai_res = {}
-            try:
-                ai_res = await call_ai_json(ai_prompt)
-            except Exception as e:
-                logger.error(f"Error calling AI for prompt analysis: {e}")
-
-            refined_prompt = (
-                ai_res.get("refined_prompt")
-                or f"// Refined:\n{original_prompt}\n\n(Specify detailed requirements for better results.)"
-            )
-            score = ai_res.get("score") or 50
-            techs_list = ai_res.get("technologies") or []
-            workflow = ai_res.get("workflow") or "Development"
-            technologies_str = ", ".join(techs_list) if techs_list else "General"
+            refined_prompt = ""
+            score = 0
+            techs_list = []
+            workflow = "Development"
+            technologies_str = "General"
 
             db_prompt = PromptHistory(
                 user_id=user_id,
@@ -224,15 +196,68 @@ async def receive_prompt_event(
     if not original_prompt or not original_prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
 
+    refined_prompt = ""
+    score = 0
+    techs_list = []
+    workflow = "Development"
+    technologies_str = "General"
+
+    db_prompt = PromptHistory(
+        user_id=user_id,
+        original_prompt=original_prompt,
+        refined_prompt=refined_prompt,
+        score=score,
+        technologies=technologies_str,
+        workflow=workflow,
+        project_name=payload.project_name,
+    )
+
+    db.add(db_prompt)
+    db.commit()
+    db.refresh(db_prompt)
+
+    return {
+        "id": db_prompt.id,
+        "user_id": db_prompt.user_id,
+        "original_prompt": db_prompt.original_prompt,
+        "refined_prompt": db_prompt.refined_prompt,
+        "score": db_prompt.score,
+        "technologies": techs_list,
+        "workflow": db_prompt.workflow,
+        "project_name": db_prompt.project_name,
+        "created_at": db_prompt.created_at.isoformat(),
+    }
+
+
+@router.post("/{prompt_id}/refine")
+async def refine_individual_prompt(
+    prompt_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """
+    On-demand prompt refiner for a specific prompt ID.
+    Calls AI to generate the refined prompt, score, technologies, and workflow category.
+    """
+    stmt = select(PromptHistory).where(
+        PromptHistory.id == prompt_id,
+        PromptHistory.user_id == user_id
+    )
+    db_prompt = db.scalar(stmt)
+    if not db_prompt:
+        raise HTTPException(status_code=404, detail="Prompt history item not found")
+
+    original_prompt = db_prompt.original_prompt
+    project_name = db_prompt.project_name or "N/A"
+
     ai_prompt = (
         f"You are a Prompt Intelligence Analyzer. Analyze the following prompt used by a developer:\n\n"
         f"Prompt: {original_prompt}\n"
-        f"Project Name Context: {payload.project_name or 'N/A'}\n"
-        f"File Context: {payload.file_context or 'N/A'}\n\n"
+        f"Project Name Context: {project_name}\n\n"
         f"Perform the following tasks:\n"
         f"1. Refine and upgrade the original prompt to be much more clear, professional, structured (with instructions/placeholders) and effective for an AI coding assistant.\n"
         f"2. Score the original prompt from 0 to 100 based on its clarity, specificity, context, and structural quality.\n"
-        f"3. Extract technologies, languages, libraries or frameworks referenced or relevant (e.g. Flutter, FastAPI, python, react). Return as a list of names.\n"
+        f"3. Extract technologies, languages, libraries or frameworks referenced or relevant. Return as a list of names.\n"
         f"4. Detect the developer workflow category. Choose exactly one from: Debugging, Refactoring, Feature Building, Testing, DevOps, Architecture, Documentation.\n\n"
         f"Return your response strictly as a JSON object with these exact keys:\n"
         f"{{\n"
@@ -247,28 +272,19 @@ async def receive_prompt_event(
     try:
         ai_res = await call_ai_json(ai_prompt)
     except Exception as e:
-        logger.error(f"Error calling AI for prompt analysis: {e}")
+        logger.error(f"Error calling AI for prompt refinement: {e}")
+        raise HTTPException(status_code=500, detail="AI service error")
 
-    refined_prompt = (
-        ai_res.get("refined_prompt")
-        or f"// Refined:\n{original_prompt}\n\n(Specify detailed requirements for better results.)"
-    )
+    refined_prompt = ai_res.get("refined_prompt") or f"// Refined:\n{original_prompt}"
     score = ai_res.get("score") or 50
     techs_list = ai_res.get("technologies") or []
     workflow = ai_res.get("workflow") or "Development"
     technologies_str = ", ".join(techs_list) if techs_list else "General"
 
-    db_prompt = PromptHistory(
-        user_id=user_id,
-        original_prompt=original_prompt,
-        refined_prompt=refined_prompt,
-        score=score,
-        technologies=technologies_str,
-        workflow=workflow,
-        project_name=payload.project_name,
-    )
-
-    db.add(db_prompt)
+    db_prompt.refined_prompt = refined_prompt
+    db_prompt.score = score
+    db_prompt.technologies = technologies_str
+    db_prompt.workflow = workflow
     db.commit()
     db.refresh(db_prompt)
 
@@ -628,29 +644,65 @@ async def sync_github_prompts(
                     decoded_bytes = base64.b64decode(raw_content)
                     markdown_text = decoded_bytes.decode("utf-8")
 
-                    # Parse the markdown prompts
+                    # Parse the markdown prompts block-by-block (indentation-aware)
                     lines = markdown_text.split("\n")
+                    current_prompt = None
+                    prompts_to_import = []
+
                     for line in lines:
+                        indentation = len(line) - len(line.lstrip())
                         line_str = line.strip()
-                        # Match list items like "- " or "* " or "1. "
-                        if line_str.startswith("- ") or line_str.startswith("* "):
-                            prompt_raw = line_str[2:].strip()
-                        elif line_str.startswith("1. "):
-                            prompt_raw = line_str[3:].strip()
-                        else:
+                        if not line_str:
                             continue
 
-                        if not prompt_raw:
-                            continue
+                        # If it's a top-level list item (starts with - or * or 1.) and indentation < 2
+                        if (line_str.startswith("- ") or line_str.startswith("* ") or line_str.startswith("1. ")) and indentation < 2:
+                            if current_prompt:
+                                prompts_to_import.append(current_prompt)
+                            
+                            prefix_len = 3 if line_str.startswith("1. ") else 2
+                            raw_text = line_str[prefix_len:].strip()
+                            
+                            # Parse project name: [project] refined_prompt
+                            project_name = None
+                            refined_text = raw_text
+                            if raw_text.startswith("["):
+                                end_bracket = raw_text.find("]")
+                                if end_bracket != -1:
+                                    project_name = raw_text[1:end_bracket].strip()
+                                    refined_text = raw_text[end_bracket + 1:].strip()
 
-                        # Parse [project_name] if present
-                        project_name = None
-                        original_prompt = prompt_raw
-                        if prompt_raw.startswith("["):
-                            end_bracket = prompt_raw.find("]")
-                            if end_bracket != -1:
-                                project_name = prompt_raw[1:end_bracket].strip()
-                                original_prompt = prompt_raw[end_bracket + 1 :].strip()
+                            current_prompt = {
+                                "refined_prompt": refined_text,
+                                "original_prompt": refined_text,  # default fallback
+                                "project_name": project_name,
+                                "score": 0,
+                                "technologies": "General",
+                                "workflow": "Development",
+                            }
+                        elif current_prompt and indentation >= 2:
+                            # Parse metadata keys
+                            if line_str.startswith("- ") or line_str.startswith("* "):
+                                meta_content = line_str[2:].strip()
+                                if meta_content.startswith("*Original:*"):
+                                    current_prompt["original_prompt"] = meta_content[len("*Original:*"):].strip()
+                                elif meta_content.startswith("*Score:*"):
+                                    score_str = meta_content[len("*Score:*"):].strip().split("/")[0]
+                                    try:
+                                        current_prompt["score"] = int(score_str)
+                                    except:
+                                        pass
+                                elif meta_content.startswith("*Technologies:*"):
+                                    current_prompt["technologies"] = meta_content[len("*Technologies:*"):].strip()
+                                elif meta_content.startswith("*Workflow:*"):
+                                    current_prompt["workflow"] = meta_content[len("*Workflow:*"):].strip()
+
+                    if current_prompt:
+                        prompts_to_import.append(current_prompt)
+
+                    for p_data in prompts_to_import:
+                        original_prompt = p_data["original_prompt"]
+                        project_name = p_data["project_name"] or name
 
                         # Check if prompt already exists in history
                         check_stmt = select(PromptHistory).where(
@@ -659,55 +711,23 @@ async def sync_github_prompts(
                         )
                         exists = db.scalar(check_stmt)
                         if not exists:
-                            # Run prompt analysis (refine, score, extract tech & workflow)
-                            ai_prompt = (
-                                f"You are a Prompt Intelligence Analyzer. Analyze the following prompt used by a developer:\n\n"
-                                f"Prompt: {original_prompt}\n"
-                                f"Project Name Context: {project_name or 'N/A'}\n\n"
-                                f"Perform the following tasks:\n"
-                                f"1. Refine and upgrade the original prompt to be much more clear, professional, structured (with instructions/placeholders) and effective for an AI coding assistant.\n"
-                                f"2. Score the original prompt from 0 to 100 based on its clarity, specificity, context, and structural quality.\n"
-                                f"3. Extract technologies, languages, libraries or frameworks referenced or relevant. Return as a list of names.\n"
-                                f"4. Detect the developer workflow category. Choose exactly one from: Debugging, Refactoring, Feature Building, Testing, DevOps, Architecture, Documentation.\n\n"
-                                f"Return your response strictly as a JSON object with these exact keys:\n"
-                                f"{{\n"
-                                f'  "refined_prompt": "upgraded prompt content here",\n'
-                                f'  "score": 85,\n'
-                                f'  "technologies": ["Python", "FastAPI"],\n'
-                                f'  "workflow": "Feature Building"\n'
-                                f"}}"
-                            )
-
-                            ai_res = {}
-                            try:
-                                ai_res = await call_ai_json(ai_prompt)
-                            except Exception as e:
-                                logger.error(
-                                    f"Error calling AI for prompt analysis in sync: {e}"
-                                )
-
-                            refined_prompt = (
-                                ai_res.get("refined_prompt")
-                                or f"// Refined:\n{original_prompt}"
-                            )
-                            score = ai_res.get("score") or 50
-                            techs_list = ai_res.get("technologies") or []
-                            workflow = ai_res.get("workflow") or "Development"
-                            technologies_str = (
-                                ", ".join(techs_list) if techs_list else "General"
-                            )
-
                             db_prompt = PromptHistory(
                                 user_id=user_id,
                                 original_prompt=original_prompt,
-                                refined_prompt=refined_prompt,
-                                score=score,
-                                technologies=technologies_str,
-                                workflow=workflow,
-                                project_name=project_name or name,
+                                refined_prompt=p_data["refined_prompt"],
+                                score=p_data["score"],
+                                technologies=p_data["technologies"],
+                                workflow=p_data["workflow"],
+                                project_name=project_name,
                             )
                             db.add(db_prompt)
                             imported_count += 1
+                        elif exists.score == 0 and p_data["score"] > 0:
+                            exists.refined_prompt = p_data["refined_prompt"]
+                            exists.score = p_data["score"]
+                            exists.technologies = p_data["technologies"]
+                            exists.workflow = p_data["workflow"]
+                            db.add(exists)
 
                     scanned_repos.append(full_name)
             except Exception as e:

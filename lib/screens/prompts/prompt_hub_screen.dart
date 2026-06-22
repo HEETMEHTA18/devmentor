@@ -112,6 +112,28 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                       ),
                       child: IconButton(
                         padding: EdgeInsets.zero,
+                        tooltip: 'AutoDevs CLI Setup',
+                        icon: Icon(
+                          Icons.terminal_rounded,
+                          size: 18,
+                          color: AppTheme.textSecondary,
+                        ),
+                        onPressed: () => _showCliInstructionsBottomSheet(context, state, isDark),
+                      ),
+                    ),
+                    Container(
+                      width: 36,
+                      height: 36,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        tooltip: 'Sync GitHub Prompts',
                         icon: Icon(
                           Icons.cloud_sync_rounded,
                           size: 18,
@@ -145,13 +167,6 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            // 24/7 Deep Research Agent Status
-            _buildResearchAgentBanner(state, isDark),
-            const SizedBox(height: 16),
-
-            // CLI banner indicator
-            _buildCliStatusBanner(isDark),
-            const SizedBox(height: 20),
 
             // GitHub prompts.md viewer
             _buildRepoSourcesPanel(state, isDark),
@@ -165,10 +180,6 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
 
             // Real-time Playground section
             _buildPlayground(state, isDark),
-            const SizedBox(height: 25),
-
-            // Skill Gaps and Recommendations Section
-            _buildRecommendationsSection(state, isDark),
             const SizedBox(height: 25),
 
             // Search and Filters
@@ -1582,6 +1593,39 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                       ),
                   ],
                 ),
+                if (prompt.score == 0) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      LiquidGlassButton.icon(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        borderRadius: 8,
+                        icon: const Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 13,
+                          color: Colors.amber,
+                        ),
+                        label: Text(
+                          'Refine with AI',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
+                          ),
+                        ),
+                        onPressed: () {
+                          final state = Provider.of<AppState>(context, listen: false);
+                          _refinePromptOnDemand(context, state, prompt);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -1737,49 +1781,154 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                                 color: AppTheme.success,
                               ),
                             ),
-                            AnimatedCopyButton(
-                              text: prompt.refinedPrompt,
-                              size: 18,
-                              color: AppTheme.success,
-                              successColor: AppTheme.success,
-                            ),
+                            if (prompt.refinedPrompt.isNotEmpty)
+                              AnimatedCopyButton(
+                                text: prompt.refinedPrompt,
+                                size: 18,
+                                color: AppTheme.success,
+                                successColor: AppTheme.success,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppTheme.success.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppTheme.success.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: MarkdownBody(
-                            data: prompt.refinedPrompt,
-                            selectable: true,
-                            styleSheet: MarkdownStyleSheet(
-                              p: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: AppTheme.textMain,
-                                height: 1.55,
-                              ),
-                              code: GoogleFonts.jetBrainsMono(
-                                fontSize: 12,
-                                color: AppTheme.success,
-                                backgroundColor: isDark
-                                    ? const Color(0x1AFFFFFF)
-                                    : const Color(0x0A000000),
-                              ),
-                              codeblockDecoration: BoxDecoration(
-                                color: isDark
-                                    ? const Color(0x1A000000)
-                                    : const Color(0x0A000000),
-                                borderRadius: BorderRadius.circular(8),
+                        if (prompt.refinedPrompt.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0x0AFFFFFF)
+                                  : const Color(0x05000000),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.border.withValues(alpha: 0.3),
                               ),
                             ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 32,
+                                  color: Colors.amber.withValues(alpha: 0.6),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Prompt refinement is on-demand.',
+                                  style: GoogleFonts.outfit(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textMain,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Trigger refinement to generate the AI-upgraded prompt and score.',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                LiquidGlassButton.icon(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 10,
+                                  ),
+                                  color: Colors.amber.withValues(alpha: 0.2),
+                                  borderRadius: 12,
+                                  icon: const Icon(
+                                    Icons.auto_awesome_rounded,
+                                    size: 15,
+                                    color: Colors.amber,
+                                  ),
+                                  label: Text(
+                                    'Refine Prompt Now',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    final state = Provider.of<AppState>(context, listen: false);
+                                    Navigator.pop(context); // close bottom sheet
+                                    _refinePromptOnDemand(context, state, prompt);
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppTheme.success.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.success.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                MarkdownBody(
+                                  data: prompt.refinedPrompt,
+                                  selectable: true,
+                                  styleSheet: MarkdownStyleSheet(
+                                    p: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: AppTheme.textMain,
+                                      height: 1.55,
+                                    ),
+                                    code: GoogleFonts.jetBrainsMono(
+                                      fontSize: 12,
+                                      color: AppTheme.success,
+                                      backgroundColor: isDark
+                                          ? const Color(0x1AFFFFFF)
+                                          : const Color(0x0A000000),
+                                    ),
+                                    codeblockDecoration: BoxDecoration(
+                                      color: isDark
+                                          ? const Color(0x1A000000)
+                                          : const Color(0x0A000000),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: LiquidGlassButton.icon(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    color: Colors.amber.withValues(alpha: 0.1),
+                                    borderRadius: 8,
+                                    icon: const Icon(
+                                      Icons.refresh_rounded,
+                                      size: 13,
+                                      color: Colors.amber,
+                                    ),
+                                    label: Text(
+                                      'Re-Refine Prompt',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        color: Colors.amber,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      final state = Provider.of<AppState>(context, listen: false);
+                                      Navigator.pop(context); // close bottom sheet
+                                      _refinePromptOnDemand(context, state, prompt);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
                         const SizedBox(height: 24),
 
                         // Tech tags
@@ -2197,17 +2346,76 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
   }
 
   Color _getScoreColor(int score) {
+    if (score == 0) return AppTheme.textSecondary;
     if (score >= 85) return AppTheme.success;
     if (score >= 70) return AppTheme.warning;
     return AppTheme.destructive;
   }
 
   String _getScoreGrade(int score) {
+    if (score == 0) return 'N/A';
     if (score >= 90) return 'A+';
     if (score >= 80) return 'A';
     if (score >= 70) return 'B';
     if (score >= 60) return 'C';
     return 'D';
+  }
+
+  void _refinePromptOnDemand(
+    BuildContext context,
+    AppState state,
+    PromptItem prompt,
+  ) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              const CircularProgressIndicator(color: Colors.amber),
+              const SizedBox(height: 20),
+              Text(
+                'Refining Prompt with AI...',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Upgrading clarity, structure, and scoring context.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+
+    final res = await state.refinePrompt(prompt.id);
+    if (context.mounted) {
+      Navigator.pop(context); // Dismiss loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            res == 'Success'
+                ? 'Prompt refined successfully!'
+                : 'Refinement failed: $res',
+          ),
+          backgroundColor: res == 'Success' ? AppTheme.success : AppTheme.destructive,
+        ),
+      );
+    }
   }
 }
 
