@@ -90,7 +90,7 @@ class LiquidGlassButton extends StatelessWidget {
                   Positioned.fill(
                     child: OCLiquidGlass(
                       borderRadius: borderRadius,
-                      color: color ?? AppTheme.accent.withOpacity(0.2),
+                      color: color ?? AppTheme.accent.withValues(alpha: 0.2),
                       child: const SizedBox.expand(),
                     ),
                   ),

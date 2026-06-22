@@ -432,7 +432,7 @@ This is simulated offline prompts.md content.
       'count': (index % 7 == 0) ? 1 : (index % 3 == 0) ? 2 : (index % 2 == 0) ? 4 : 8
     };
   });
-  String selectedActivityYear = 'Last 14 Weeks';
+  String selectedActivityYear = '2026';
   bool isLoadingActivity = false;
 
   List<Map<String, dynamic>> followingActivity = [];
@@ -504,6 +504,8 @@ This is simulated offline prompts.md content.
 
   // Opportunities
   List<dynamic>? techOpportunities;
+  bool isLoadingAwesomeLists = false;
+  List<Map<String, dynamic>> awesomeLists = [];
   bool isLoadingOpportunities = false;
 
   // Open Source Copilot
@@ -1668,9 +1670,7 @@ This is simulated offline prompts.md content.
     isLoadingActivity = true;
     notifyListeners();
     try {
-      final String urlString = selectedActivityYear == 'Last 14 Weeks'
-          ? '${AppConfig.apiBaseUrl}/github/activity'
-          : '${AppConfig.apiBaseUrl}/github/activity?year=$selectedActivityYear';
+      final String urlString = '${AppConfig.apiBaseUrl}/github/activity?year=$selectedActivityYear';
       final response = await http.get(
         Uri.parse(urlString),
         headers: {
@@ -2870,6 +2870,26 @@ This is simulated offline prompts.md content.
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        
+        try {
+          final ghRes = await http.get(
+            Uri.parse('https://api.github.com/search/repositories?q=stars:>50+created:>2026-06-01&sort=stars&order=desc'),
+          );
+          if (ghRes.statusCode == 200) {
+            final ghData = jsonDecode(ghRes.body);
+            final items = ghData['items'] as List?;
+            if (items != null && items.isNotEmpty) {
+              data['github'] = items.take(5).map((item) => {
+                "name": item['name'] ?? "",
+                "owner": item['owner']?['login'] ?? "",
+                "description": item['description'] ?? "No description",
+                "stars": item['stargazers_count'] ?? 0,
+                "url": item['html_url'] ?? "",
+              }).toList();
+            }
+          }
+        } catch (_) {}
+
         whatsNewDigest = data;
 
         final digestText = data['digest'] ?? '';
@@ -2908,6 +2928,34 @@ This is simulated offline prompts.md content.
       debugPrint('Error fetching whats new digest: $e');
     } finally {
       isLoadingWhatsNewDigest = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAwesomeLists() async {
+    isLoadingAwesomeLists = true;
+    notifyListeners();
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.github.com/search/repositories?q=topic:awesome&sort=stars&order=desc'),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['items'] as List?;
+        if (items != null && items.isNotEmpty) {
+          awesomeLists = items.take(20).map((item) => {
+            "name": item['name'] ?? "",
+            "owner": item['owner']?['login'] ?? "",
+            "description": item['description'] ?? "No description",
+            "stars": item['stargazers_count'] ?? 0,
+            "url": item['html_url'] ?? "",
+          }).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching awesome lists: $e');
+    } finally {
+      isLoadingAwesomeLists = false;
       notifyListeners();
     }
   }

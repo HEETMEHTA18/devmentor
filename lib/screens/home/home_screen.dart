@@ -393,7 +393,7 @@ class HomeScreen extends StatelessWidget {
                       state.setActivityYear(newValue);
                     }
                   },
-                  items: <String>['Last 14 Weeks', '2026', '2025', '2024', '2023']
+                  items: <String>['2026', '2025', '2024', '2023']
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -412,48 +412,23 @@ class HomeScreen extends StatelessWidget {
                     child: CircularProgressIndicator(),
                   ),
                 )
-              : state.selectedActivityYear == 'Last 14 Weeks'
-                  ? GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 14,
-                        crossAxisSpacing: 6,
-                        mainAxisSpacing: 6,
-                      ),
-                      itemCount: state.activityData.length.clamp(0, 70),
-                      itemBuilder: (context, index) {
-                        if (index >= state.activityData.length) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          );
-                        }
-                        final dayData = state.activityData[index];
-                        final int count = dayData['count'] ?? 0;
-                        final String date = dayData['date'] ?? '';
-                        final double opacity = count == 0 ? 0.1 : count <= 2 ? 0.4 : count <= 5 ? 0.7 : 1.0;
-                        return InkWell(
-                          onTap: () {
-                            _showDayActivityDialog(context, date, state.token ?? '');
-                          },
-                          borderRadius: BorderRadius.circular(4),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.accent.withValues(alpha: opacity),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                  : SingleChildScrollView(
+              : (() {
+                  int paddingCells = 0;
+                  if (state.activityData.isNotEmpty) {
+                    final dateStr = state.activityData.first['date'] as String?;
+                    if (dateStr != null && dateStr.isNotEmpty) {
+                      try {
+                        final firstDate = DateTime.parse(dateStr);
+                        paddingCells = firstDate.weekday % 7;
+                      } catch (_) {}
+                    }
+                  }
+                  
+                  return SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: SizedBox(
                         height: 120,
-                        width: 53 * 16.0,
+                        width: ((state.activityData.length + paddingCells) / 7).ceil() * 16.0,
                         child: GridView.builder(
                           scrollDirection: Axis.horizontal,
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -461,9 +436,12 @@ class HomeScreen extends StatelessWidget {
                             crossAxisSpacing: 4,
                             mainAxisSpacing: 4,
                           ),
-                          itemCount: state.activityData.length,
+                          itemCount: state.activityData.length + paddingCells,
                           itemBuilder: (context, index) {
-                            final dayData = state.activityData[index];
+                            if (index < paddingCells) {
+                              return const SizedBox();
+                            }
+                            final dayData = state.activityData[index - paddingCells];
                             final int count = dayData['count'] ?? 0;
                             final String date = dayData['date'] ?? '';
                             final double opacity = count == 0 ? 0.1 : count <= 2 ? 0.4 : count <= 5 ? 0.7 : 1.0;
@@ -482,7 +460,8 @@ class HomeScreen extends StatelessWidget {
                           },
                         ),
                       ),
-                    ),
+                    );
+                })(),
           const SizedBox(height: 16),
           Row(
             children: [

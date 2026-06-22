@@ -71,8 +71,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           tabTitle = 'AI Project Evaluator';
           break;
         case 4:
-          tabContent = _buildOpportunitiesTab(context, appState);
-          tabTitle = 'Opportunity Scanner';
+          tabContent = _buildAwesomeListsTab(context, appState);
+          tabTitle = 'Awesome Lists';
           break;
         case 5:
           tabContent = _buildResearchTab(context, appState);
@@ -1303,41 +1303,51 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       ),
     );
   }
-
-  Widget _buildOpportunitiesTab(BuildContext context, AppState state) {
-    if (state.isLoadingOpportunities) {
+  Widget _buildAwesomeListsTab(BuildContext context, AppState state) {
+    if (state.isLoadingAwesomeLists) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final opps = state.techOpportunities ?? [];
+    final lists = state.awesomeLists;
 
     return RefreshIndicator(
-      onRefresh: () => state.fetchOpportunities(),
+      onRefresh: () => state.fetchAwesomeLists(),
       child: ListView.builder(
         padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
-        itemCount: opps.isEmpty ? 1 : opps.length,
+        itemCount: lists.isEmpty ? 1 : lists.length,
         itemBuilder: (context, index) {
-          if (opps.isEmpty) {
+          if (lists.isEmpty) {
             return GlassCard(
               padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text(
-                  'No opportunities scanned yet. Try pulling to refresh.',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'No awesome lists found. Tap to fetch.',
+                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    LiquidGlassButton(
+                      child: Text('Fetch Awesome Lists', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                      onPressed: () => state.fetchAwesomeLists(),
+                    ),
+                  ],
                 ),
               ),
             );
           }
 
-          final opp = opps[index];
-          final title = opp['title'] ?? 'Dynamic Project Idea';
-          final why = opp['why'] ?? 'Trending in tech industry circles.';
-          final stack = opp['tech_stack'] ?? 'Flutter, FastAPI, Postgres';
+          final repo = lists[index];
+          final title = '${repo['owner']}/${repo['name']}';
+          final desc = repo['description'] ?? 'No description';
+          final stars = repo['stars'] ?? 0;
+          final url = repo['url'] ?? '';
 
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             child: GlassCard(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1349,7 +1359,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                           color: AppTheme.accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.trending_up_rounded, color: AppTheme.accent, size: 18),
+                        child: Icon(Icons.sentiment_satisfied_alt_rounded, color: AppTheme.accent, size: 18),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1366,16 +1376,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'WHY BUILD THIS:',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    why,
+                    desc,
                     style: TextStyle(
                       fontSize: 12,
                       color: AppTheme.textMain,
@@ -1384,22 +1385,42 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   ),
                   const Divider(height: 24, color: Colors.white12),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'RECOMMENDED STACK: ',
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.accent,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          stack,
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 9,
-                            color: AppTheme.textSecondary,
+                      Row(
+                        children: [
+                          Icon(Icons.star_rounded, size: 14, color: AppTheme.peach),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$stars',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textSecondary,
+                            ),
                           ),
+                        ],
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final uri = Uri.tryParse(url);
+                          if (uri != null) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        child: Row(
+                          children: [
+                            Text(
+                              'VIEW ON GITHUB',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.accent,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.open_in_new_rounded, size: 12, color: AppTheme.accent),
+                          ],
                         ),
                       ),
                     ],

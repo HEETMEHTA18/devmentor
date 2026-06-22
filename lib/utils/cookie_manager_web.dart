@@ -1,15 +1,15 @@
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 
 void saveCookie(String name, String value) {
   try {
     // Save cookie with 365 days expiry, Secure and SameSite=Strict
-    html.document.cookie = "$name=$value; path=/; max-age=31536000; Secure; SameSite=Strict";
+    web.document.cookie = "$name=$value; path=/; max-age=31536000; Secure; SameSite=Strict";
   } catch (_) {}
 }
 
 String? getCookie(String name) {
   try {
-    final cookies = html.document.cookie ?? '';
+    final cookies = web.document.cookie;
     final parts = cookies.split(';');
     for (var part in parts) {
       final kv = part.trim().split('=');
@@ -23,6 +23,6 @@ String? getCookie(String name) {
 
 void deleteCookie(String name) {
   try {
-    html.document.cookie = "$name=; path=/; max-age=0; Secure; SameSite=Strict";
+    web.document.cookie = "$name=; path=/; max-age=0; Secure; SameSite=Strict";
   } catch (_) {}
 }
