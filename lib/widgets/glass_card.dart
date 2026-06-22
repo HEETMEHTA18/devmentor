@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -24,29 +25,13 @@ class GlassCard extends StatelessWidget {
     final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
     final double activeBlur = isMobileBrowser ? 16.0 : blur;
 
-    // Apple-style dual-tone glass gradient colors
-    final Color topColor = isDark 
-        ? Colors.white.withValues(alpha: isMobileBrowser ? 0.08 : 0.07) 
-        : Colors.white.withValues(alpha: isMobileBrowser ? 0.70 : 0.65);
-    final Color bottomColor = isDark 
-        ? Colors.black.withValues(alpha: isMobileBrowser ? 0.40 : 0.35) 
-        : Colors.white.withValues(alpha: isMobileBrowser ? 0.20 : 0.15);
+    final Color glassColor = isDark 
+        ? Colors.white.withValues(alpha: isMobileBrowser ? 0.05 : 0.08) 
+        : Colors.white.withValues(alpha: isMobileBrowser ? 0.35 : 0.45);
 
-    final card = Container(
-      padding: padding,
+    return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [topColor, bottomColor],
-        ),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.15) 
-              : Colors.white.withValues(alpha: 0.45),
-          width: 0.8,
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
@@ -55,18 +40,39 @@ class GlassCard extends StatelessWidget {
           ),
         ],
       ),
-      child: child,
-    );
-
-    return RepaintBoundary(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: activeBlur > 0
-            ? BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: activeBlur, sigmaY: activeBlur),
-                child: card,
-              )
-            : card,
+        child: OCLiquidGlassGroup(
+          settings: OCLiquidGlassSettings(
+            refractStrength: -0.05,
+            blurRadiusPx: activeBlur > 0 ? activeBlur : 2.0,
+            specStrength: 25.0,
+          ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: OCLiquidGlass(
+                  borderRadius: borderRadius,
+                  color: glassColor,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+              Container(
+                padding: padding,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: Border.all(
+                    color: isDark 
+                        ? Colors.white.withValues(alpha: 0.15) 
+                        : Colors.white.withValues(alpha: 0.45),
+                    width: 0.8,
+                  ),
+                ),
+                child: child,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
