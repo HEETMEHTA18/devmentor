@@ -34,8 +34,19 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         onRefresh: () async {
-          await appState.fetchGithubData(appState.githubUsername);
+          await appState.fetchGithubData(appState.githubUsername, force: true);
           await appState.fetchProfileRoast(force: true);
+          await appState.fetchActivityData(force: true);
+          await appState.fetchFollowingActivity(force: true);
+          await appState.fetchDeveloperDna(force: true);
+          await appState.fetchWeeklyReport(force: true);
+          await appState.fetchLearningPaths(force: true);
+          await appState.fetchOpportunities(force: true);
+          await appState.fetchPromptHistory(force: true);
+          await appState.fetchPromptAnalytics(force: true);
+          await appState.fetchPromptRecommendations(force: true);
+          await appState.fetchRoadmap(force: true);
+          await appState.fetchWhatsNewDigest(force: true);
         },
         color: AppTheme.accent,
         backgroundColor: AppTheme.surface,

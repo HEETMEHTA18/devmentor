@@ -95,6 +95,83 @@ class AppState extends ChangeNotifier {
           whatsNewDigest = jsonDecode(cachedWhatsNew);
         }
       } catch (_) {}
+
+      // Load cached activity data
+      try {
+        final cachedActivity = prefs.getString('activity_data_cache_$selectedActivityYear');
+        if (cachedActivity != null) {
+          final List<dynamic> rawList = jsonDecode(cachedActivity);
+          activityData = rawList.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+      } catch (_) {}
+
+      // Load cached following activity
+      try {
+        if (githubUsername.isNotEmpty) {
+          final cachedFollowing = prefs.getString('following_activity_cache_$githubUsername');
+          if (cachedFollowing != null) {
+            final List<dynamic> rawEvents = jsonDecode(cachedFollowing);
+            followingActivity = rawEvents.map((e) => Map<String, dynamic>.from(e)).toList();
+          }
+        }
+      } catch (_) {}
+
+      // Load cached learning paths
+      try {
+        final cachedLearningPaths = prefs.getString('learning_paths_cache');
+        if (cachedLearningPaths != null) {
+          final data = jsonDecode(cachedLearningPaths);
+          learningPathTitle = data['roadmap_title'] ?? 'Developer Career Path';
+          final String rawPathText = data['learning_path'] ?? '';
+          _parseAndSetLearningPath(rawPathText);
+        }
+      } catch (_) {}
+
+      // Load cached opportunities
+      try {
+        final cachedOpps = prefs.getString('opportunities_cache');
+        if (cachedOpps != null) {
+          final data = jsonDecode(cachedOpps);
+          techOpportunities = data['opportunities'];
+        }
+      } catch (_) {}
+
+      // Load cached roadmap
+      try {
+        final cachedRoadmap = prefs.getString('roadmap_cache');
+        if (cachedRoadmap != null) {
+          final data = jsonDecode(cachedRoadmap);
+          _parseAndSetRoadmap(data);
+        }
+      } catch (_) {}
+
+      // Load cached prompt history
+      try {
+        final cachedPromptHistory = prefs.getString('prompt_history_cache__');
+        if (cachedPromptHistory != null) {
+          final List<dynamic> data = jsonDecode(cachedPromptHistory);
+          promptHistory = data.map((json) => PromptItem.fromJson(json)).toList();
+        }
+      } catch (_) {}
+
+      // Load cached prompt analytics
+      try {
+        final cachedPromptAnalytics = prefs.getString('prompt_analytics_cache');
+        if (cachedPromptAnalytics != null) {
+          final data = jsonDecode(cachedPromptAnalytics);
+          _parseAndSetPromptAnalytics(data);
+        }
+      } catch (_) {}
+
+      // Load cached prompt recommendations
+      try {
+        final cachedPromptRecommendations = prefs.getString('prompt_recommendations_cache');
+        if (cachedPromptRecommendations != null) {
+          final data = jsonDecode(cachedPromptRecommendations);
+          promptRecommendations = List<dynamic>.from(data['recommendations'] ?? []);
+        }
+      } catch (_) {}
+
       await loadCachedGithubPromptsMarkdown();
       await loadPromptRepoSources();
       await loadChatHistory();
@@ -620,8 +697,26 @@ This is simulated offline prompts.md content.
   bool isLoadingRoadmap = false;
   String roadmapTitle = "Senior Developer Career Path";
 
-  Future<void> fetchRoadmap() async {
+  Future<void> fetchRoadmap({bool force = false}) async {
     if (token == null) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('roadmap_timestamp') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 14400000) { // 4 hours
+        final cachedRaw = prefs.getString('roadmap_cache');
+        if (cachedRaw != null) {
+          final data = jsonDecode(cachedRaw);
+          _parseAndSetRoadmap(data);
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading roadmap cache: $e');
+    }
+
     isLoadingRoadmap = true;
     notifyListeners();
 
@@ -635,19 +730,13 @@ This is simulated offline prompts.md content.
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        roadmapTitle = data['title'] ?? 'Senior Developer Career Path';
-        final List<dynamic> miles = data['milestones'] ?? [];
-        milestones = miles.map((m) {
-          return RoadmapMilestone(
-            title: m['title'] ?? '',
-            description: m['description'] ?? '',
-            isCompleted: m['isCompleted'] ?? false,
-            recommendations: (m['recommendations'] as List<dynamic>?)
-                    ?.map((e) => e.toString())
-                    .toList() ??
-                const [],
-          );
-        }).toList();
+        _parseAndSetRoadmap(data);
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('roadmap_cache', response.body);
+          await prefs.setInt('roadmap_timestamp', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('Error fetching roadmap: $e');
@@ -655,6 +744,22 @@ This is simulated offline prompts.md content.
       isLoadingRoadmap = false;
       notifyListeners();
     }
+  }
+
+  void _parseAndSetRoadmap(Map<String, dynamic> data) {
+    roadmapTitle = data['title'] ?? 'Senior Developer Career Path';
+    final List<dynamic> miles = data['milestones'] ?? [];
+    milestones = miles.map((m) {
+      return RoadmapMilestone(
+        title: m['title'] ?? '',
+        description: m['description'] ?? '',
+        isCompleted: m['isCompleted'] ?? false,
+        recommendations: (m['recommendations'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
+      );
+    }).toList();
   }
 
   Future<void> regenerateRoadmap() async {
@@ -1071,8 +1176,26 @@ This is simulated offline prompts.md content.
   String? avatarUrl;
   String? token;
 
-  Future<void> fetchGithubData(String ghUsername) async {
+  Future<void> fetchGithubData(String ghUsername, {bool force = false}) async {
     if (ghUsername.isEmpty) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('github_data_response_timestamp_$ghUsername') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 1800000) { // 30 minutes cache
+        final cachedRaw = prefs.getString('github_data_response_cache_$ghUsername');
+        if (cachedRaw != null) {
+          final data = jsonDecode(cachedRaw);
+          _parseGithubData(data, ghUsername);
+          debugPrint('GitHub stats successfully restored from cache.');
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading GitHub stats cache: $e');
+    }
+
     isLoading = true;
     notifyListeners();
 
@@ -1083,118 +1206,14 @@ This is simulated offline prompts.md content.
         final response = await http.get(backendUri);
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          username = data['name'] ?? data['login'] ?? username;
-          repos = data['public_repos'] ?? 0;
-          avatarUrl = data['avatar_url'];
-          final int totalStars = data['total_stars'] ?? 0;
-          final int commitsCount = data['total_commits'] ?? 0;
-          final List<dynamic> reposData = data['repos'] ?? [];
+          _parseGithubData(data, ghUsername);
 
-          List<Repository> newRepos = [];
-          Map<String, int> langCounts = {};
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('github_data_response_cache_$ghUsername', response.body);
+            await prefs.setInt('github_data_response_timestamp_$ghUsername', DateTime.now().millisecondsSinceEpoch);
+          } catch (_) {}
 
-          for (var r in reposData) {
-            final String? lang = r['language'];
-            if (lang != null && lang.isNotEmpty) {
-              langCounts[lang] = (langCounts[lang] ?? 0) + 1;
-            }
-
-            newRepos.add(Repository(
-              name: r['name'] ?? '',
-              owner: r['owner']?['login'] ?? '',
-              description: r['description'] ?? 'No description provided.',
-              difficulty: (r['stargazers_count'] as num) > 50 ? 'Advanced' : ((r['stargazers_count'] as num) > 5 ? 'Intermediate' : 'Beginner'),
-              impactScore: ((r['stargazers_count'] as num) * 5 + 40).clamp(40, 100).toInt(),
-              tags: lang != null ? [lang] : ['Repo'],
-              whyRecommended: 'Based on your GitHub activity and repository engagement.',
-            ));
-          }
-
-          stars = totalStars;
-          commits = commitsCount > 0 ? commitsCount : (reposData.length * 15);
-
-          if (newRepos.isNotEmpty) {
-            allRepositories = newRepos;
-          }
-
-          // Calculate dynamic Developer Score with real commits
-          developerScore = double.parse(((totalStars * 0.2 + reposData.length * 0.3 + commits * 0.01 + 3.0).clamp(1.0, 10.0)).toStringAsFixed(1));
-
-          // Determine strengths and gaps dynamically
-          strengths = [];
-          gaps = [];
-
-          if (totalStars > 10) {
-            strengths.add('Popular repositories (Total stars: $totalStars)');
-          } else {
-            gaps.add('Increase repo visibility and stargazers');
-          }
-
-          bool hasBackend = false;
-          bool hasFrontend = false;
-          for (var lang in langCounts.keys) {
-            final l = lang.toLowerCase();
-            if (l == 'typescript' || l == 'javascript' || l == 'html' || l == 'css' || l == 'dart') {
-              hasFrontend = true;
-            }
-            if (l == 'go' || l == 'rust' || l == 'python' || l == 'java' || l == 'c#' || l == 'ruby') {
-              hasBackend = true;
-            }
-          }
-
-          if (hasBackend) {
-            strengths.add('Solid backend development knowledge');
-          } else {
-            gaps.add('Backend experience is holding back your score');
-          }
-
-          if (hasFrontend) {
-            strengths.add('Strong UI/frontend development foundation');
-          } else {
-            gaps.add('Lack of frontend/UI application projects');
-          }
-
-          if (strengths.isEmpty) {
-            strengths.add('Clean repository setup');
-          }
-          if (gaps.isEmpty) {
-            gaps.add('Learn system architecture & cloud deployment');
-          }
-
-          // Dynamically update milestones based on languages
-          if (langCounts.isNotEmpty) {
-            final sortedLangs = langCounts.entries.toList()
-              ..sort((a, b) => b.value.compareTo(a.value));
-            final primaryLang = sortedLangs.first.key;
-
-            milestones = [
-              RoadmapMilestone(
-                title: 'Master $primaryLang Core & Patterns',
-                description: 'Completed',
-                isCompleted: true,
-              ),
-              RoadmapMilestone(
-                title: 'Build Distributed Systems with $primaryLang',
-                description: 'In Progress',
-                isCompleted: false,
-              ),
-              RoadmapMilestone(
-                title: 'CI/CD Pipelines & Automated Testing',
-                description: 'Next — 1 month',
-                isCompleted: false,
-              ),
-              RoadmapMilestone(
-                title: 'System Design & Scalability',
-                description: 'Next — 3 months',
-                isCompleted: false,
-              ),
-              RoadmapMilestone(
-                title: 'Deploy to Cloud & Production Monitoring',
-                description: 'Next — 5 months',
-                isCompleted: false,
-              ),
-            ];
-          }
           isLoading = false;
           await _saveCachedGithubStats();
           notifyListeners();
@@ -1228,11 +1247,14 @@ This is simulated offline prompts.md content.
       final userUri = Uri.parse('https://api.github.com/users/$ghUsername');
       final userResponse = await http.get(userUri);
       
+      String userDisplayName = username;
+      int publicRepos = 0;
+      String? userAvatarUrl;
       if (userResponse.statusCode == 200) {
         final userData = jsonDecode(userResponse.body);
-        username = userData['name'] ?? userData['login'] ?? username;
-        repos = userData['public_repos'] ?? 0;
-        avatarUrl = userData['avatar_url'];
+        userDisplayName = userData['name'] ?? userData['login'] ?? username;
+        publicRepos = userData['public_repos'] ?? 0;
+        userAvatarUrl = userData['avatar_url'];
       }
 
       final reposUri = Uri.parse('https://api.github.com/users/$ghUsername/repos?per_page=100');
@@ -1241,112 +1263,27 @@ This is simulated offline prompts.md content.
       if (reposResponse.statusCode == 200) {
         final List<dynamic> reposData = jsonDecode(reposResponse.body);
         int totalStars = 0;
-        List<Repository> newRepos = [];
-        Map<String, int> langCounts = {};
-
         for (var r in reposData) {
           totalStars += (r['stargazers_count'] as num).toInt();
-          final String? lang = r['language'];
-          if (lang != null && lang.isNotEmpty) {
-            langCounts[lang] = (langCounts[lang] ?? 0) + 1;
-          }
-
-          newRepos.add(Repository(
-            name: r['name'] ?? '',
-            owner: r['owner']?['login'] ?? '',
-            description: r['description'] ?? 'No description provided.',
-            difficulty: (r['stargazers_count'] as num) > 50 ? 'Advanced' : ((r['stargazers_count'] as num) > 5 ? 'Intermediate' : 'Beginner'),
-            impactScore: ((r['stargazers_count'] as num) * 5 + 40).clamp(40, 100).toInt(),
-            tags: lang != null ? [lang] : ['Repo'],
-            whyRecommended: 'Based on your GitHub activity and repository engagement.',
-          ));
         }
 
-        stars = totalStars;
-        commits = commitsCount > 0 ? commitsCount : (reposData.length * 15);
+        final Map<String, dynamic> proxyLikeMap = {
+          'name': userDisplayName,
+          'login': ghUsername,
+          'public_repos': publicRepos,
+          'avatar_url': userAvatarUrl,
+          'total_stars': totalStars,
+          'total_commits': commitsCount > 0 ? commitsCount : (reposData.length * 15),
+          'repos': reposData,
+        };
 
-        if (newRepos.isNotEmpty) {
-          allRepositories = newRepos;
-        }
+        _parseGithubData(proxyLikeMap, ghUsername);
 
-        // Calculate dynamic Developer Score with real commits
-        developerScore = double.parse(((totalStars * 0.2 + reposData.length * 0.3 + commits * 0.01 + 3.0).clamp(1.0, 10.0)).toStringAsFixed(1));
-
-        // Determine strengths and gaps dynamically
-        strengths = [];
-        gaps = [];
-
-        if (totalStars > 10) {
-          strengths.add('Popular repositories (Total stars: $totalStars)');
-        } else {
-          gaps.add('Increase repo visibility and stargazers');
-        }
-
-        bool hasBackend = false;
-        bool hasFrontend = false;
-        for (var lang in langCounts.keys) {
-          final l = lang.toLowerCase();
-          if (l == 'typescript' || l == 'javascript' || l == 'html' || l == 'css' || l == 'dart') {
-            hasFrontend = true;
-          }
-          if (l == 'go' || l == 'rust' || l == 'python' || l == 'java' || l == 'c#' || l == 'ruby') {
-            hasBackend = true;
-          }
-        }
-
-        if (hasBackend) {
-          strengths.add('Solid backend development knowledge');
-        } else {
-          gaps.add('Backend experience is holding back your score');
-        }
-
-        if (hasFrontend) {
-          strengths.add('Strong UI/frontend development foundation');
-        } else {
-          gaps.add('Lack of frontend/UI application projects');
-        }
-
-        if (strengths.isEmpty) {
-          strengths.add('Clean repository setup');
-        }
-        if (gaps.isEmpty) {
-          gaps.add('Learn system architecture & cloud deployment');
-        }
-
-        // Dynamically update milestones based on languages
-        if (langCounts.isNotEmpty) {
-          final sortedLangs = langCounts.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value));
-          final primaryLang = sortedLangs.first.key;
-
-          milestones = [
-            RoadmapMilestone(
-              title: 'Master $primaryLang Core & Patterns',
-              description: 'Completed',
-              isCompleted: true,
-            ),
-            RoadmapMilestone(
-              title: 'Build Distributed Systems with $primaryLang',
-              description: 'In Progress',
-              isCompleted: false,
-            ),
-            RoadmapMilestone(
-              title: 'CI/CD Pipelines & Automated Testing',
-              description: 'Next — 1 month',
-              isCompleted: false,
-            ),
-            RoadmapMilestone(
-              title: 'System Design & Scalability',
-              description: 'Next — 3 months',
-              isCompleted: false,
-            ),
-            RoadmapMilestone(
-              title: 'Deploy to Cloud & Production Monitoring',
-              description: 'Next — 5 months',
-              isCompleted: false,
-            ),
-          ];
-        }
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('github_data_response_cache_$ghUsername', jsonEncode(proxyLikeMap));
+          await prefs.setInt('github_data_response_timestamp_$ghUsername', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('Error fetching GitHub data: $e');
@@ -1354,6 +1291,121 @@ This is simulated offline prompts.md content.
       isLoading = false;
       await _saveCachedGithubStats();
       notifyListeners();
+    }
+  }
+
+  void _parseGithubData(Map<String, dynamic> data, String ghUsername) {
+    username = data['name'] ?? data['login'] ?? username;
+    repos = data['public_repos'] ?? 0;
+    avatarUrl = data['avatar_url'];
+    final int totalStars = data['total_stars'] ?? 0;
+    final int commitsCount = data['total_commits'] ?? 0;
+    final List<dynamic> reposData = data['repos'] ?? [];
+
+    List<Repository> newRepos = [];
+    Map<String, int> langCounts = {};
+
+    for (var r in reposData) {
+      final String? lang = r['language'];
+      if (lang != null && lang.isNotEmpty) {
+        langCounts[lang] = (langCounts[lang] ?? 0) + 1;
+      }
+
+      newRepos.add(Repository(
+        name: r['name'] ?? '',
+        owner: r['owner'] is Map ? (r['owner']['login'] ?? '') : (r['owner'] ?? ''),
+        description: r['description'] ?? 'No description provided.',
+        difficulty: (r['stargazers_count'] as num) > 50 ? 'Advanced' : ((r['stargazers_count'] as num) > 5 ? 'Intermediate' : 'Beginner'),
+        impactScore: ((r['stargazers_count'] as num) * 5 + 40).clamp(40, 100).toInt(),
+        tags: lang != null ? [lang] : ['Repo'],
+        whyRecommended: 'Based on your GitHub activity and repository engagement.',
+      ));
+    }
+
+    stars = totalStars;
+    commits = commitsCount;
+
+    if (newRepos.isNotEmpty) {
+      allRepositories = newRepos;
+    }
+
+    // Calculate dynamic Developer Score with real commits
+    developerScore = double.parse(((totalStars * 0.2 + reposData.length * 0.3 + commits * 0.01 + 3.0).clamp(1.0, 10.0)).toStringAsFixed(1));
+
+    // Determine strengths and gaps dynamically
+    strengths = [];
+    gaps = [];
+
+    if (totalStars > 10) {
+      strengths.add('Popular repositories (Total stars: $totalStars)');
+    } else {
+      gaps.add('Increase repo visibility and stargazers');
+    }
+
+    bool hasBackend = false;
+    bool hasFrontend = false;
+    for (var lang in langCounts.keys) {
+      final l = lang.toLowerCase();
+      if (l == 'typescript' || l == 'javascript' || l == 'html' || l == 'css' || l == 'dart') {
+        hasFrontend = true;
+      }
+      if (l == 'go' || l == 'rust' || l == 'python' || l == 'java' || l == 'c#' || l == 'ruby') {
+        hasBackend = true;
+      }
+    }
+
+    if (hasBackend) {
+      strengths.add('Solid backend development knowledge');
+    } else {
+      gaps.add('Backend experience is holding back your score');
+    }
+
+    if (hasFrontend) {
+      strengths.add('Strong UI/frontend development foundation');
+    } else {
+      gaps.add('Lack of frontend/UI application projects');
+    }
+
+    if (strengths.isEmpty) {
+      strengths.add('Clean repository setup');
+    }
+    if (gaps.isEmpty) {
+      gaps.add('Learn system architecture & cloud deployment');
+    }
+
+    // Dynamically update milestones based on languages
+    if (langCounts.isNotEmpty) {
+      final sortedLangs = langCounts.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      final primaryLang = sortedLangs.first.key;
+
+      milestones = [
+        RoadmapMilestone(
+          title: 'Master $primaryLang Core & Patterns',
+          description: 'Completed',
+          isCompleted: true,
+        ),
+        RoadmapMilestone(
+          title: 'Build Distributed Systems with $primaryLang',
+          description: 'In Progress',
+          isCompleted: false,
+        ),
+        RoadmapMilestone(
+          title: 'CI/CD Pipelines & Automated Testing',
+          description: 'Next — 1 month',
+          isCompleted: false,
+        ),
+        RoadmapMilestone(
+          title: 'System Design & Scalability',
+          description: 'Next — 3 months',
+          isCompleted: false,
+        ),
+        RoadmapMilestone(
+          title: 'Deploy to Cloud & Production Monitoring',
+          description: 'Next — 5 months',
+          isCompleted: false,
+        ),
+      ];
     }
   }
 
@@ -1666,7 +1718,24 @@ This is simulated offline prompts.md content.
   }
 
 
-  Future<void> fetchActivityData() async {
+  Future<void> fetchActivityData({bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('activity_data_timestamp_$selectedActivityYear') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 3600000) { // 1 hour
+        final cachedRaw = prefs.getString('activity_data_cache_$selectedActivityYear');
+        if (cachedRaw != null) {
+          final List<dynamic> rawList = jsonDecode(cachedRaw);
+          activityData = rawList.map((e) => Map<String, dynamic>.from(e)).toList();
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading activity data cache: $e');
+    }
+
     isLoadingActivity = true;
     notifyListeners();
     try {
@@ -1681,6 +1750,12 @@ This is simulated offline prompts.md content.
         final data = jsonDecode(response.body);
         final List<dynamic> rawList = data['activity'] ?? [];
         activityData = rawList.map((e) => Map<String, dynamic>.from(e)).toList();
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('activity_data_cache_$selectedActivityYear', jsonEncode(rawList));
+          await prefs.setInt('activity_data_timestamp_$selectedActivityYear', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('Error fetching activity data: $e');
@@ -1695,7 +1770,24 @@ This is simulated offline prompts.md content.
     fetchActivityData();
   }
 
-  Future<void> fetchFollowingActivity() async {
+  Future<void> fetchFollowingActivity({bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('following_activity_timestamp_$githubUsername') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 1800000) { // 30 minutes
+        final cachedRaw = prefs.getString('following_activity_cache_$githubUsername');
+        if (cachedRaw != null) {
+          final List<dynamic> rawEvents = jsonDecode(cachedRaw);
+          followingActivity = rawEvents.map((e) => Map<String, dynamic>.from(e)).toList();
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading following activity cache: $e');
+    }
+
     isLoadingFollowingActivity = true;
     notifyListeners();
     try {
@@ -1709,6 +1801,12 @@ This is simulated offline prompts.md content.
         final data = jsonDecode(response.body);
         final List<dynamic> rawEvents = data['events'] ?? [];
         followingActivity = rawEvents.map((e) => Map<String, dynamic>.from(e)).toList();
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('following_activity_cache_$githubUsername', jsonEncode(rawEvents));
+          await prefs.setInt('following_activity_timestamp_$githubUsername', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       } else {
         debugPrint('Failed to load following activity: ${response.statusCode}');
       }
@@ -2229,7 +2327,26 @@ This is simulated offline prompts.md content.
     }
   }
 
-  Future<void> fetchLearningPaths() async {
+  Future<void> fetchLearningPaths({bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('learning_paths_timestamp') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 14400000) { // 4 hours
+        final cachedRaw = prefs.getString('learning_paths_cache');
+        if (cachedRaw != null) {
+          final data = jsonDecode(cachedRaw);
+          learningPathTitle = data['roadmap_title'] ?? 'Developer Career Path';
+          final String rawPathText = data['learning_path'] ?? '';
+          _parseAndSetLearningPath(rawPathText);
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading learning paths cache: $e');
+    }
+
     isLoadingLearningPaths = true;
     isRateLimited = false;
     notifyListeners();
@@ -2255,75 +2372,13 @@ This is simulated offline prompts.md content.
         learningPathTitle = data['roadmap_title'] ?? 'Developer Career Path';
         final String rawPathText = data['learning_path'] ?? '';
         
-        // Parse the markdown string into 5 Duolingo-style steps
-        final List<Map<String, dynamic>> parsedSteps = [];
-        final regex = RegExp(r'(?:^|\n)(?:Step\s+\d+|Milestone\s+\d+|###?\s+\d+)\b', caseSensitive: false);
-        final parts = rawPathText.split(regex);
-        
-        int stepIdx = 1;
-        for (var part in parts) {
-          final trimmed = part.trim();
-          if (trimmed.isEmpty) continue;
-          
-          // Try to extract a repository name from the text
-          String repoName = 'GitHub Reference';
-          final repoMatch = RegExp(r'\b([a-zA-Z0-9\-_]+/[a-zA-Z0-9\-_.]+)\b').firstMatch(trimmed);
-          if (repoMatch != null) {
-            repoName = repoMatch.group(1)!;
-          } else {
-            // Pick a reasonable fallback name if none found
-            if (stepIdx == 1) {
-              repoName = 'flutter/flutter';
-            } else if (stepIdx == 2) {
-              repoName = 'tiangolo/fastapi';
-            } else if (stepIdx == 3) {
-              repoName = 'docker/cli';
-            } else {
-              repoName = 'open-source/project';
-            }
-          }
-          
-          // Extract description and task
-          String desc = trimmed;
-          String task = 'Inspect typical project configuration and package dependency tree.';
-          
-          final taskMatch = RegExp(r'(?:Task|Actionable\s+Task|Action):\s*(.*)', caseSensitive: false).firstMatch(trimmed);
-          if (taskMatch != null) {
-            task = taskMatch.group(1)!.trim();
-            desc = trimmed.substring(0, taskMatch.start).trim();
-          } else {
-            // Split by double newline to find a task-like ending
-            final paragraphs = trimmed.split('\n\n');
-            if (paragraphs.length > 1) {
-              task = paragraphs.last.trim();
-              desc = paragraphs.sublist(0, paragraphs.length - 1).join('\n\n').trim();
-            }
-          }
-          
-          parsedSteps.add({
-            'step_num': stepIdx++,
-            'repo_name': repoName,
-            'description': desc,
-            'task': task,
-            'is_completed': stepIdx == 2, // first step marked completed for UI matchup
-          });
-        }
-        
-        // If parsing didn't produce any items, fallback or create structured steps
-        if (parsedSteps.isEmpty) {
-          final lines = rawPathText.split('\n').where((l) => l.trim().isNotEmpty).toList();
-          for (var i = 0; i < lines.length && i < 5; i++) {
-            parsedSteps.add({
-              'step_num': i + 1,
-              'repo_name': i == 0 ? 'flutter/flutter' : 'git/git',
-              'description': lines[i].replaceFirst(RegExp(r'^[-•\d+\.\s]+'), '').trim(),
-              'task': 'Examine repository code structure and main files.',
-              'is_completed': i == 0,
-            });
-          }
-        }
-        
-        learningPathSteps = parsedSteps;
+        _parseAndSetLearningPath(rawPathText);
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('learning_paths_cache', response.body);
+          await prefs.setInt('learning_paths_timestamp', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       } else if (response.statusCode == 429) {
         handleRateLimit();
       }
@@ -2335,7 +2390,96 @@ This is simulated offline prompts.md content.
     }
   }
 
-  Future<void> fetchOpportunities() async {
+  void _parseAndSetLearningPath(String rawPathText) {
+    // Parse the markdown string into 5 Duolingo-style steps
+    final List<Map<String, dynamic>> parsedSteps = [];
+    final regex = RegExp(r'(?:^|\n)(?:Step\s+\d+|Milestone\s+\d+|###?\s+\d+)\b', caseSensitive: false);
+    final parts = rawPathText.split(regex);
+    
+    int stepIdx = 1;
+    for (var part in parts) {
+      final trimmed = part.trim();
+      if (trimmed.isEmpty) continue;
+      
+      // Try to extract a repository name from the text
+      String repoName = 'GitHub Reference';
+      final repoMatch = RegExp(r'\b([a-zA-Z0-9\-_]+/[a-zA-Z0-9\-_.]+)\b').firstMatch(trimmed);
+      if (repoMatch != null) {
+        repoName = repoMatch.group(1)!;
+      } else {
+        // Pick a reasonable fallback name if none found
+        if (stepIdx == 1) {
+          repoName = 'flutter/flutter';
+        } else if (stepIdx == 2) {
+          repoName = 'tiangolo/fastapi';
+        } else if (stepIdx == 3) {
+          repoName = 'docker/cli';
+        } else {
+          repoName = 'open-source/project';
+        }
+      }
+      
+      // Extract description and task
+      String desc = trimmed;
+      String task = 'Inspect typical project configuration and package dependency tree.';
+      
+      final taskMatch = RegExp(r'(?:Task|Actionable\s+Task|Action):\s*(.*)', caseSensitive: false).firstMatch(trimmed);
+      if (taskMatch != null) {
+        task = taskMatch.group(1)!.trim();
+        desc = trimmed.substring(0, taskMatch.start).trim();
+      } else {
+        // Split by double newline to find a task-like ending
+        final paragraphs = trimmed.split('\n\n');
+        if (paragraphs.length > 1) {
+          task = paragraphs.last.trim();
+          desc = paragraphs.sublist(0, paragraphs.length - 1).join('\n\n').trim();
+        }
+      }
+      
+      parsedSteps.add({
+        'step_num': stepIdx++,
+        'repo_name': repoName,
+        'description': desc,
+        'task': task,
+        'is_completed': stepIdx == 2, // first step marked completed for UI matchup
+      });
+    }
+    
+    // If parsing didn't produce any items, fallback or create structured steps
+    if (parsedSteps.isEmpty) {
+      final lines = rawPathText.split('\n').where((l) => l.trim().isNotEmpty).toList();
+      for (var i = 0; i < lines.length && i < 5; i++) {
+        parsedSteps.add({
+          'step_num': i + 1,
+          'repo_name': i == 0 ? 'flutter/flutter' : 'git/git',
+          'description': lines[i].replaceFirst(RegExp(r'^[-•\d+\.\s]+'), '').trim(),
+          'task': 'Examine repository code structure and main files.',
+          'is_completed': i == 0,
+        });
+      }
+    }
+    
+    learningPathSteps = parsedSteps;
+  }
+
+  Future<void> fetchOpportunities({bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('opportunities_timestamp') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 14400000) { // 4 hours
+        final cachedRaw = prefs.getString('opportunities_cache');
+        if (cachedRaw != null) {
+          final data = jsonDecode(cachedRaw);
+          techOpportunities = data['opportunities'];
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading opportunities cache: $e');
+    }
+
     isLoadingOpportunities = true;
     notifyListeners();
     try {
@@ -2348,6 +2492,12 @@ This is simulated offline prompts.md content.
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         techOpportunities = data['opportunities'];
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('opportunities_cache', response.body);
+          await prefs.setInt('opportunities_timestamp', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
 
         if (techOpportunities != null && techOpportunities!.isNotEmpty) {
           final firstOppTitle = techOpportunities!.first['title'] ?? 'AI Trend Project';
@@ -2464,7 +2614,26 @@ This is simulated offline prompts.md content.
     notifyListeners();
   }
 
-  Future<void> fetchPromptHistory({String? query, String? workflow}) async {
+  Future<void> fetchPromptHistory({String? query, String? workflow, bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cacheKey = 'prompt_history_cache_${query ?? ""}_${workflow ?? ""}';
+      final timestampKey = 'prompt_history_timestamp_${query ?? ""}_${workflow ?? ""}';
+      final lastTime = prefs.getInt(timestampKey) ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 900000) { // 15 minutes cache
+        final cachedRaw = prefs.getString(cacheKey);
+        if (cachedRaw != null) {
+          final List<dynamic> data = jsonDecode(cachedRaw);
+          promptHistory = data.map((json) => PromptItem.fromJson(json)).toList();
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading prompt history cache: $e');
+    }
+
     isLoadingPromptHistory = true;
     notifyListeners();
     try {
@@ -2523,6 +2692,14 @@ This is simulated offline prompts.md content.
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         promptHistory = data.map((json) => PromptItem.fromJson(json)).toList();
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final cacheKey = 'prompt_history_cache_${query ?? ""}_${workflow ?? ""}';
+          final timestampKey = 'prompt_history_timestamp_${query ?? ""}_${workflow ?? ""}';
+          await prefs.setString(cacheKey, response.body);
+          await prefs.setInt(timestampKey, DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('Error fetching prompt history: $e');
@@ -2552,10 +2729,10 @@ This is simulated offline prompts.md content.
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Refresh prompt history, analytics, and recommendations
-        fetchPromptHistory();
-        fetchPromptAnalytics();
-        fetchPromptRecommendations();
+        // Refresh prompt history, analytics, and recommendations bypassing the cache
+        fetchPromptHistory(force: true);
+        fetchPromptAnalytics(force: true);
+        fetchPromptRecommendations(force: true);
         return data['message'] ?? 'Successfully synchronized prompts from GitHub.';
       } else {
         final data = jsonDecode(response.body);
@@ -2567,7 +2744,24 @@ This is simulated offline prompts.md content.
     }
   }
 
-  Future<void> fetchPromptAnalytics() async {
+  Future<void> fetchPromptAnalytics({bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('prompt_analytics_timestamp') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 900000) { // 15 minutes cache
+        final cachedRaw = prefs.getString('prompt_analytics_cache');
+        if (cachedRaw != null) {
+          final data = jsonDecode(cachedRaw);
+          _parseAndSetPromptAnalytics(data);
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading prompt analytics cache: $e');
+    }
+
     isLoadingPromptAnalytics = true;
     notifyListeners();
     try {
@@ -2609,15 +2803,13 @@ This is simulated offline prompts.md content.
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        totalPrompts = data['total_prompts'] ?? 0;
-        averagePromptScore = (data['average_score'] as num?)?.toDouble() ?? 0.0;
-        promptWorkflowCounts = Map<String, int>.from(data['workflow_counts'] ?? {});
-        topPromptTechnologies = List<Map<String, dynamic>>.from(
-          (data['top_technologies'] ?? []).map((e) => Map<String, dynamic>.from(e))
-        );
-        promptScoreHistory = List<Map<String, dynamic>>.from(
-          (data['score_history'] ?? []).map((e) => Map<String, dynamic>.from(e))
-        );
+        _parseAndSetPromptAnalytics(data);
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('prompt_analytics_cache', response.body);
+          await prefs.setInt('prompt_analytics_timestamp', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('Error fetching prompt analytics: $e');
@@ -2627,7 +2819,36 @@ This is simulated offline prompts.md content.
     }
   }
 
-  Future<void> fetchPromptRecommendations() async {
+  void _parseAndSetPromptAnalytics(Map<String, dynamic> data) {
+    totalPrompts = data['total_prompts'] ?? 0;
+    averagePromptScore = (data['average_score'] as num?)?.toDouble() ?? 0.0;
+    promptWorkflowCounts = Map<String, int>.from(data['workflow_counts'] ?? {});
+    topPromptTechnologies = List<Map<String, dynamic>>.from(
+      (data['top_technologies'] ?? []).map((e) => Map<String, dynamic>.from(e))
+    );
+    promptScoreHistory = List<Map<String, dynamic>>.from(
+      (data['score_history'] ?? []).map((e) => Map<String, dynamic>.from(e))
+    );
+  }
+
+  Future<void> fetchPromptRecommendations({bool force = false}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('prompt_recommendations_timestamp') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 3600000) { // 1 hour cache
+        final cachedRaw = prefs.getString('prompt_recommendations_cache');
+        if (cachedRaw != null) {
+          final data = jsonDecode(cachedRaw);
+          promptRecommendations = List<dynamic>.from(data['recommendations'] ?? []);
+          notifyListeners();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading prompt recommendations cache: $e');
+    }
+
     isLoadingPromptRecommendations = true;
     notifyListeners();
     try {
@@ -2662,6 +2883,12 @@ This is simulated offline prompts.md content.
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         promptRecommendations = List<dynamic>.from(data['recommendations'] ?? []);
+
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('prompt_recommendations_cache', response.body);
+          await prefs.setInt('prompt_recommendations_timestamp', DateTime.now().millisecondsSinceEpoch);
+        } catch (_) {}
       }
     } catch (e) {
       debugPrint('Error fetching prompt recommendations: $e');
@@ -2845,7 +3072,7 @@ This is simulated offline prompts.md content.
     }
   }
 
-  Future<void> fetchWhatsNewDigest() async {
+  Future<void> fetchWhatsNewDigest({bool force = false}) async {
     isLoadingWhatsNewDigest = true;
     notifyListeners();
 
@@ -2853,9 +3080,16 @@ This is simulated offline prompts.md content.
     try {
       final prefs = await SharedPreferences.getInstance();
       final cachedRaw = prefs.getString('whats_new_digest_cache');
-      if (cachedRaw != null && whatsNewDigest == null) {
+      final lastTime = prefs.getInt('last_whats_new_time') ?? 0;
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      if (cachedRaw != null) {
         whatsNewDigest = jsonDecode(cachedRaw);
         notifyListeners();
+        if (!force && (nowMs - lastTime) < 43200000) { // 12 hours
+          isLoadingWhatsNewDigest = false;
+          notifyListeners();
+          return;
+        }
       }
     } catch (_) {}
 
