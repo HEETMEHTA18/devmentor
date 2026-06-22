@@ -14,6 +14,7 @@ import '../../providers/app_state.dart';
 import '../../widgets/liquid_glass_background.dart';
 import '../../widgets/animated_copy_button.dart';
 import '../../utils/speech_helper.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class MentorChatScreen extends StatefulWidget {
   const MentorChatScreen({super.key});
@@ -212,22 +213,16 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: LiquidGlassButton.icon(
               onPressed: () => _showTailorBottomSheet(state),
               icon: const Icon(Icons.auto_awesome_rounded, size: 14),
               label: Text(
                 'Tailor & Sync',
                 style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
-              ),
+              color: AppTheme.accent,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              borderRadius: 12,
             ),
           ),
         ],
@@ -334,7 +329,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                         child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
                       ),
                       const SizedBox(width: 12),
-                      ElevatedButton(
+                      LiquidGlassButton(
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
                             Navigator.pop(context);
@@ -345,14 +340,9 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                             _scrollToBottom();
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accent,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        ),
+                        color: AppTheme.accent,
+                        borderRadius: 16,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         child: const Text('Tailor & Sync'),
                       ),
                     ],

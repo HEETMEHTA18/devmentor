@@ -9,6 +9,7 @@ import '../../providers/app_state.dart';
 import '../../models/repository.dart';
 import '../mentor/mentor_chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class DiscoverReposScreen extends StatefulWidget {
   const DiscoverReposScreen({super.key});
@@ -578,7 +579,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      ElevatedButton.icon(
+                      LiquidGlassButton.icon(
                         onPressed: () {
                           setState(() {
                             _activeTab = 5; // Switch to Research Agent Tab
@@ -594,15 +595,9 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                           'Deep Analyze',
                           style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accent,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        borderRadius: 8,
+                        color: AppTheme.accent,
                       ),
                     ],
                   ),
@@ -720,7 +715,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: LiquidGlassButton(
                     onPressed: state.isReviewingResume
                         ? null
                         : () {
@@ -728,12 +723,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                               state.reviewResume(_resumeController.text.trim());
                             }
                           },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    borderRadius: 16,
+                    color: AppTheme.accent,
                     child: state.isReviewingResume
                         ? const SizedBox(
                             width: 20, height: 20,

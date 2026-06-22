@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
+import '../../widgets/liquid_glass_button.dart';
 import '../../providers/app_state.dart';
 
 class RoadmapScreen extends StatefulWidget {
@@ -742,19 +743,15 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: LiquidGlassButton(
                     onPressed: () {
                       state.clearRateLimit();
                       state.personalGoal = _learningPathRoleController.text.trim();
                       state.preferredStack = _learningPathTechsController.text.trim();
                       state.fetchLearningPaths();
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    color: AppTheme.accent,
+                    borderRadius: 16,
                     child: Text(
                       'BUILD LEARNING PATH',
                       style: GoogleFonts.jetBrainsMono(
@@ -967,18 +964,14 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: LiquidGlassButton(
                     onPressed: state.isBattling
                         ? null
                         : () {
                             state.battleTarget(_selectedBattleRole);
                           },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.destructive,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    color: AppTheme.destructive,
+                    borderRadius: 16,
                     child: state.isBattling
                         ? const SizedBox(
                             width: 20, height: 20,
@@ -1164,7 +1157,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: ElevatedButton(
+                  child: LiquidGlassButton(
                     onPressed: state.isCopilotRunning
                         ? null
                         : () {
@@ -1177,12 +1170,8 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                               );
                             }
                           },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    color: AppTheme.accent,
+                    borderRadius: 16,
                     child: state.isCopilotRunning
                         ? const SizedBox(
                             width: 20, height: 20,

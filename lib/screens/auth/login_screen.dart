@@ -6,7 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/web_helper.dart';
 import '../../routes/route_paths.dart';
 import '../../widgets/liquid_glass_background.dart';
-
+import '../../widgets/liquid_glass_button.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -60,10 +60,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ? Center(child: CircularProgressIndicator(color: AppTheme.accent))
                 : Column(
                     children: [
-                      ElevatedButton.icon(
+                      LiquidGlassButton.icon(
                         onPressed: _handleGithubLogin,
                         icon: const Icon(Icons.hub_rounded),
                         label: Text('CONTINUE WITH GITHUB', style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold)),
+                        width: double.infinity,
+                        height: 60,
                       ),
                       const SizedBox(height: 16),
                       OutlinedButton(

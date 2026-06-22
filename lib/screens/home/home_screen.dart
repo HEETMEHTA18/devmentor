@@ -11,6 +11,7 @@ import '../../core/config/app_config.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../mentor/mentor_chat_screen.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -662,7 +663,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton(
+                    LiquidGlassButton(
                       onPressed: () {
                         final newUsername = controller.text.trim();
                         if (newUsername.isNotEmpty) {
@@ -676,10 +677,9 @@ class HomeScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(80, 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      color: AppTheme.accent,
+                      borderRadius: 8,
                       child: const Text('Save'),
                     ),
                   ],
@@ -856,18 +856,14 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
+                  LiquidGlassButton(
                     onPressed: () {
                       state.togglePreference('ai');
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.peach.withValues(alpha: 0.2),
-                      foregroundColor: AppTheme.peach,
-                      side: BorderSide(color: AppTheme.peach.withValues(alpha: 0.4)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    child: Text('Enable AI Insights', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                    color: AppTheme.peach.withValues(alpha: 0.2),
+                    borderRadius: 16,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Text('Enable AI Insights', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.peach)),
                   ),
                 ],
               ),
@@ -1130,18 +1126,14 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
+                  LiquidGlassButton(
                     onPressed: () {
                       state.togglePreference('report');
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
-                      foregroundColor: AppTheme.accent,
-                      side: BorderSide(color: AppTheme.accent.withValues(alpha: 0.4)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                    child: Text('Enable Weekly Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+                    color: AppTheme.accent.withValues(alpha: 0.2),
+                    borderRadius: 16,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Text('Enable Weekly Report', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppTheme.accent)),
                   ),
                 ],
               ),
@@ -2342,7 +2334,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton(
+                    LiquidGlassButton(
                       onPressed: () {
                         final username = controller.text.trim();
                         if (username.isNotEmpty) {
@@ -2356,10 +2348,9 @@ class HomeScreen extends StatelessWidget {
                           );
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(80, 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      color: AppTheme.accent,
+                      borderRadius: 8,
                       child: const Text('Link Account'),
                     ),
                   ],

@@ -10,7 +10,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/app_state.dart';
 import '../../routes/route_paths.dart';
 import '../../widgets/liquid_glass_background.dart';
-
+import '../../widgets/liquid_glass_button.dart';
 class EmailAuthScreen extends StatefulWidget {
   const EmailAuthScreen({super.key});
 
@@ -349,14 +349,10 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                   // Submit Button
                   _isLoading
                       ? Center(child: CircularProgressIndicator(color: AppTheme.accent))
-                      : ElevatedButton(
+                      : LiquidGlassButton(
                           onPressed: _submit,
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 56),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                          ),
+                          width: double.infinity,
+                          height: 56,
                           child: Text(
                             _isLoginMode ? 'SIGN IN' : 'CREATE ACCOUNT',
                             style: GoogleFonts.jetBrainsMono(
@@ -476,7 +472,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                     style: GoogleFonts.inter(color: AppTheme.textSecondary),
                   ),
                 ),
-                ElevatedButton(
+                LiquidGlassButton(
                   onPressed: () {
                     if (codeController.text == '123456') {
                       Navigator.of(context).pop(true);
@@ -489,12 +485,7 @@ class _EmailAuthScreenState extends State<EmailAuthScreen> {
                       );
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  borderRadius: 12,
                   child: Text(
                     'Verify',
                     style: GoogleFonts.inter(

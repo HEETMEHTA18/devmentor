@@ -9,6 +9,7 @@ import '../../providers/app_state.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/animated_copy_button.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class PromptHubScreen extends StatefulWidget {
   const PromptHubScreen({super.key});
@@ -263,26 +264,15 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                               ],
                             ),
                             if (projectName != 'Unassigned')
-                              ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
-                                  ),
-                                  backgroundColor: AppTheme.accent.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  foregroundColor: AppTheme.accent,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    side: BorderSide(
-                                      color: AppTheme.accent.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                    ),
-                                  ),
+                              LiquidGlassButton.icon(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
                                 ),
+                                color: AppTheme.accent.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: 10,
                                 icon: state.isPushingPrompts
                                     ? const SizedBox(
                                         width: 14,
@@ -724,7 +714,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                ElevatedButton(
+                LiquidGlassButton(
                   onPressed: () {
                     state.addPromptRepoSource(
                       _repoOwnerController.text,
@@ -734,11 +724,9 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                     _repoNameController.clear();
                     setState(() {});
                   },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
                   ),
                   child: const Text('Add'),
                 ),
@@ -1167,14 +1155,9 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
             SizedBox(
               width: double.infinity,
               height: 48,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              child: LiquidGlassButton(
+                color: AppTheme.accent,
+                borderRadius: 12,
                 onPressed: state.isSubmittingPromptEvent
                     ? null
                     : () async {

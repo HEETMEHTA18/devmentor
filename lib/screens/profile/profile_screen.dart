@@ -7,6 +7,7 @@ import '../../providers/app_state.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/glass_card.dart';
 import '../mentor/mentor_chat_screen.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -412,7 +413,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton(
+                    LiquidGlassButton(
                       onPressed: () {
                         final newUsername = controller.text.trim();
                         if (newUsername.isNotEmpty) {
@@ -426,10 +427,9 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(80, 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      color: AppTheme.accent,
+                      borderRadius: 8,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: const Text('Save'),
                     ),
                   ],
@@ -663,7 +663,7 @@ class ProfileScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: ElevatedButton(
+                              child: LiquidGlassButton(
                                 onPressed: () {
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -673,11 +673,8 @@ class ProfileScreen extends StatelessWidget {
                                     ),
                                   );
                                 },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.accent,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                  minimumSize: const Size(0, 48),
-                                ),
+                                color: AppTheme.accent,
+                                borderRadius: 16,
                                 child: const Text('Export Data'),
                               ),
                             ),
@@ -821,7 +818,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       // Support Action Buttons
-                      ElevatedButton.icon(
+                      LiquidGlassButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
                           Navigator.push(
@@ -831,11 +828,8 @@ class ProfileScreen extends StatelessWidget {
                         },
                         icon: const Icon(Icons.chat_bubble_outline),
                         label: const Text('Chat with AI Support Mentor'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accent,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
+                        color: AppTheme.accent,
+                        borderRadius: 16,
                       ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
@@ -936,7 +930,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton(
+                    LiquidGlassButton(
                       onPressed: () async {
                         // Perform sign out
                         await state.clearSession();
@@ -948,11 +942,9 @@ class ProfileScreen extends StatelessWidget {
                           );
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.destructive,
-                        minimumSize: const Size(80, 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      color: AppTheme.destructive,
+                      borderRadius: 8,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: const Text('Sign Out', style: TextStyle(color: Colors.white)),
                     ),
                   ],
@@ -1305,7 +1297,7 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton(
+                    LiquidGlassButton(
                       onPressed: () async {
                         await appState.clearAllChatHistory();
                         if (context.mounted) {
@@ -1318,11 +1310,9 @@ class ProfileScreen extends StatelessWidget {
                           );
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.destructive,
-                        minimumSize: const Size(80, 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
+                      color: AppTheme.destructive,
+                      borderRadius: 8,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       child: const Text('Clear All', style: TextStyle(color: Colors.white)),
                     ),
                   ],

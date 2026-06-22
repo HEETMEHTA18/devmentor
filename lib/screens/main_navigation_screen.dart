@@ -10,6 +10,7 @@ import '../core/theme/app_theme.dart';
 import '../routes/route_paths.dart';
 import '../widgets/liquid_glass_background.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/liquid_glass_button.dart';
 import '../providers/app_state.dart';
 import '../core/utils/web_helper.dart';
 import 'home/home_screen.dart';
@@ -395,17 +396,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                             ),
                           ),
                         ),
-                        ElevatedButton(
+                        LiquidGlassButton(
                           onPressed: _nextWalkthroughStep,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
                           ),
+                          borderRadius: 12,
                           child: Text(
                             _walkthroughStep == _walkthroughSteps.length - 1
                                 ? 'GET STARTED'
@@ -680,7 +677,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
+                      child: LiquidGlassButton(
                         onPressed: () async {
                           final scaffoldMessenger = ScaffoldMessenger.of(context);
                           Navigator.pop(context);
@@ -694,13 +691,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                             );
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accent,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        color: AppTheme.accent,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        borderRadius: 12,
                         child: Text(
                           'ENABLE',
                           style: GoogleFonts.jetBrainsMono(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../routes/route_paths.dart';
 import '../../widgets/liquid_glass_background.dart';
+import '../../widgets/liquid_glass_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -82,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  ElevatedButton(
+                  LiquidGlassButton(
                     onPressed: () {
                       if (_currentPage == _pages.length - 1) {
                         context.go(RoutePaths.login);
@@ -93,6 +94,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         );
                       }
                     },
+                    width: double.infinity,
+                    height: 60,
                     child: Text(_currentPage == _pages.length - 1 ? 'GET STARTED' : 'NEXT', style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold)),
                   ),
                 ],
