@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import '../core/theme/app_theme.dart';
 import '../routes/route_paths.dart';
 import '../widgets/liquid_glass_background.dart';
@@ -505,27 +506,82 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                                   top: 6,
                                   bottom: 6,
                                   width: itemWidth - 12,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? Colors.white.withValues(alpha: 0.12)
-                                          : Colors.white.withValues(alpha: 0.70),
-                                      borderRadius: BorderRadius.circular(22),
-                                      border: Border.all(
-                                        color: Colors.white.withValues(alpha: isDark ? 0.20 : 0.60),
-                                        width: 0.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
+                                  child: OCLiquidGlassGroup(
+                                    settings: const OCLiquidGlassSettings(
+                                      refractStrength: -0.07,
+                                      blurRadiusPx: 4.0,
+                                      specStrength: 28.0,
+                                    ),
+                                    child: Stack(
+                                      children: [
+                                        // 1. Refractive liquid glass shader
+                                        Positioned.fill(
+                                          child: OCLiquidGlass(
+                                            borderRadius: 22,
+                                            color: Colors.transparent,
+                                            child: const SizedBox.expand(),
+                                          ),
                                         ),
-                                        // Inner specular glow
-                                        BoxShadow(
-                                          color: Colors.white.withValues(alpha: isDark ? 0.06 : 0.30),
-                                          blurRadius: 1,
-                                          spreadRadius: -1,
+                                        // 2. High fidelity glass container backing (with sheen and thin border)
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? Colors.white.withValues(alpha: 0.12)
+                                                  : Colors.white.withValues(alpha: 0.70),
+                                              borderRadius: BorderRadius.circular(22),
+                                              border: Border.all(
+                                                color: Colors.white.withValues(alpha: isDark ? 0.20 : 0.60),
+                                                width: 0.5,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Stack(
+                                              children: [
+                                                // Glossy specular reflection gradient
+                                                Positioned.fill(
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(22),
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment.topCenter,
+                                                        end: Alignment.bottomCenter,
+                                                        colors: [
+                                                          Colors.white.withValues(alpha: isDark ? 0.15 : 0.45),
+                                                          Colors.white.withValues(alpha: 0.0),
+                                                        ],
+                                                        stops: const [0.0, 0.5],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                // Xcode style glossy top reflection lip
+                                                Positioned(
+                                                  top: 0.5,
+                                                  left: 11.0,
+                                                  right: 11.0,
+                                                  height: 1.0,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: [
+                                                          Colors.white.withValues(alpha: 0.0),
+                                                          Colors.white.withValues(alpha: isDark ? 0.40 : 0.80),
+                                                          Colors.white.withValues(alpha: 0.0),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -536,11 +592,46 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
-                                      _buildNavItem(0, 'Home', Icons.home_rounded, itemWidth),
-                                      _buildNavItem(1, 'Explore', Icons.explore_rounded, itemWidth),
-                                      _buildNavItem(2, 'Prompts', Icons.auto_awesome_rounded, itemWidth),
-                                      _buildNavItem(3, 'Roadmap', Icons.route_rounded, itemWidth),
-                                      _buildNavItem(4, 'Settings', Icons.settings_rounded, itemWidth),
+                                      _MainNavigationItem(
+                                        index: 0,
+                                        label: 'Home',
+                                        icon: Icons.home_rounded,
+                                        width: itemWidth,
+                                        isSelected: _selectedIndex == 0,
+                                        onTap: () => _onTabSelected(0),
+                                      ),
+                                      _MainNavigationItem(
+                                        index: 1,
+                                        label: 'Explore',
+                                        icon: Icons.explore_rounded,
+                                        width: itemWidth,
+                                        isSelected: _selectedIndex == 1,
+                                        onTap: () => _onTabSelected(1),
+                                      ),
+                                      _MainNavigationItem(
+                                        index: 2,
+                                        label: 'Prompts',
+                                        icon: Icons.auto_awesome_rounded,
+                                        width: itemWidth,
+                                        isSelected: _selectedIndex == 2,
+                                        onTap: () => _onTabSelected(2),
+                                      ),
+                                      _MainNavigationItem(
+                                        index: 3,
+                                        label: 'Roadmap',
+                                        icon: Icons.route_rounded,
+                                        width: itemWidth,
+                                        isSelected: _selectedIndex == 3,
+                                        onTap: () => _onTabSelected(3),
+                                      ),
+                                      _MainNavigationItem(
+                                        index: 4,
+                                        label: 'Settings',
+                                        icon: Icons.settings_rounded,
+                                        width: itemWidth,
+                                        isSelected: _selectedIndex == 4,
+                                        onTap: () => _onTabSelected(4),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -557,49 +648,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
           ),
           if (_showWalkthrough) _buildWalkthroughOverlay(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(int index, String label, IconData icon, double width) {
-    final isSelected = _selectedIndex == index;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () => _onTabSelected(index),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: width,
-        height: 68,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedScale(
-              scale: isSelected ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutCubic,
-              child: Icon(
-                icon,
-                color: isSelected
-                    ? (isDark ? Colors.white : const Color(0xFF007AFF))
-                    : (isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93)),
-                size: 22,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'SF Pro Text',
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? (isDark ? Colors.white : const Color(0xFF007AFF))
-                    : (isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93)),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -844,6 +892,124 @@ class _SimulatedPushNotificationBannerState extends State<_SimulatedPushNotifica
           ),
         );
       },
+    );
+  }
+}
+
+class _MainNavigationItem extends StatefulWidget {
+  final int index;
+  final String label;
+  final IconData icon;
+  final double width;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _MainNavigationItem({
+    required this.index,
+    required this.label,
+    required this.icon,
+    required this.width,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_MainNavigationItem> createState() => _MainNavigationItemState();
+}
+
+class _MainNavigationItemState extends State<_MainNavigationItem> with SingleTickerProviderStateMixin {
+  late AnimationController _pressController;
+  late Animation<double> _scaleAnimation;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 80),
+      reverseDuration: const Duration(milliseconds: 125),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.94).animate(
+      CurvedAnimation(
+        parent: _pressController,
+        curve: Curves.easeInOutCubic,
+        reverseCurve: Curves.easeOutBack, // spring response
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTapDown: (_) {
+          _pressController.forward();
+          HapticFeedback.lightImpact(); // Apple tactile feedback
+        },
+        onTapUp: (_) {
+          _pressController.reverse();
+        },
+        onTapCancel: () {
+          _pressController.reverse();
+        },
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: widget.width,
+            height: 68,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: _isHovered
+                  ? (isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.03))
+                  : Colors.transparent,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedScale(
+                  scale: widget.isSelected ? 1.12 : 1.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  child: Icon(
+                    widget.icon,
+                    color: widget.isSelected
+                        ? (isDark ? Colors.white : const Color(0xFF007AFF))
+                        : (isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93)),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontFamily: 'SF Pro Text',
+                    fontSize: 10,
+                    fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: widget.isSelected
+                        ? (isDark ? Colors.white : const Color(0xFF007AFF))
+                        : (isDark ? const Color(0xFF8E8E93) : const Color(0xFF8E8E93)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -45,7 +45,9 @@ void main() {
     expect(find.text('Dashboard'), findsOneWidget);
     
     // Tap EXPLORE
-    final exploreTab = find.text('EXPLORE');
+    final exploreTab = find.byWidgetPredicate(
+      (widget) => widget is Text && widget.data == 'Explore' && widget.style?.fontSize == 10,
+    );
     expect(exploreTab, findsOneWidget);
     await tester.tap(exploreTab);
     
@@ -54,7 +56,9 @@ void main() {
     await tester.pump();
     
     // Tap PROMPTS
-    final promptsTab = find.text('PROMPTS');
+    final promptsTab = find.byWidgetPredicate(
+      (widget) => widget is Text && widget.data == 'Prompts' && widget.style?.fontSize == 10,
+    );
     expect(promptsTab, findsOneWidget);
     await tester.tap(promptsTab);
     
@@ -63,7 +67,7 @@ void main() {
     await tester.pump();
 
     // Verify that the prompts screen is now showing
-    expect(find.text('PROMPT INTELLIGENCE'), findsOneWidget);
+    expect(find.text('Prompt repo sources'), findsOneWidget);
     expect(find.text('Dashboard'), findsNothing);
   });
 
@@ -103,14 +107,16 @@ void main() {
     );
 
     expect(find.byType(IndexedStack), findsOneWidget);
-    final promptsTab = find.text('PROMPTS');
+    final promptsTab = find.byWidgetPredicate(
+      (widget) => widget is Text && widget.data == 'Prompts' && widget.style?.fontSize == 10,
+    );
     expect(promptsTab, findsOneWidget);
 
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 300));
 
     // Verify that the prompts route mapping shows the prompts screen.
-    expect(find.text('PROMPT INTELLIGENCE'), findsOneWidget);
+    expect(find.text('Prompt repo sources'), findsOneWidget);
     expect(find.text('Dashboard'), findsNothing);
   });
 }

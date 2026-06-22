@@ -1,8 +1,11 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import '../core/theme/app_theme.dart';
 
-class LiquidGlassButton extends StatelessWidget {
+class LiquidGlassButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -54,48 +57,180 @@ class LiquidGlassButton extends StatelessWidget {
   }
 
   @override
+  State<LiquidGlassButton> createState() => _LiquidGlassButtonState();
+}
+
+class _LiquidGlassButtonState extends State<LiquidGlassButton> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 80),
+      reverseDuration: const Duration(milliseconds: 140),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOutCubic,
+        reverseCurve: Curves.easeOutBack, // iOS bouncy spring effect
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown(TapDownDetails details) {
+    if (widget.onPressed != null) {
+      _animationController.forward();
+      HapticFeedback.lightImpact(); // Apple tactile haptic feedback
+    }
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    if (widget.onPressed != null) {
+      _animationController.reverse();
+    }
+  }
+
+  void _handleTapCancel() {
+    if (widget.onPressed != null) {
+      _animationController.reverse();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+
+    // Setup base color
+    final Color buttonBaseColor = widget.color ?? 
+        (isDark 
+            ? AppTheme.accent.withValues(alpha: 0.15) 
+            : AppTheme.accent.withValues(alpha: 0.25));
+
     Widget content = Padding(
-      padding: padding,
-      child: child,
+      padding: widget.padding,
+      child: widget.child,
     );
 
-    if (width != null || height != null) {
+    if (widget.width != null || widget.height != null) {
       content = SizedBox(
-        width: width,
-        height: height,
+        width: widget.width,
+        height: widget.height,
         child: Center(child: content),
       );
     }
 
-    return Semantics(
-      button: true,
-      enabled: onPressed != null,
-      child: MouseRegion(
-        cursor: onPressed != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
-        child: GestureDetector(
-          onTap: onPressed,
-          behavior: HitTestBehavior.opaque,
-          child: Opacity(
-            opacity: onPressed == null ? 0.5 : 1.0,
-            child: OCLiquidGlassGroup(
-              settings: const OCLiquidGlassSettings(
-                refractStrength: -0.05,
-                blurRadiusPx: 2.0,
-                specStrength: 25.0,
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: OCLiquidGlass(
-                      borderRadius: borderRadius,
-                      color: color ?? AppTheme.accent.withValues(alpha: 0.2),
-                      child: const SizedBox.expand(),
+    // Build the visual container with layered Apple Liquid Glass styles
+    Widget glassContainer = ClipRRect(
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: isMobileBrowser ? 12.0 : 20.0,
+          sigmaY: isMobileBrowser ? 12.0 : 20.0,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _isHovered 
+                ? buttonBaseColor.withValues(alpha: (buttonBaseColor.a + 0.08).clamp(0.0, 1.0))
+                : buttonBaseColor,
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.40),
+              width: 0.5,
+            ),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Specular reflection gloss gradient overlay
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(widget.borderRadius),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withValues(alpha: isDark ? 0.15 : 0.40),
+                        Colors.white.withValues(alpha: 0.0),
+                      ],
+                      stops: const [0.0, 0.5],
                     ),
                   ),
-                  content,
-                ],
+                ),
+              ),
+              // Apple/Xcode physical glossy top border lip highlight
+              Positioned(
+                top: 0.5,
+                left: widget.borderRadius / 2,
+                right: widget.borderRadius / 2,
+                height: 1.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white.withValues(alpha: isDark ? 0.35 : 0.70),
+                        Colors.white.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              content,
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return Semantics(
+      button: true,
+      enabled: widget.onPressed != null,
+      child: MouseRegion(
+        cursor: widget.onPressed != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          onTapCancel: _handleTapCancel,
+          onTap: widget.onPressed,
+          behavior: HitTestBehavior.opaque,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Opacity(
+              opacity: widget.onPressed == null ? 0.5 : 1.0,
+              child: OCLiquidGlassGroup(
+                settings: const OCLiquidGlassSettings(
+                  refractStrength: -0.06,
+                  blurRadiusPx: 3.0,
+                  specStrength: 30.0,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned.fill(
+                      child: OCLiquidGlass(
+                        borderRadius: widget.borderRadius,
+                        color: Colors.transparent, // backing color handled in glassContainer
+                        child: const SizedBox.expand(),
+                      ),
+                    ),
+                    glassContainer,
+                  ],
+                ),
               ),
             ),
           ),
