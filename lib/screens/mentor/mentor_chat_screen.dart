@@ -103,12 +103,26 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
               icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.textMain),
               onPressed: () => context.pop(),
             ),
-            title: Text(
-              'AI Mentor',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textMain,
-              ),
+            title: Column(
+              children: [
+                Text(
+                  'AI Mentor',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textMain,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildOsStatusPill('🧠 Cognee', const Color(0xFF6C63FF)),
+                    const SizedBox(width: 6),
+                    _buildOsStatusPill('🤖 OpenClaw', const Color(0xFF00BFA5)),
+                  ],
+                ),
+              ],
             ),
             centerTitle: true,
           ),
@@ -526,6 +540,8 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
       {'icon': '🗺️', 'title': 'Explain my roadmap', 'desc': 'Understand the next milestone in your career.'},
       {'icon': '💼', 'title': 'Mock interview prep', 'desc': 'Challenge yourself with high-impact tech questions.'},
       {'icon': '💻', 'title': 'Suggest a project', 'desc': 'Get real-world recommendations matching your stack.'},
+      {'icon': '⚡', 'title': 'Execute a task', 'desc': 'Let OpenClaw write code or create a PR for you.'},
+      {'icon': '🖥️', 'title': 'Run terminal', 'desc': 'Run a command in the agent sandbox environment.'},
     ];
 
     return GridView.builder(
@@ -535,7 +551,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 2.2,
+        childAspectRatio: 2.0,
       ),
       itemCount: suggestions.length,
       itemBuilder: (context, index) {
@@ -551,6 +567,10 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
               cleanText = 'Give me a challenging technical mock interview question';
             } else if (cleanText == 'Suggest a project') {
               cleanText = 'Suggest a real-world coding project based on my stack';
+            } else if (cleanText == 'Execute a task') {
+              cleanText = 'Execute a task: add a /health endpoint that returns {status: ok} to my first synced repository';
+            } else if (cleanText == 'Run terminal') {
+              cleanText = 'Run terminal command: echo Hello from OpenClaw agent';
             }
             state.sendMessage(cleanText);
             _scrollToBottom();
@@ -687,7 +707,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                 ),
                 if (!isUser) ...[
                   const SizedBox(height: 12),
-                  // Chat Action Buttons (translucent, clean ChatGPT style)
+                  // Chat Action Buttons
                   Row(
                     children: [
                       AnimatedCopyButton(
@@ -707,6 +727,11 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                       ),
                     ],
                   ),
+                  // OpenClaw action result card (shown when agent ran a task)
+                  if (msg.openclawTask != null) ...[
+                    const SizedBox(height: 12),
+                    _buildOpenClawResultCard(msg.openclawTask!),
+                  ],
                 ],
               ],
             ),
@@ -760,8 +785,8 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                       maxLines: null,
                       keyboardType: TextInputType.multiline,
                       decoration: InputDecoration(
-                        hintText: 'Message AI Mentor...',
-                        hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 15),
+                        hintText: 'Message AI Mentor or say "execute a task"...',
+                        hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
@@ -807,6 +832,102 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOsStatusPill(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOpenClawResultCard(Map<String, dynamic> task) {
+    final bool isStub = task['stub'] == true;
+    final bool success = task['success'] == true;
+    final String? prUrl = task['pull_request_url'];
+    final String? output = task['output'];
+    final String? error = task['error'];
+    final Color cardColor = isStub
+        ? const Color(0xFF00BFA5)
+        : success
+            ? const Color(0xFF00BFA5)
+            : Colors.redAccent;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cardColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cardColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.smart_toy_rounded, color: cardColor, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                isStub ? '🤖 OpenClaw (Stub Mode)' : success ? '🤖 OpenClaw Executed' : '🤖 OpenClaw Error',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: cardColor,
+                ),
+              ),
+            ],
+          ),
+          if (prUrl != null) ...[
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () async {
+                final uri = Uri.parse(prUrl);
+                if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+              },
+              child: Text(
+                '📎 View Pull Request: $prUrl',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: cardColor,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+          if (output != null) ...[
+            const SizedBox(height: 8),
+            Text('Output: $output', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+          ],
+          if (error != null) ...[
+            const SizedBox(height: 8),
+            Text('Error: $error', style: GoogleFonts.inter(fontSize: 12, color: Colors.redAccent)),
+          ],
+        ],
       ),
     );
   }

@@ -864,10 +864,12 @@ This is simulated offline prompts.md content.
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final reply = data['assistant_message'] ?? 'Sorry, I could not generate a response.';
+        final openclawTask = data['openclaw_task'] as Map<String, dynamic>?;
         chatMessages.add(MentorMessage(
           content: reply,
           role: MessageRole.assistant,
           timestamp: DateTime.now(),
+          openclawTask: openclawTask,
         ));
       } else {
         chatMessages.add(MentorMessage(
