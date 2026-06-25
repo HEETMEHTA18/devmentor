@@ -13,6 +13,8 @@ from app.api.v1.endpoints import (
     users,
     prompts,
     research,
+    timeline,
+    reviewer,
 )
 
 api_router = APIRouter()
@@ -34,3 +36,5 @@ api_router.include_router(
     notifications.router, prefix="/notifications", tags=["notifications"]
 )
 api_router.include_router(research.router, prefix="/research", tags=["research"])
+api_router.include_router(timeline.router, prefix="/timeline", tags=["timeline"])
+api_router.include_router(reviewer.router, prefix="/reviewer", tags=["reviewer"])
