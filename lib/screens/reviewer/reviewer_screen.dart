@@ -43,8 +43,8 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
           'Authorization': 'Bearer ${appState.token}',
         },
         body: jsonEncode({
-          'action': 'run_review',
-          'path': path,
+          'repo_url': path,
+          'branch': 'main',
         }),
       );
 
@@ -193,7 +193,7 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
                 style: const TextStyle(color: Colors.red),
               ),
             ),
-          if (_reviewData != null && _reviewData!['scores'] != null) ...[
+          if (_reviewData != null && _reviewData!['success'] == true) ...[
             const SizedBox(height: 24),
             Text(
               'Code Quality Scores',
@@ -209,10 +209,10 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildScoreRing('Security', _reviewData!['scores']['security'] ?? 0, AppTheme.destructive),
-                  _buildScoreRing('Performance', _reviewData!['scores']['performance'] ?? 0, AppTheme.peach),
-                  _buildScoreRing('Arch', _reviewData!['scores']['architecture'] ?? 0, AppTheme.blue),
-                  _buildScoreRing('Maint.', _reviewData!['scores']['maintainability'] ?? 0, AppTheme.success),
+                  _buildScoreRing('Security', _reviewData!['security_score'] ?? 0, AppTheme.destructive),
+                  _buildScoreRing('Performance', _reviewData!['performance_score'] ?? 0, AppTheme.peach),
+                  _buildScoreRing('Arch', _reviewData!['architecture_score'] ?? 0, AppTheme.blue),
+                  _buildScoreRing('Maint.', _reviewData!['maintainability_score'] ?? 0, AppTheme.success),
                 ],
               ),
             ),
@@ -228,65 +228,23 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
             const SizedBox(height: 12),
             if (_reviewData!['issues'] != null && (_reviewData!['issues'] as List).isNotEmpty)
               ...(_reviewData!['issues'] as List).map((issue) {
-                final severity = issue['severity']?.toString().toLowerCase() ?? 'low';
-                final color = severity == 'high' || severity == 'critical'
-                    ? AppTheme.destructive
-                    : severity == 'medium'
-                        ? AppTheme.peach
-                        : AppTheme.success;
-
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: GlassCard(
                     padding: const EdgeInsets.all(16),
-                    child: Column(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                severity.toUpperCase(),
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
-                                ),
-                              ),
+                        Icon(Icons.warning_amber_rounded, color: AppTheme.peach, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            issue.toString(),
+                            style: TextStyle(
+                              color: AppTheme.textMain,
+                              fontSize: 13,
+                              height: 1.4,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                issue['file'] ?? 'Unknown File',
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 12,
-                                  color: AppTheme.textMain,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          issue['issue'] ?? '',
-                          style: TextStyle(
-                            color: AppTheme.textMain,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Suggestion: ${issue['suggestion'] ?? ''}',
-                          style: TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
                           ),
                         ),
                       ],
@@ -309,7 +267,7 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
             GlassCard(
               padding: const EdgeInsets.all(16),
               child: Text(
-                _reviewData!['overall_feedback'] ?? '',
+                _reviewData!['summary'] ?? '',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.5),
               ),
             ),
