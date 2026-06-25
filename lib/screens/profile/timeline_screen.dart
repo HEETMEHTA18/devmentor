@@ -237,7 +237,7 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.bgSecondary.withValues(alpha: 0.5),
+                                            color: AppTheme.surface.withValues(alpha: 0.5),
                                             borderRadius: BorderRadius.circular(12),
                                             border: Border.all(color: AppTheme.border.withValues(alpha: 0.3)),
                                           ),
