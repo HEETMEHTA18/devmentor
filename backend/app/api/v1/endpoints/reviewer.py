@@ -67,55 +67,23 @@ async def run_continuous_code_review(
         "Do not output anything outside of the JSON block."
     )
 
-    url = "https://api.groq.com/openai/v1/chat/completions"
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                url,
-                json={
-                    "model": "llama-3.1-8b-instant",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {
-                            "role": "user",
-                            "content": f"Review this repository analysis:\n\n{raw_analysis}",
-                        },
-                    ],
-                    "response_format": {"type": "json_object"},
-                },
-                headers={
-                    "Authorization": f"Bearer {settings.groq_api_key}",
-                    "Content-Type": "application/json",
-                },
-                timeout=45.0,
+    prompt_text = f"{system_prompt}\n\nReview this repository analysis:\n\n{raw_analysis}"
+
+    try:
+        from app.api.v1.endpoints.advanced import call_ai_json
+        review_data = await call_ai_json(prompt_text, task_type="heavy")
+        if review_data:
+            return ReviewResponse(
+                success=True,
+                security_score=review_data.get("security_score", 0),
+                performance_score=review_data.get("performance_score", 0),
+                architecture_score=review_data.get("architecture_score", 0),
+                maintainability_score=review_data.get("maintainability_score", 0),
+                summary=review_data.get("summary", "Analysis complete."),
+                issues=review_data.get("issues", []),
             )
-
-            if response.status_code == 200:
-                data = response.json()
-                import json
-
-                try:
-                    review_data = json.loads(data["choices"][0]["message"]["content"])
-                    return ReviewResponse(
-                        success=True,
-                        security_score=review_data.get("security_score", 0),
-                        performance_score=review_data.get("performance_score", 0),
-                        architecture_score=review_data.get("architecture_score", 0),
-                        maintainability_score=review_data.get(
-                            "maintainability_score", 0
-                        ),
-                        summary=review_data.get("summary", "Analysis complete."),
-                        issues=review_data.get("issues", []),
-                    )
-                except json.JSONDecodeError:
-                    raise HTTPException(
-                        status_code=500,
-                        detail="LLM failed to output valid JSON for review.",
-                    )
-            else:
-                logger.error(f"API Error: {response.text}")
-                raise HTTPException(status_code=500, detail="Code reviewer AI failed")
-
-        except Exception as e:
-            logger.error(f"Code Reviewer Exception: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+        else:
+            raise HTTPException(status_code=500, detail="LLM failed to output valid JSON for review.")
+    except Exception as e:
+        logger.error(f"Code Reviewer Exception: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
