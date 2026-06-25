@@ -1,0 +1,322 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import '../../core/config/app_config.dart';
+import '../../core/theme/app_theme.dart';
+import '../../providers/app_state.dart';
+import '../../widgets/glass_card.dart';
+import '../../widgets/liquid_glass_button.dart';
+
+class ReviewerScreen extends StatefulWidget {
+  const ReviewerScreen({super.key});
+
+  @override
+  State<ReviewerScreen> createState() => _ReviewerScreenState();
+}
+
+class _ReviewerScreenState extends State<ReviewerScreen> {
+  final _pathController = TextEditingController(text: '/home/heet18/Projects/devmentor');
+  bool _isLoading = false;
+  Map<String, dynamic>? _reviewData;
+  String _errorMsg = '';
+
+  Future<void> _runReview() async {
+    final path = _pathController.text.trim();
+    if (path.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMsg = '';
+      _reviewData = null;
+    });
+
+    final appState = Provider.of<AppState>(context, listen: false);
+    
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.apiBaseUrl}/reviewer/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${appState.token}',
+        },
+        body: jsonEncode({
+          'action': 'run_review',
+          'path': path,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            _reviewData = data;
+          });
+        } else {
+          setState(() {
+            _errorMsg = data['error'] ?? 'Unknown error occurred.';
+          });
+        }
+      } else {
+        setState(() {
+          _errorMsg = 'Server error: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMsg = 'Failed to connect: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildScoreRing(String label, int score, Color color) {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 60,
+              height: 60,
+              child: CircularProgressIndicator(
+                value: score / 10,
+                strokeWidth: 6,
+                backgroundColor: color.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+            ),
+            Text(
+              '$score/10',
+              style: GoogleFonts.jetBrainsMono(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: AppTheme.textMain,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GlassCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.code_rounded, color: AppTheme.accent),
+                    const SizedBox(width: 8),
+                    Text(
+                      'CONTINUOUS CODE REVIEWER',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppTheme.textMain,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Provide a local repository path or workspace to run a continuous code review using OpenClaw.',
+                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _pathController,
+                  style: TextStyle(color: AppTheme.textMain, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: 'Workspace Path',
+                    labelStyle: TextStyle(color: AppTheme.textSecondary),
+                    filled: true,
+                    fillColor: AppTheme.isDark ? const Color(0x10FFFFFF) : const Color(0x05000000),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.border),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: LiquidGlassButton(
+                    onPressed: _isLoading ? null : _runReview,
+                    color: AppTheme.accent,
+                    borderRadius: 12,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20, height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Text(
+                            'RUN REVIEW',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Colors.black,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_errorMsg.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text(
+                _errorMsg,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          if (_reviewData != null && _reviewData!['scores'] != null) ...[
+            const SizedBox(height: 24),
+            Text(
+              'Code Quality Scores',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppTheme.textMain,
+              ),
+            ),
+            const SizedBox(height: 16),
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildScoreRing('Security', _reviewData!['scores']['security'] ?? 0, AppTheme.destructive),
+                  _buildScoreRing('Performance', _reviewData!['scores']['performance'] ?? 0, AppTheme.peach),
+                  _buildScoreRing('Arch', _reviewData!['scores']['architecture'] ?? 0, AppTheme.blue),
+                  _buildScoreRing('Maint.', _reviewData!['scores']['maintainability'] ?? 0, AppTheme.success),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Actionable Issues',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppTheme.textMain,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_reviewData!['issues'] != null && (_reviewData!['issues'] as List).isNotEmpty)
+              ...(_reviewData!['issues'] as List).map((issue) {
+                final severity = issue['severity']?.toString().toLowerCase() ?? 'low';
+                final color = severity == 'high' || severity == 'critical'
+                    ? AppTheme.destructive
+                    : severity == 'medium'
+                        ? AppTheme.peach
+                        : AppTheme.success;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: GlassCard(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                severity.toUpperCase(),
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                issue['file'] ?? 'Unknown File',
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 12,
+                                  color: AppTheme.textMain,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          issue['issue'] ?? '',
+                          style: TextStyle(
+                            color: AppTheme.textMain,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Suggestion: ${issue['suggestion'] ?? ''}',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              })
+            else
+              const Text('No issues found. Great job!'),
+            const SizedBox(height: 24),
+            Text(
+              'Overall Feedback',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppTheme.textMain,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                _reviewData!['overall_feedback'] ?? '',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.5),
+              ),
+            ),
+            const SizedBox(height: 80),
+          ]
+        ],
+      ),
+    );
+  }
+}

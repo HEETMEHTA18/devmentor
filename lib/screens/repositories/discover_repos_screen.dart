@@ -10,6 +10,7 @@ import '../../models/repository.dart';
 import '../mentor/mentor_chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/liquid_glass_button.dart';
+import '../reviewer/reviewer_screen.dart';
 
 class DiscoverReposScreen extends StatefulWidget {
   const DiscoverReposScreen({super.key});
@@ -77,6 +78,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         case 5:
           tabContent = _buildResearchTab(context, appState);
           tabTitle = 'Deep Research Agent';
+          break;
+        case 6:
+          tabContent = _buildReviewerTab(context, appState);
+          tabTitle = 'Continuous Code Reviewer';
           break;
         default:
           tabContent = Container();
@@ -197,6 +202,13 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         setState(() => _activeTab = 5);
                         appState.fetchWeeklyTechDigest();
                       },
+                      showDivider: true,
+                    ),
+                    _buildDiscoverRow(
+                      icon: Icons.code_rounded,
+                      iconColor: const Color(0xFF32D74B),
+                      label: 'Continuous Code Reviewer',
+                      onTap: () => setState(() => _activeTab = 6),
                       showDivider: false,
                     ),
                   ],
@@ -2040,6 +2052,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildReviewerTab(BuildContext context, AppState state) {
+    return const ReviewerScreen();
   }
 
 }

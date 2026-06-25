@@ -8,6 +8,7 @@ import '../auth/login_screen.dart';
 import '../../widgets/glass_card.dart';
 import '../mentor/mentor_chat_screen.dart';
 import '../../widgets/liquid_glass_button.dart';
+import 'timeline_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -100,7 +101,19 @@ class ProfileScreen extends StatelessWidget {
               ),
             ]),
             const SizedBox(height: 24),
-            _buildSection(context, 'CHAT HISTORY', [
+            _buildSection(context, 'HISTORY & TIMELINE', [
+              _buildSettingItem(
+                context,
+                Icons.timeline_rounded,
+                'View Developer Timeline',
+                trailing: 'New!',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TimelineScreen()),
+                  );
+                },
+              ),
               _buildSettingItem(
                 context,
                 Icons.history_rounded,
