@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +23,42 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
   bool _isLoading = false;
   Map<String, dynamic>? _reviewData;
   String _errorMsg = '';
+  
+  Timer? _loadingTimer;
+  int _loadingMsgIndex = 0;
+  final List<String> _loadingMessages = [
+    'Waking up OpenClaw...',
+    'Cloning repository securely...',
+    'Analyzing architecture & dependencies...',
+    'Running security vulnerability scans...',
+    'Evaluating performance metrics...',
+    'Compiling actionable issues...',
+    'Generating final review...',
+    'Almost there, hanging tight...',
+  ];
+
+  @override
+  void dispose() {
+    _loadingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startLoadingMessages() {
+    setState(() {
+      _loadingMsgIndex = 0;
+    });
+    _loadingTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (!_isLoading) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_loadingMsgIndex < _loadingMessages.length - 1) {
+          _loadingMsgIndex++;
+        }
+      });
+    });
+  }
 
   Future<void> _runReview() async {
     final path = _pathController.text.trim();
@@ -32,6 +69,8 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
       _errorMsg = '';
       _reviewData = null;
     });
+    
+    _startLoadingMessages();
 
     final appState = Provider.of<AppState>(context, listen: false);
     
@@ -168,9 +207,23 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
                     color: AppTheme.accent,
                     borderRadius: 12,
                     child: _isLoading
-                        ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                width: 16, height: 16,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                _loadingMessages[_loadingMsgIndex],
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           )
                         : Text(
                             'RUN REVIEW',
