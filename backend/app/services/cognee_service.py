@@ -12,6 +12,11 @@ class CogneeService:
         """
         self.api_key = settings.cognee_api_key
 
+        # Fix SQLite operational error on read-only environments by routing to /tmp
+        os.environ["COGNEE_HOME"] = "/tmp/cognee_system"
+        os.environ["DATA_DIR"] = "/tmp/cognee_system/data"
+        os.makedirs("/tmp/cognee_system/data", exist_ok=True)
+
         # Cognee relies on environment variables set during module initialization
         if self.api_key:
             os.environ["COGNEE_API_KEY"] = self.api_key
@@ -65,7 +70,8 @@ class CogneeService:
             import cognee
 
             results = await cognee.search(
-                f"developer profile metadata weaknesses strengths mistakes user_{user_id}"
+                f"developer profile metadata weaknesses strengths mistakes user_{user_id}",
+                search_type="mindmap",
             )
             return {"results": results}
         except Exception as e:
