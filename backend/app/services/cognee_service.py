@@ -25,6 +25,34 @@ class CogneeService:
                 "Cognee API Key is not configured. Cognee memory layer will operate in stub/dry-run mode."
             )
 
+    async def _trigger_cognify(self, dataset_name: str) -> bool:
+        """
+        Triggers the Cognee cognify pipeline to process raw ingested data
+        into a structured knowledge graph for recall.
+        """
+        url = f"{self.base_url}/api/v1/cognify"
+        payload = {
+            "datasets": [dataset_name],
+        }
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    url, json=payload, headers=self.headers, timeout=120.0
+                )
+                if response.status_code == 200:
+                    logger.info(
+                        f"Cognify triggered successfully for dataset: {dataset_name}"
+                    )
+                    return True
+                logger.warning(
+                    f"Cognify returned {response.status_code}: {response.text}"
+                )
+                return False
+            except Exception as e:
+                logger.warning(f"Cognify trigger failed (non-critical): {e}")
+                return False
+
     async def add_developer_profile(self, user_id: str, profile_data: dict) -> bool:
         """
         Saves user developer strengths, weaknesses, mistakes, and project history into the long-term memory graph.
@@ -36,13 +64,14 @@ class CogneeService:
             return True
 
         url = f"{self.base_url}/api/v1/remember/entry"
+        dataset_name = f"user_{user_id}"
         payload = {
             "entry": {
                 "type": "qa",
                 "question": f"What is the developer profile, strengths, and weaknesses for user {user_id}?",
                 "answer": str(profile_data),
             },
-            "dataset_name": f"user_{user_id}",
+            "dataset_name": dataset_name,
             "session_id": f"devmentor_{user_id}",
         }
 
@@ -52,6 +81,8 @@ class CogneeService:
                     url, json=payload, headers=self.headers, timeout=30.0
                 )
                 if response.status_code == 200:
+                    # Trigger cognify to process into the knowledge graph
+                    await self._trigger_cognify(dataset_name)
                     return True
                 logger.error(f"Failed to add developer profile: {response.text}")
                 return False
@@ -131,6 +162,8 @@ class CogneeService:
             os.remove(tmp_path)
 
             if response.status_code == 200:
+                # Trigger cognify to build the knowledge graph
+                await self._trigger_cognify(f"user_{user_id}")
                 return True
             logger.error(f"Failed to index repository in Cognee Cloud: {response.text}")
             return False
