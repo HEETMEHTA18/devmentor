@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.models.entities import Repository, TechNews, GithubProfile
 from app.services.cognee_service import CogneeService
 from app.services.openclaw_service import OpenClawService
+from app.services.github_agent_service import GithubAgentService
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -199,10 +200,9 @@ async def mentor_chat(
         "Always recommend actionable learning steps based on these real-time tech trends and repositories."
     )
 
-    # 5b. Detect agentic action keywords to dispatch to OpenClaw
-    action_keywords = [
+    # 5b. Detect agentic action keywords to dispatch to GithubAgentService or OpenClaw
+    github_action_keywords = [
         "execute",
-        "run command",
         "create pr",
         "open pr",
         "make a pr",
@@ -211,26 +211,41 @@ async def mentor_chat(
         "implement this",
         "build this feature",
         "write the code",
-        "deploy",
-        "run terminal",
         "edit the file",
     ]
+    terminal_keywords = [
+        "run command",
+        "deploy",
+        "run terminal",
+    ]
+
     openclaw_result = None
-    if any(k in msg_lower for k in action_keywords):
-        # Find the first synced repo to use as target
-        target_repo = repos[0].full_name if repos else None
-        if target_repo:
-            repo_url = f"https://github.com/{target_repo}"
+    target_repo = repos[0].full_name if repos else None
+
+    if target_repo:
+        if any(k in msg_lower for k in github_action_keywords):
             try:
-                openclaw_result = await _openclaw_service.execute_task(
-                    repo_url=repo_url,
-                    task_description=payload.message,
+                # Use real GitHub Agent for repository modifications
+                github_agent = GithubAgentService(
+                    github_token=access_token
+                    or getattr(settings, "github_client_secret", "")
                 )
-                logger.info(
-                    f"OpenClaw task dispatched for user {user_id}: {openclaw_result}"
+                logger.info(f"Dispatching GitHub Agent task for repo {target_repo}")
+                openclaw_result = await github_agent.execute_task_and_pr(
+                    repo_full_name=target_repo, task=payload.message
                 )
             except Exception as e:
-                logger.warning(f"OpenClaw dispatch failed: {e}")
+                logger.warning(f"GitHub Agent dispatch failed: {e}")
+
+        elif any(k in msg_lower for k in terminal_keywords):
+            try:
+                # Use OpenClaw for isolated terminal execution
+                logger.info(f"Dispatching OpenClaw terminal task for user {user_id}")
+                openclaw_result = await _openclaw_service.run_terminal_command(
+                    command=payload.message
+                )
+            except Exception as e:
+                logger.warning(f"OpenClaw terminal dispatch failed: {e}")
 
     # 6. Build the conversation history turns for the LLM
     # Sanitise roles to strictly 'user' or 'assistant' to prevent injection
