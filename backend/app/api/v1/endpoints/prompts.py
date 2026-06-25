@@ -625,23 +625,40 @@ async def sync_github_prompts(
             name = repo["name"]
             full_name = repo["full_name"]
 
-            # Check for .autodevs/prompts.md
-            url = f"https://api.github.com/repos/{owner}/{name}/contents/.autodevs/prompts.md"
-            headers = {
-                "Accept": "application/vnd.github.v3+json",
-                "User-Agent": "DevMentor-App",
-            }
-            if access_token:
-                headers["Authorization"] = f"Bearer {access_token}"
+            paths_to_check = [
+                ".autodevs/prompts.md",
+                ".autodevs/prompt.md",
+                "prompts.md",
+                "prompt.md",
+            ]
 
-            try:
-                response = await client.get(url, headers=headers, timeout=12.0)
-                if response.status_code == 200:
-                    data = response.json()
-                    raw_content = data.get("content", "")
-                    raw_content = raw_content.replace("\n", "").replace("\r", "")
-                    decoded_bytes = base64.b64decode(raw_content)
-                    markdown_text = decoded_bytes.decode("utf-8")
+            markdown_text = None
+
+            for check_path in paths_to_check:
+                url = (
+                    f"https://api.github.com/repos/{owner}/{name}/contents/{check_path}"
+                )
+                headers = {
+                    "Accept": "application/vnd.github.v3+json",
+                    "User-Agent": "DevMentor-App",
+                }
+                if access_token:
+                    headers["Authorization"] = f"Bearer {access_token}"
+
+                try:
+                    response = await client.get(url, headers=headers, timeout=12.0)
+                    if response.status_code == 200:
+                        data = response.json()
+                        raw_content = data.get("content", "")
+                        raw_content = raw_content.replace("\n", "").replace("\r", "")
+                        decoded_bytes = base64.b64decode(raw_content)
+                        markdown_text = decoded_bytes.decode("utf-8")
+                        break  # Found the file, stop checking paths
+                except Exception as e:
+                    logger.error(f"Error checking {check_path} in {full_name}: {e}")
+
+            if markdown_text:
+                try:
 
                     # Parse the markdown prompts block-by-block (indentation-aware)
                     lines = markdown_text.split("\n")
@@ -743,8 +760,8 @@ async def sync_github_prompts(
                             db.add(exists)
 
                     scanned_repos.append(full_name)
-            except Exception as e:
-                logger.error(f"Error scanning repo {full_name} for prompts: {e}")
+                except Exception as e:
+                    logger.error(f"Error scanning repo {full_name} for prompts: {e}")
 
     if imported_count > 0:
         db.commit()

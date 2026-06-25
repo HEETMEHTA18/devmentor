@@ -183,7 +183,10 @@ async def mentor_chat(
         "- Do NOT use markdown bolding (e.g. never use '**').\n"
         "- Do NOT use markdown headers (e.g. never use '#', '##', or '###').\n"
         "- Write in simple, clean, plain text that fits easily in a small chat bubble. Keep it engaging so the user doesn't get bored.\n"
-        "- Present links as raw clean URLs (e.g. https://github.com/...), not markdown format.\n\n"
+        "- Write in simple, clean, plain text that fits easily in a small chat bubble. Keep it engaging so the user doesn't get bored.\n"
+        "- Present links as raw clean URLs (e.g. https://github.com/...), not markdown format.\n"
+        "- **AUTONOMOUS EXECUTION:** If you need to test code, check system state, or run a terminal command, output EXACTLY the command inside this XML tag: `<run_terminal>your command here</run_terminal>`. The system will intercept this, run it securely in OpenClaw sandbox, and feed the output back to you.\n"
+        "- **BROWSER TESTING:** If you need to navigate to a URL to test UI or check a web app, output exactly: `<open_browser>https://url-here</open_browser>`.\n\n"
         "You have access to real-time information below. When the user asks about trending repos, tech news, "
         "what's happening in tech, or roadmaps, you MUST use the real data provided below to answer them. DO NOT "
         "make up mock names or links. Provide the real repository names, stars, descriptions, and hyperlinks.\n\n"
@@ -262,56 +265,120 @@ async def mentor_chat(
         # Replace common markdown list markers with clean dashes if needed
         return cleaned.strip()
 
-    # 7. Call AI API
+    # 7. Agentic Loop - Call AI API (up to 3 iterations for ReAct)
     if settings.groq_api_key:
+        import re
+
         url = "https://api.groq.com/openai/v1/chat/completions"
+
+        # Initialize loop variables
+        max_iterations = 3
+        current_iteration = 0
+        final_reply = ""
+        agent_messages = [
+            {"role": "system", "content": system_prompt},
+            *safe_history,
+            {"role": "user", "content": payload.message},
+        ]
+
         async with httpx.AsyncClient() as client:
             try:
-                groq_messages = [
-                    {"role": "system", "content": system_prompt},
-                    *safe_history,
-                    {"role": "user", "content": payload.message},
-                ]
-                response = await client.post(
-                    url,
-                    json={
-                        "model": "llama-3.1-8b-instant",
-                        "messages": groq_messages,
-                    },
-                    headers={
-                        "Authorization": f"Bearer {settings.groq_api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    timeout=30.0,
-                )
-                if response.status_code == 200:
+                while current_iteration < max_iterations:
+                    response = await client.post(
+                        url,
+                        json={
+                            "model": "llama-3.1-8b-instant",
+                            "messages": agent_messages,
+                        },
+                        headers={
+                            "Authorization": f"Bearer {settings.groq_api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        timeout=30.0,
+                    )
+
+                    if response.status_code != 200:
+                        logger.error(f"Groq API error: {response.text}")
+                        break
+
                     data = response.json()
                     reply = data["choices"][0]["message"]["content"]
-                    # Save this exchange to Cognee long-term memory
-                    try:
-                        await _cognee_service.add_developer_profile(
-                            user_id,
-                            {
-                                "last_message": payload.message,
-                                "repos": repo_list_str,
-                                "provider": "groq",
-                            },
-                        )
-                    except Exception:
-                        pass
-                    response_data = {
-                        "user_id": user_id,
-                        "assistant_message": clean_response(reply),
-                    }
-                    if openclaw_result:
-                        response_data["openclaw_task"] = openclaw_result
-                    return response_data
-                else:
-                    import logging
 
-                    logging.getLogger(__name__).error(
-                        f"Groq API error: {response.text}"
+                    # Intercept autonomous tool execution tags
+                    terminal_match = re.search(
+                        r"<run_terminal>(.*?)</run_terminal>", reply, re.DOTALL
                     )
+                    browser_match = re.search(
+                        r"<open_browser>(.*?)</open_browser>", reply, re.DOTALL
+                    )
+
+                    if terminal_match:
+                        cmd = terminal_match.group(1).strip()
+                        logger.info(f"Agentic loop: Intercepted <run_terminal> '{cmd}'")
+                        action_res = await _openclaw_service.run_terminal_command(
+                            command=cmd
+                        )
+                        output = action_res.get("output", str(action_res))
+                        # Append the AI's generation, then the tool output
+                        agent_messages.append({"role": "assistant", "content": reply})
+                        agent_messages.append(
+                            {
+                                "role": "user",
+                                "content": f"System Output for `{cmd}`:\n{output}\nNow continue fulfilling my request.",
+                            }
+                        )
+                        current_iteration += 1
+                        openclaw_result = action_res  # Save to show user what happened
+                        continue
+
+                    elif browser_match:
+                        url_to_open = browser_match.group(1).strip()
+                        logger.info(
+                            f"Agentic loop: Intercepted <open_browser> '{url_to_open}'"
+                        )
+                        action_res = await _openclaw_service.execute_task(
+                            repo_url="",
+                            task_description=f"Open browser and test {url_to_open}",
+                        )
+                        output = str(action_res.get("message", action_res))
+                        agent_messages.append({"role": "assistant", "content": reply})
+                        agent_messages.append(
+                            {
+                                "role": "user",
+                                "content": f"Browser Output for `{url_to_open}`:\n{output}\nNow continue fulfilling my request.",
+                            }
+                        )
+                        current_iteration += 1
+                        openclaw_result = action_res
+                        continue
+
+                    # No actionable tags found, break out of loop
+                    final_reply = reply
+                    break
+
+                # After loop finishes, save long-term memory
+                try:
+                    await _cognee_service.add_developer_profile(
+                        user_id,
+                        {
+                            "last_message": payload.message,
+                            "repos": repo_list_str,
+                            "provider": "groq",
+                        },
+                    )
+                except Exception:
+                    pass
+
+                response_data = {
+                    "user_id": user_id,
+                    "assistant_message": clean_response(
+                        final_reply or "I was unable to complete the agentic workflow."
+                    ),
+                }
+                if openclaw_result:
+                    response_data["openclaw_task"] = openclaw_result
+                return response_data
+
             except Exception as e:
                 import logging
 
