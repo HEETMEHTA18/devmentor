@@ -15,6 +15,8 @@ import '../../widgets/liquid_glass_background.dart';
 import '../../widgets/animated_copy_button.dart';
 import '../../utils/speech_helper.dart';
 import '../../widgets/liquid_glass_button.dart';
+import '../intelligence/voice_review_screen.dart';
+import '../intelligence/auto_fix_screen.dart';
 
 class MentorChatScreen extends StatefulWidget {
   const MentorChatScreen({super.key});
@@ -527,10 +529,62 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
               ),
               const SizedBox(height: 40),
               _buildSuggestionGrid(state),
+              const SizedBox(height: 24),
+              _buildActionButtons(context),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: LiquidGlassButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VoiceReviewScreen()),
+              );
+            },
+            color: AppTheme.secondaryAccent,
+            borderRadius: 16,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.mic_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Voice Code Review', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: LiquidGlassButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AutoFixScreen()),
+              );
+            },
+            color: AppTheme.blue,
+            borderRadius: 16,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.auto_fix_high_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Auto-Fix Generator', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

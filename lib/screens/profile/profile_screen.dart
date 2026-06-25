@@ -9,6 +9,7 @@ import '../../widgets/glass_card.dart';
 import '../mentor/mentor_chat_screen.dart';
 import '../../widgets/liquid_glass_button.dart';
 import 'timeline_screen.dart';
+import '../intelligence/developer_growth_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -1046,6 +1047,26 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 24),
+              LiquidGlassButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DeveloperGrowthScreen()),
+                  );
+                },
+                color: AppTheme.secondaryAccent,
+                borderRadius: 12,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.trending_up_rounded, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Text('Developer Growth & Badges', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                  ],
+                ),
               ),
             ],
           ),

@@ -260,13 +260,6 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         showDivider: true,
                       ),
                       _buildDiscoverRow(
-                        icon: Icons.trending_up_rounded,
-                        iconColor: const Color(0xFFFF9F0A),
-                        label: 'Developer Growth & Badges',
-                        onTap: () => setState(() => _activeTab = 7),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
                         icon: Icons.search_rounded,
                         iconColor: const Color(0xFF5E5CE6),
                         label: 'Codebase Q&A Search',
@@ -274,24 +267,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         showDivider: true,
                       ),
                       _buildDiscoverRow(
-                        icon: Icons.build_rounded,
-                        iconColor: const Color(0xFFFF375F),
-                        label: 'Auto-Fix PR Generator',
-                        onTap: () => setState(() => _activeTab = 9),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
                         icon: Icons.desktop_mac_rounded,
                         iconColor: const Color(0xFF64D2FF),
                         label: 'Live UI Audit',
                         onTap: () => setState(() => _activeTab = 10),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
-                        icon: Icons.mic_rounded,
-                        iconColor: const Color(0xFFFFD60A),
-                        label: 'Voice Code Review',
-                        onTap: () => setState(() => _activeTab = 11),
                         showDivider: false,
                       ),
                     ],
