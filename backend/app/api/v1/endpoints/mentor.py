@@ -1,6 +1,6 @@
 import logging
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -291,10 +291,9 @@ async def mentor_chat(
                         logger.warning(
                             "Agentic loop approaching 100s Render timeout. Breaking early."
                         )
-                        final_reply = (
-                            reply
-                            if "reply" in locals()
-                            else "Task is taking too long to finish. OpenClaw is still processing in the background."
+                        final_reply = locals().get(
+                            "reply",
+                            "Task is taking too long to finish. OpenClaw is still processing in the background.",
                         )
                         break
 
