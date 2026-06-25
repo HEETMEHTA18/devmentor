@@ -13,7 +13,7 @@ _openclaw_service = OpenClawService()
 
 class ReviewRequest(BaseModel):
     repo_url: str
-    branch: str = "main"
+    branch: str = "master"
 
 
 class ReviewResponse(BaseModel):

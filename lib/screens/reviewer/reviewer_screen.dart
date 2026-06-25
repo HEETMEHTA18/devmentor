@@ -83,7 +83,7 @@ class _ReviewerScreenState extends State<ReviewerScreen> {
         },
         body: jsonEncode({
           'repo_url': path,
-          'branch': 'main',
+          'branch': 'master',
         }),
       );
 
