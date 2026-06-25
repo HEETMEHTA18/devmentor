@@ -2596,6 +2596,9 @@ This is simulated offline prompts.md content.
     if (key == 'notifications') {
       pushNotifications = !pushNotifications;
       await prefs.setBool('pref_notifications', pushNotifications);
+      if (pushNotifications) {
+        web_helper.requestNotificationPermission();
+      }
     }
     if (key == 'ai') {
       aiInsights = !aiInsights;

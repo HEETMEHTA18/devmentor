@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.api.deps import get_current_user_id
+from app.api.deps import get_optional_user_id
 from app.core.config import settings
 from app.services.openclaw_service import OpenClawService
 
@@ -29,7 +29,7 @@ class ReviewResponse(BaseModel):
 @router.post("/", response_model=ReviewResponse)
 async def run_continuous_code_review(
     request: ReviewRequest,
-    user_id: str = Depends(get_current_user_id),
+    user_id: str | None = Depends(get_optional_user_id),
 ):
     """
     Continuous Code Reviewer: Analyzes architecture, security, performance, accessibility.

@@ -130,29 +130,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
     }
     _appState.addListener(_onAppStateChanged);
     
-    // Request actual OS/browser notification permission
-    requestNotificationPermission();
-
-    // Sync AppState with the initial tab from URL and check walkthrough status
+    // Sync AppState with the initial tab from URL
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         _appState.setSelectedTab(_selectedIndex);
       }
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final hasCompleted = prefs.getBool('has_completed_walkthrough') ?? false;
-        debugPrint('DEBUG WALKTHROUGH: hasCompleted = $hasCompleted, showWalkthrough = $_showWalkthrough');
-        if (!hasCompleted && mounted) {
-          setState(() {
-            _showWalkthrough = true;
-            _walkthroughStep = 0;
-            _selectedIndex = 0;
-          });
-          _appState.setSelectedTab(0);
-        } else {
-          _checkAndShowNotificationPrompt();
-        }
-      } catch (_) {}
     });
   }
 
