@@ -13,7 +13,7 @@ _openclaw_service = OpenClawService()
 
 class ReviewRequest(BaseModel):
     repo_url: str
-    branch: str = "master"
+    branch: str | None = None
 
 
 class ReviewResponse(BaseModel):
@@ -40,12 +40,17 @@ async def run_continuous_code_review(
 
     # 1. Ask OpenClaw to clone and analyze the codebase structure
     logger.info(f"Dispatching Code Review for {request.repo_url}")
-    claw_task = f"Clone {request.repo_url} branch {request.branch}. Analyze the architecture, dependencies, and code quality. Do not modify files. Just print a summary of the tech stack, major files, and obvious code smells."
-    claw_result = await _openclaw_service.execute_task(
-        repo_url=request.repo_url,
-        task_description=claw_task,
-        branch_name=request.branch,
-    )
+    branch_text = f" branch {request.branch}" if request.branch else " on its default branch"
+    claw_task = f"Clone {request.repo_url}{branch_text}. Analyze the architecture, dependencies, and code quality. Do not modify files. Just print a summary of the tech stack, major files, and obvious code smells."
+    
+    kwargs = {
+        "repo_url": request.repo_url,
+        "task_description": claw_task,
+    }
+    if request.branch:
+        kwargs["branch_name"] = request.branch
+        
+    claw_result = await _openclaw_service.execute_task(**kwargs)
 
     # Extract the raw output from OpenClaw (the file tree / analysis)
     raw_analysis = str(claw_result.get("message", claw_result))
