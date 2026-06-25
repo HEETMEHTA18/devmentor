@@ -11,6 +11,11 @@ import '../mentor/mentor_chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/liquid_glass_button.dart';
 import '../reviewer/reviewer_screen.dart';
+import '../intelligence/developer_growth_screen.dart';
+import '../intelligence/codebase_qa_screen.dart';
+import '../intelligence/auto_fix_screen.dart';
+import '../intelligence/ui_audit_screen.dart';
+import '../intelligence/voice_review_screen.dart';
 
 class DiscoverReposScreen extends StatefulWidget {
   const DiscoverReposScreen({super.key});
@@ -50,8 +55,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       if (_searchQuery.isEmpty) return true;
       final q = _searchQuery.toLowerCase();
       return r.name.toLowerCase().contains(q) ||
-             r.description.toLowerCase().contains(q) ||
-             r.tags.any((t) => t.toLowerCase().contains(q));
+          r.description.toLowerCase().contains(q) ||
+          r.tags.any((t) => t.toLowerCase().contains(q));
     }).toList();
 
     // Sub-page view for deep tabs
@@ -83,6 +88,26 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           tabContent = _buildReviewerTab(context, appState);
           tabTitle = 'Continuous Code Reviewer';
           break;
+        case 7:
+          tabContent = const DeveloperGrowthScreen();
+          tabTitle = 'Developer Growth & Badges';
+          break;
+        case 8:
+          tabContent = const CodebaseQAScreen();
+          tabTitle = 'Codebase Q&A Search';
+          break;
+        case 9:
+          tabContent = const AutoFixScreen();
+          tabTitle = 'Auto-Fix PR Generator';
+          break;
+        case 10:
+          tabContent = const UIAuditScreen();
+          tabTitle = 'Live UI Audit';
+          break;
+        case 11:
+          tabContent = const VoiceReviewScreen();
+          tabTitle = 'Voice Code Review';
+          break;
         default:
           tabContent = Container();
           tabTitle = '';
@@ -91,10 +116,17 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppTheme.textMain),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 18,
+              color: AppTheme.textMain,
+            ),
             onPressed: () => setState(() => _activeTab = 0),
           ),
-          title: Text(tabTitle, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 17)),
+          title: Text(
+            tabTitle,
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 17),
+          ),
         ),
         body: tabContent,
       );
@@ -112,210 +144,286 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-          // Large title header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 60, bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Explore',
-                    style: GoogleFonts.inter(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textMain,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.search_rounded, size: 18, color: AppTheme.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Discover Section
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 12),
-              child: Text(
-                'Discover',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textMain,
+            // Large title header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 60,
+                  bottom: 8,
                 ),
-              ),
-            ),
-          ),
-
-          // Discover Cards
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GlassCard(
-                borderRadius: 16,
-                padding: EdgeInsets.zero,
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildDiscoverRow(
-                      icon: Icons.trending_up_rounded,
-                      iconColor: const Color(0xFF34C759),
-                      label: 'Trending Repositories',
-                      onTap: () => setState(() => _activeTab = 1),
-                      showDivider: true,
+                    Text(
+                      'Explore',
+                      style: GoogleFonts.inter(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textMain,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                    _buildDiscoverRow(
-                      icon: Icons.sentiment_satisfied_alt_rounded,
-                      iconColor: const Color(0xFFFF9500),
-                      label: 'Awesome Lists',
-                      onTap: () => setState(() => _activeTab = 4),
-                      showDivider: true,
-                    ),
-                    _buildDiscoverRow(
-                      icon: Icons.description_rounded,
-                      iconColor: const Color(0xFF5856D6),
-                      label: 'AI Resume Reviewer',
-                      onTap: () => setState(() => _activeTab = 2),
-                      showDivider: true,
-                    ),
-                    _buildDiscoverRow(
-                      icon: Icons.workspace_premium_rounded,
-                      iconColor: const Color(0xFFFF2D55),
-                      label: 'AI Project Evaluator',
-                      onTap: () => setState(() => _activeTab = 3),
-                      showDivider: true,
-                    ),
-                    _buildDiscoverRow(
-                      icon: Icons.travel_explore_rounded,
-                      iconColor: const Color(0xFF0A84FF),
-                      label: 'Deep Research Agent',
-                      onTap: () {
-                        setState(() => _activeTab = 5);
-                        appState.fetchWeeklyTechDigest();
-                      },
-                      showDivider: true,
-                    ),
-                    _buildDiscoverRow(
-                      icon: Icons.code_rounded,
-                      iconColor: const Color(0xFF32D74B),
-                      label: 'Continuous Code Reviewer',
-                      onTap: () => setState(() => _activeTab = 6),
-                      showDivider: false,
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
 
-          // Activity Section Header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 28, bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Activity',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textMain,
-                    ),
+            // Discover Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 16,
+                  bottom: 12,
+                ),
+                child: Text(
+                  'Discover',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textMain,
                   ),
-                  GestureDetector(
-                    onTap: () => appState.fetchFollowingActivity(),
-                    child: Icon(
-                      Icons.tune_rounded,
-                      size: 20,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
 
-          // Activity Feed
-          if (appState.isLoadingFollowingActivity)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            )
-          else if (appState.followingActivity.isEmpty)
+            // Discover Cards
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: GlassCard(
                   borderRadius: 16,
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      Icon(Icons.people_outline_rounded, size: 48, color: AppTheme.textSecondary.withValues(alpha: 0.4)),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No activity yet',
-                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textMain),
+                      _buildDiscoverRow(
+                        icon: Icons.trending_up_rounded,
+                        iconColor: const Color(0xFF34C759),
+                        label: 'Trending Repositories',
+                        onTap: () => setState(() => _activeTab = 1),
+                        showDivider: true,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Follow developers on GitHub to see their events here.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                      _buildDiscoverRow(
+                        icon: Icons.sentiment_satisfied_alt_rounded,
+                        iconColor: const Color(0xFFFF9500),
+                        label: 'Awesome Lists',
+                        onTap: () => setState(() => _activeTab = 4),
+                        showDivider: true,
                       ),
-                      const SizedBox(height: 16),
-                      GestureDetector(
-                        onTap: () => appState.fetchFollowingActivity(),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF007AFF).withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Refresh Feed',
-                            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF007AFF)),
-                          ),
-                        ),
+                      _buildDiscoverRow(
+                        icon: Icons.description_rounded,
+                        iconColor: const Color(0xFF5856D6),
+                        label: 'AI Resume Reviewer',
+                        onTap: () => setState(() => _activeTab = 2),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.workspace_premium_rounded,
+                        iconColor: const Color(0xFFFF2D55),
+                        label: 'AI Project Evaluator',
+                        onTap: () => setState(() => _activeTab = 3),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.travel_explore_rounded,
+                        iconColor: const Color(0xFF0A84FF),
+                        label: 'Deep Research Agent',
+                        onTap: () {
+                          setState(() => _activeTab = 5);
+                          appState.fetchWeeklyTechDigest();
+                        },
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.code_rounded,
+                        iconColor: const Color(0xFF32D74B),
+                        label: 'Continuous Code Reviewer',
+                        onTap: () => setState(() => _activeTab = 6),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.trending_up_rounded,
+                        iconColor: const Color(0xFFFF9F0A),
+                        label: 'Developer Growth & Badges',
+                        onTap: () => setState(() => _activeTab = 7),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.search_rounded,
+                        iconColor: const Color(0xFF5E5CE6),
+                        label: 'Codebase Q&A Search',
+                        onTap: () => setState(() => _activeTab = 8),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.build_rounded,
+                        iconColor: const Color(0xFFFF375F),
+                        label: 'Auto-Fix PR Generator',
+                        onTap: () => setState(() => _activeTab = 9),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.desktop_mac_rounded,
+                        iconColor: const Color(0xFF64D2FF),
+                        label: 'Live UI Audit',
+                        onTap: () => setState(() => _activeTab = 10),
+                        showDivider: true,
+                      ),
+                      _buildDiscoverRow(
+                        icon: Icons.mic_rounded,
+                        iconColor: const Color(0xFFFFD60A),
+                        label: 'Voice Code Review',
+                        onTap: () => setState(() => _activeTab = 11),
+                        showDivider: false,
                       ),
                     ],
                   ),
                 ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final event = appState.followingActivity[index];
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      left: 16, right: 16,
-                      top: index == 0 ? 0 : 0,
-                      bottom: index == appState.followingActivity.length - 1 ? 120 : 12,
+            ),
+
+            // Activity Section Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 28,
+                  bottom: 12,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Activity',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textMain,
+                      ),
                     ),
-                    child: _buildActivityCard(context, event, isDark),
-                  );
-                },
-                childCount: appState.followingActivity.length,
+                    GestureDetector(
+                      onTap: () => appState.fetchFollowingActivity(),
+                      child: Icon(
+                        Icons.tune_rounded,
+                        size: 20,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
-          // Bottom padding
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
-      ),
+            // Activity Feed
+            if (appState.isLoadingFollowingActivity)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              )
+            else if (appState.followingActivity.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GlassCard(
+                    borderRadius: 16,
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.people_outline_rounded,
+                          size: 48,
+                          color: AppTheme.textSecondary.withValues(alpha: 0.4),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No activity yet',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textMain,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Follow developers on GitHub to see their events here.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => appState.fetchFollowingActivity(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(
+                                0xFF007AFF,
+                              ).withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Refresh Feed',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF007AFF),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final event = appState.followingActivity[index];
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: index == 0 ? 0 : 0,
+                      bottom: index == appState.followingActivity.length - 1
+                          ? 120
+                          : 12,
+                    ),
+                    child: _buildActivityCard(context, event, isDark),
+                  );
+                }, childCount: appState.followingActivity.length),
+              ),
+
+            // Bottom padding
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ),
       ),
     );
   }
@@ -356,24 +464,38 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     ),
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, size: 20, color: AppTheme.textSecondary.withValues(alpha: 0.4)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppTheme.textSecondary.withValues(alpha: 0.4),
+                ),
               ],
             ),
           ),
           if (showDivider)
             Padding(
               padding: const EdgeInsets.only(left: 62),
-              child: Container(height: 0.5, color: AppTheme.border.withValues(alpha: 0.3)),
+              child: Container(
+                height: 0.5,
+                color: AppTheme.border.withValues(alpha: 0.3),
+              ),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildActivityCard(BuildContext context, Map<String, dynamic> event, bool isDark) {
-    final String actorLogin = event['actor_name'] ?? (event['actor']?['login'] ?? 'Unknown');
-    final String actorAvatar = event['actor_avatar'] ?? (event['actor']?['avatar_url'] ?? '');
-    final String repoName = event['repo_name'] ?? (event['repo']?['name'] ?? 'Unknown Repo');
+  Widget _buildActivityCard(
+    BuildContext context,
+    Map<String, dynamic> event,
+    bool isDark,
+  ) {
+    final String actorLogin =
+        event['actor_name'] ?? (event['actor']?['login'] ?? 'Unknown');
+    final String actorAvatar =
+        event['actor_avatar'] ?? (event['actor']?['avatar_url'] ?? '');
+    final String repoName =
+        event['repo_name'] ?? (event['repo']?['name'] ?? 'Unknown Repo');
     final String eventType = event['type'] ?? 'PushEvent';
     final String actionType = event['action_type'] ?? '';
     final String action = event['action'] ?? '';
@@ -405,7 +527,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       final issueMatch = RegExp(r'issue #(\d+)').firstMatch(title);
       final prMatch = RegExp(r'pull request #(\d+)').firstMatch(title);
       if (issueMatch != null) {
-        targetUrl = 'https://github.com/$repoName/issues/${issueMatch.group(1)}';
+        targetUrl =
+            'https://github.com/$repoName/issues/${issueMatch.group(1)}';
       } else if (prMatch != null) {
         targetUrl = 'https://github.com/$repoName/pull/${prMatch.group(1)}';
       }
@@ -471,16 +594,23 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           Row(
             children: [
               CircleAvatar(
-                backgroundImage: actorAvatar.isNotEmpty ? NetworkImage(actorAvatar) : null,
+                backgroundImage: actorAvatar.isNotEmpty
+                    ? NetworkImage(actorAvatar)
+                    : null,
                 radius: 16,
                 backgroundColor: AppTheme.accent.withValues(alpha: 0.2),
-                child: actorAvatar.isEmpty ? const Icon(Icons.person, size: 16) : null,
+                child: actorAvatar.isEmpty
+                    ? const Icon(Icons.person, size: 16)
+                    : null,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: RichText(
                   text: TextSpan(
-                    style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textMain),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: AppTheme.textMain,
+                    ),
                     children: [
                       TextSpan(
                         text: actorLogin,
@@ -489,14 +619,23 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       TextSpan(text: ' $typeLabel '),
                       TextSpan(
                         text: repoName,
-                        style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.accent),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.accent,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
               if (timeAgo.isNotEmpty)
-                Text(timeAgo, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                Text(
+                  timeAgo,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
             ],
           ),
 
@@ -507,9 +646,13 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.02),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.black.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.border.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppTheme.border.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,13 +660,21 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   // Repo name
                   Text(
                     repoName,
-                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   // Title
                   Text(
                     title,
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textMain),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textMain,
+                    ),
                   ),
                   // Badge row
                   const SizedBox(height: 10),
@@ -531,11 +682,16 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: badgeColor.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: badgeColor.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -544,7 +700,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                             const SizedBox(width: 4),
                             Text(
                               badgeLabel,
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: badgeColor),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: badgeColor,
+                              ),
                             ),
                           ],
                         ),
@@ -556,12 +716,20 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     const SizedBox(height: 10),
                     Text(
                       'Detail',
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textMain),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textMain,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       body,
-                      style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -575,17 +743,26 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         onPressed: () async {
                           final Uri uri = Uri.parse(targetUrl);
                           if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
                           }
                         },
                         icon: const Icon(Icons.open_in_new_rounded, size: 14),
                         label: Text(
                           'GitHub',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         style: TextButton.styleFrom(
                           foregroundColor: AppTheme.textSecondary,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -598,16 +775,30 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                             _researchSubTab = 0; // Select GitHub Research
                             _researchUrlController.text = targetUrl;
                           });
-                          final state = Provider.of<AppState>(context, listen: false);
+                          final state = Provider.of<AppState>(
+                            context,
+                            listen: false,
+                          );
                           state.clearRateLimit();
                           state.fetchResearchData('github', {'url': targetUrl});
                         },
-                        icon: const Icon(Icons.psychology_rounded, size: 14, color: Colors.black),
+                        icon: const Icon(
+                          Icons.psychology_rounded,
+                          size: 14,
+                          color: Colors.black,
+                        ),
                         label: Text(
                           'Deep Analyze',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         borderRadius: 8,
                         color: AppTheme.accent,
                       ),
@@ -622,10 +813,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
     );
   }
 
-
-
-
-  Widget _buildReposTab(BuildContext context, AppState appState, List<dynamic> repos) {
+  Widget _buildReposTab(
+    BuildContext context,
+    AppState appState,
+    List<dynamic> repos,
+  ) {
     return Column(
       children: [
         _buildAISearchSection(context),
@@ -634,18 +826,25 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         const SizedBox(height: 16),
         Expanded(
           child: repos.isEmpty
-            ? Center(child: Text('No repositories found matching filters.', style: Theme.of(context).textTheme.bodyMedium))
-            : ListView.builder(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
-                itemCount: repos.length,
-                itemBuilder: (context, index) {
-                  final repo = repos[index];
-                  return _buildRepoCard(
-                    context,
-                    repo,
-                  );
-                },
-              ),
+              ? Center(
+                  child: Text(
+                    'No repositories found matching filters.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 10,
+                    bottom: 120,
+                  ),
+                  itemCount: repos.length,
+                  itemBuilder: (context, index) {
+                    final repo = repos[index];
+                    return _buildRepoCard(context, repo);
+                  },
+                ),
         ),
       ],
     );
@@ -667,7 +866,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.description_rounded, color: AppTheme.accent, size: 20),
+                        Icon(
+                          Icons.description_rounded,
+                          color: AppTheme.accent,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'PASTE YOUR RESUME TEXT',
@@ -683,11 +886,12 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       onPressed: state.isReviewingResume
                           ? null
                           : () async {
-                              final result = await FilePicker.platform.pickFiles(
-                                type: FileType.custom,
-                                allowedExtensions: ['pdf'],
-                                withData: true,
-                              );
+                              final result = await FilePicker.platform
+                                  .pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf'],
+                                    withData: true,
+                                  );
                               if (result != null && result.files.isNotEmpty) {
                                 final file = result.files.first;
                                 if (file.bytes != null) {
@@ -698,7 +902,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       icon: const Icon(Icons.upload_file_rounded, size: 18),
                       label: Text(
                         'UPLOAD PDF',
-                        style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.accent,
@@ -712,14 +919,20 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   maxLines: 8,
                   style: TextStyle(color: AppTheme.textMain, fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Paste resume text here (e.g. skills, experience, education)...',
-                    hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    hintText:
+                        'Paste resume text here (e.g. skills, experience, education)...',
+                    hintStyle: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(color: AppTheme.border),
                     ),
                     filled: true,
-                    fillColor: AppTheme.isDark ? const Color(0x10FFFFFF) : const Color(0x05000000),
+                    fillColor: AppTheme.isDark
+                        ? const Color(0x10FFFFFF)
+                        : const Color(0x05000000),
                     contentPadding: const EdgeInsets.all(16),
                   ),
                 ),
@@ -739,15 +952,21 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     color: AppTheme.accent,
                     child: state.isReviewingResume
                         ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             'ANALYZE & MATCH WITH GITHUB',
                             style: GoogleFonts.jetBrainsMono(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              color: AppTheme.isDark ? Colors.black : Colors.white,
+                              color: AppTheme.isDark
+                                  ? Colors.black
+                                  : Colors.white,
                             ),
                           ),
                   ),
@@ -780,11 +999,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: state.resumeAtsScore! > 80 
-                              ? AppTheme.success 
-                              : state.resumeAtsScore! > 60 
-                                  ? AppTheme.peach 
-                                  : AppTheme.destructive,
+                          color: state.resumeAtsScore! > 80
+                              ? AppTheme.success
+                              : state.resumeAtsScore! > 60
+                              ? AppTheme.peach
+                              : AppTheme.destructive,
                         ),
                       ),
                     ],
@@ -796,27 +1015,49 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       value: state.resumeAtsScore! / 100,
                       backgroundColor: Colors.white10,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        state.resumeAtsScore! > 80 
-                            ? AppTheme.success 
-                            : state.resumeAtsScore! > 60 
-                                ? AppTheme.peach 
-                                : AppTheme.destructive,
+                        state.resumeAtsScore! > 80
+                            ? AppTheme.success
+                            : state.resumeAtsScore! > 60
+                            ? AppTheme.peach
+                            : AppTheme.destructive,
                       ),
                     ),
                   ),
                   const Divider(height: 32, color: Colors.white12),
-                  _buildBulletList('MISSING TECHNOLOGIES', state.resumeMissingTech ?? [], AppTheme.destructive),
+                  _buildBulletList(
+                    'MISSING TECHNOLOGIES',
+                    state.resumeMissingTech ?? [],
+                    AppTheme.destructive,
+                  ),
                   const Divider(height: 32, color: Colors.white12),
-                  _buildBulletList('WEAK BULLET POINTS', state.resumeWeakBullets ?? [], AppTheme.peach),
+                  _buildBulletList(
+                    'WEAK BULLET POINTS',
+                    state.resumeWeakBullets ?? [],
+                    AppTheme.peach,
+                  ),
                   const Divider(height: 32, color: Colors.white12),
-                  _buildBulletList('RECOMMENDED UPGRADES', state.resumeProjectImprovements ?? [], AppTheme.success),
-                  if (state.resumeMindsetUpgrades != null && state.resumeMindsetUpgrades!.isNotEmpty) ...[
+                  _buildBulletList(
+                    'RECOMMENDED UPGRADES',
+                    state.resumeProjectImprovements ?? [],
+                    AppTheme.success,
+                  ),
+                  if (state.resumeMindsetUpgrades != null &&
+                      state.resumeMindsetUpgrades!.isNotEmpty) ...[
                     const Divider(height: 32, color: Colors.white12),
-                    _buildBulletList('DEVELOPER MINDSET UPGRADES', state.resumeMindsetUpgrades!, AppTheme.accent),
+                    _buildBulletList(
+                      'DEVELOPER MINDSET UPGRADES',
+                      state.resumeMindsetUpgrades!,
+                      AppTheme.accent,
+                    ),
                   ],
-                  if (state.resumeSkillUpgrades != null && state.resumeSkillUpgrades!.isNotEmpty) ...[
+                  if (state.resumeSkillUpgrades != null &&
+                      state.resumeSkillUpgrades!.isNotEmpty) ...[
                     const Divider(height: 32, color: Colors.white12),
-                    _buildBulletList('SKILL UPGRADES (assessment: skill.sh)', state.resumeSkillUpgrades!, AppTheme.blue),
+                    _buildBulletList(
+                      'SKILL UPGRADES (assessment: skill.sh)',
+                      state.resumeSkillUpgrades!,
+                      AppTheme.blue,
+                    ),
                   ],
                 ],
               ),
@@ -846,7 +1087,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.auto_awesome_rounded, color: AppTheme.accent, size: 20),
+                  Icon(
+                    Icons.auto_awesome_rounded,
+                    color: AppTheme.accent,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'AI TAILORING & GOOGLE DRIVE SYNC',
@@ -861,7 +1106,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               const SizedBox(height: 16),
               Text(
                 'Provide the target job title and description to tailor your resume for this position and automatically sync it to your Google Drive.',
-                style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -869,14 +1117,23 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 style: TextStyle(color: AppTheme.textMain, fontSize: 13),
                 decoration: InputDecoration(
                   labelText: 'Target Job Title',
-                  labelStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  labelStyle: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                  ),
                   hintText: 'e.g. Senior Flutter Engineer',
-                  hintStyle: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.5), fontSize: 12),
+                  hintStyle: TextStyle(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                    fontSize: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppTheme.border),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -886,9 +1143,16 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 style: TextStyle(color: AppTheme.textMain, fontSize: 13),
                 decoration: InputDecoration(
                   labelText: 'Job Description / Requirements',
-                  labelStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                  hintText: 'Paste target job requirements and key responsibilities here...',
-                  hintStyle: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.5), fontSize: 12),
+                  labelStyle: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                  ),
+                  hintText:
+                      'Paste target job requirements and key responsibilities here...',
+                  hintStyle: TextStyle(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                    fontSize: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppTheme.border),
@@ -915,7 +1179,9 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text('Please fill out both job title and description.'),
+                                content: const Text(
+                                  'Please fill out both job title and description.',
+                                ),
                                 backgroundColor: AppTheme.destructive,
                               ),
                             );
@@ -923,12 +1189,18 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         },
                   icon: state.isGeneratingResume
                       ? const SizedBox(
-                          width: 16, height: 16,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Icon(Icons.cloud_upload_outlined, size: 18),
                   label: Text(
-                    state.isGeneratingResume ? 'TAILORING...' : 'TAILOR & SYNC TO GDRIVE',
+                    state.isGeneratingResume
+                        ? 'TAILORING...'
+                        : 'TAILOR & SYNC TO GDRIVE',
                     style: GoogleFonts.jetBrainsMono(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -971,15 +1243,24 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 const SizedBox(height: 12),
                 if (state.googleDriveSyncInfo != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.success.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.success.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppTheme.success.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.check_circle_outline_rounded, color: AppTheme.success, size: 20),
+                        Icon(
+                          Icons.check_circle_outline_rounded,
+                          color: AppTheme.success,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -1005,13 +1286,20 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.open_in_new_rounded, color: AppTheme.accent, size: 18),
+                          icon: Icon(
+                            Icons.open_in_new_rounded,
+                            color: AppTheme.accent,
+                            size: 18,
+                          ),
                           onPressed: () async {
-                            final link = state.googleDriveSyncInfo!['web_view_link'];
+                            final link =
+                                state.googleDriveSyncInfo!['web_view_link'];
                             if (link != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Simulating Google Drive open: $link'),
+                                  content: Text(
+                                    'Simulating Google Drive open: $link',
+                                  ),
                                   backgroundColor: AppTheme.accent,
                                 ),
                               );
@@ -1031,21 +1319,32 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...?state.generatedResumeOptimizations?.map((opt) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('• ', style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold)),
-                          Expanded(
-                            child: Text(
-                              opt,
-                              style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textMain),
+                ...?state.generatedResumeOptimizations?.map(
+                  (opt) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '• ',
+                          style: TextStyle(
+                            color: AppTheme.success,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            opt,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppTheme.textMain,
                             ),
                           ),
-                        ],
-                      ),
-                    )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1078,7 +1377,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   child: SingleChildScrollView(
                     child: Text(
                       state.generatedResumeText ?? '',
-                      style: GoogleFonts.jetBrainsMono(fontSize: 11, color: AppTheme.textMain),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        color: AppTheme.textMain,
+                      ),
                     ),
                   ),
                 ),
@@ -1104,23 +1406,32 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         ),
         const SizedBox(height: 8),
         if (items.isEmpty)
-          Text('None detected! Looking great.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12))
+          Text(
+            'None detected! Looking great.',
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          )
         else
-          ...items.map((it) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('• ', style: TextStyle(color: color, fontSize: 14)),
-                Expanded(
-                  child: Text(
-                    it,
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.3),
+          ...items.map(
+            (it) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: TextStyle(color: color, fontSize: 14)),
+                  Expanded(
+                    child: Text(
+                      it,
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          )),
+          ),
       ],
     );
   }
@@ -1138,7 +1449,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.workspace_premium_rounded, color: AppTheme.peach, size: 20),
+                    Icon(
+                      Icons.workspace_premium_rounded,
+                      color: AppTheme.peach,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'EVALUATE PROJECT IDEA',
@@ -1157,13 +1472,18 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   style: TextStyle(color: AppTheme.textMain, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Enter project name (e.g. Expense Tracker)...',
-                    hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    hintStyle: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(color: AppTheme.border),
                     ),
                     filled: true,
-                    fillColor: AppTheme.isDark ? const Color(0x10FFFFFF) : const Color(0x05000000),
+                    fillColor: AppTheme.isDark
+                        ? const Color(0x10FFFFFF)
+                        : const Color(0x05000000),
                     contentPadding: const EdgeInsets.all(16),
                   ),
                 ),
@@ -1176,7 +1496,9 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         ? null
                         : () {
                             if (_projectController.text.trim().isNotEmpty) {
-                              state.evaluateProject(_projectController.text.trim());
+                              state.evaluateProject(
+                                _projectController.text.trim(),
+                              );
                             }
                           },
                     style: ElevatedButton.styleFrom(
@@ -1187,15 +1509,21 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     ),
                     child: state.isEvaluatingProject
                         ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             'GET VALUE SCORE & PATH',
                             style: GoogleFonts.jetBrainsMono(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
-                              color: AppTheme.isDark ? Colors.black : Colors.white,
+                              color: AppTheme.isDark
+                                  ? Colors.black
+                                  : Colors.white,
                             ),
                           ),
                   ),
@@ -1203,20 +1531,33 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 if (state.isRateLimited) ...[
                   const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.destructive.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.destructive.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppTheme.destructive.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: AppTheme.destructive, size: 16),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppTheme.destructive,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Rate limit exceeded. Please wait a few minutes before trying again.',
-                            style: TextStyle(color: AppTheme.destructive, fontSize: 12, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: AppTheme.destructive,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -1251,11 +1592,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: state.evaluatedProjectScore! >= 7 
-                              ? AppTheme.success 
-                              : state.evaluatedProjectScore! >= 5 
-                                  ? AppTheme.peach 
-                                  : AppTheme.destructive,
+                          color: state.evaluatedProjectScore! >= 7
+                              ? AppTheme.success
+                              : state.evaluatedProjectScore! >= 5
+                              ? AppTheme.peach
+                              : AppTheme.destructive,
                         ),
                       ),
                     ],
@@ -1279,34 +1620,40 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ...(state.evaluatedProjectUpgradePath ?? []).map((step) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppTheme.accent.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.upgrade_rounded, color: AppTheme.accent, size: 12),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            step,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textSecondary,
-                              height: 1.3,
+                  ...(state.evaluatedProjectUpgradePath ?? []).map(
+                    (step) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.upgrade_rounded,
+                              color: AppTheme.accent,
+                              size: 12,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              step,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -1315,6 +1662,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       ),
     );
   }
+
   Widget _buildAwesomeListsTab(BuildContext context, AppState state) {
     if (state.isLoadingAwesomeLists) {
       return const Center(child: CircularProgressIndicator());
@@ -1325,7 +1673,12 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
     return RefreshIndicator(
       onRefresh: () => state.fetchAwesomeLists(),
       child: ListView.builder(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
+        padding: const EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 10,
+          bottom: 120,
+        ),
         itemCount: lists.isEmpty ? 1 : lists.length,
         itemBuilder: (context, index) {
           if (lists.isEmpty) {
@@ -1337,11 +1690,21 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   children: [
                     Text(
                       'No awesome lists found. Tap to fetch.',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     LiquidGlassButton(
-                      child: Text('Fetch Awesome Lists', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Fetch Awesome Lists',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       onPressed: () => state.fetchAwesomeLists(),
                     ),
                   ],
@@ -1371,7 +1734,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                           color: AppTheme.accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.sentiment_satisfied_alt_rounded, color: AppTheme.accent, size: 18),
+                        child: Icon(
+                          Icons.sentiment_satisfied_alt_rounded,
+                          color: AppTheme.accent,
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1401,7 +1768,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.star_rounded, size: 14, color: AppTheme.peach),
+                          Icon(
+                            Icons.star_rounded,
+                            size: 14,
+                            color: AppTheme.peach,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '$stars',
@@ -1417,7 +1788,10 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         onTap: () async {
                           final uri = Uri.tryParse(url);
                           if (uri != null) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
                           }
                         },
                         child: Row(
@@ -1431,7 +1805,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Icon(Icons.open_in_new_rounded, size: 12, color: AppTheme.accent),
+                            Icon(
+                              Icons.open_in_new_rounded,
+                              size: 12,
+                              color: AppTheme.accent,
+                            ),
                           ],
                         ),
                       ),
@@ -1511,7 +1889,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(subTabs[_researchSubTab]['icon'] as IconData, color: AppTheme.accent, size: 20),
+                    Icon(
+                      subTabs[_researchSubTab]['icon'] as IconData,
+                      color: AppTheme.accent,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'RESEARCH ${subTabs[_researchSubTab]['label']?.toString().toUpperCase()}',
@@ -1524,7 +1906,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 if (_researchSubTab != 2) ...[
                   TextField(
                     controller: _researchUrlController,
@@ -1533,15 +1915,20 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       labelText: _researchSubTab == 0
                           ? 'GITHUB REPOSITORY URL'
                           : _researchSubTab == 1
-                              ? 'YOUTUBE VIDEO URL'
-                              : 'RSS FEED URL',
-                      labelStyle: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppTheme.textSecondary),
+                          ? 'YOUTUBE VIDEO URL'
+                          : 'RSS FEED URL',
+                      labelStyle: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        color: AppTheme.textSecondary,
+                      ),
                       hintText: _researchSubTab == 0
                           ? 'e.g. https://github.com/flutter/flutter'
                           : _researchSubTab == 1
-                              ? 'e.g. https://www.youtube.com/watch?v=...'
-                              : 'e.g. https://news.ycombinator.com/rss',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ? 'e.g. https://www.youtube.com/watch?v=...'
+                          : 'e.g. https://news.ycombinator.com/rss',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1552,10 +1939,19 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     controller: _researchQueryController,
                     style: TextStyle(color: AppTheme.textMain, fontSize: 13),
                     decoration: InputDecoration(
-                      labelText: _researchSubTab == 0 ? 'SEARCH QUERY (OPTIONAL)' : 'TOPIC / KEYWORDS',
-                      labelStyle: GoogleFonts.jetBrainsMono(fontSize: 10, color: AppTheme.textSecondary),
-                      hintText: _researchSubTab == 0 ? 'e.g. state management' : 'e.g. fastml, flutter performance',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      labelText: _researchSubTab == 0
+                          ? 'SEARCH QUERY (OPTIONAL)'
+                          : 'TOPIC / KEYWORDS',
+                      labelStyle: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        color: AppTheme.textSecondary,
+                      ),
+                      hintText: _researchSubTab == 0
+                          ? 'e.g. state management'
+                          : 'e.g. fastml, flutter performance',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1563,37 +1959,58 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
 
                 if (state.researchError != null) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: AppTheme.destructive.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.destructive.withValues(alpha: 0.2)),
+                      border: Border.all(
+                        color: AppTheme.destructive.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Text(
                       state.researchError!,
-                      style: TextStyle(color: AppTheme.destructive, fontSize: 12),
+                      style: TextStyle(
+                        color: AppTheme.destructive,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
 
                 if (state.isRateLimited) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: AppTheme.destructive.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.destructive.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppTheme.destructive.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: AppTheme.destructive, size: 16),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppTheme.destructive,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Rate limit exceeded. Please wait a few minutes before trying again.',
-                            style: TextStyle(color: AppTheme.destructive, fontSize: 12, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: AppTheme.destructive,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -1623,7 +2040,9 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                               state.fetchResearchData('youtube', {'url': url});
                             } else if (_researchSubTab == 2) {
                               if (query.isEmpty) return;
-                              state.fetchResearchData('reddit', {'query': query});
+                              state.fetchResearchData('reddit', {
+                                'query': query,
+                              });
                             } else if (_researchSubTab == 3) {
                               if (url.isEmpty) return;
                               state.fetchResearchData('rss', {'url': url});
@@ -1637,8 +2056,12 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     ),
                     child: state.isResearching
                         ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.black,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             'START RESEARCH SCAN',
@@ -1674,7 +2097,9 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      AnimatedCopyButton(text: state.researchResult!['summary'] ?? ''),
+                      AnimatedCopyButton(
+                        text: state.researchResult!['summary'] ?? '',
+                      ),
                     ],
                   ),
                   const Divider(height: 24, color: Colors.white12),
@@ -1691,24 +2116,40 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     width: double.infinity,
                     height: 44,
                     child: OutlinedButton.icon(
-                      icon: Icon(Icons.forum_outlined, size: 18, color: AppTheme.accent),
+                      icon: Icon(
+                        Icons.forum_outlined,
+                        size: 18,
+                        color: AppTheme.accent,
+                      ),
                       label: Text(
                         'DISCUSS WITH AI MENTOR',
-                        style: GoogleFonts.jetBrainsMono(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.accent),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: AppTheme.accent,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: AppTheme.accent),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       onPressed: () {
-                        final platform = state.researchResult!['platform'] ?? 'research sources';
-                        final urlOrQuery = state.researchResult!['url'] ?? state.researchResult!['query'] ?? '';
-                        final summaryText = state.researchResult!['summary'] ?? '';
-                        
+                        final platform =
+                            state.researchResult!['platform'] ??
+                            'research sources';
+                        final urlOrQuery =
+                            state.researchResult!['url'] ??
+                            state.researchResult!['query'] ??
+                            '';
+                        final summaryText =
+                            state.researchResult!['summary'] ?? '';
+
                         state.addSystemMessageToChat(
                           'I have performed Deep Research on $platform ($urlOrQuery):\n\n'
                           '$summaryText\n\n'
-                          'Let\'s discuss these findings! Ask me about specific technical details or next steps.'
+                          'Let\'s discuss these findings! Ask me about specific technical details or next steps.',
                         );
                         Navigator.push(
                           context,
@@ -1735,7 +2176,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.newspaper_rounded, color: AppTheme.peach, size: 16),
+                        Icon(
+                          Icons.newspaper_rounded,
+                          color: AppTheme.peach,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'TECH NEWS DIGEST',
@@ -1749,7 +2194,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     ),
                     if (state.isLoadingTechDigest)
                       const SizedBox(
-                        width: 12, height: 12,
+                        width: 12,
+                        height: 12,
                         child: CircularProgressIndicator(strokeWidth: 1.5),
                       )
                     else
@@ -1757,7 +2203,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         icon: const Icon(Icons.refresh_rounded, size: 16),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        onPressed: () => state.fetchWeeklyTechDigest(force: true),
+                        onPressed: () =>
+                            state.fetchWeeklyTechDigest(force: true),
                       ),
                   ],
                 ),
@@ -1791,9 +2238,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-      ],
+      children: [Text(title, style: Theme.of(context).textTheme.titleMedium)],
     );
   }
 
@@ -1807,15 +2252,19 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.auto_awesome_rounded, color: AppTheme.isDark ? Colors.white : AppTheme.accent, size: 16),
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppTheme.isDark ? Colors.white : AppTheme.accent,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
                 Text(
-                  'AI RECO RECOMMENDER', 
+                  'AI RECO RECOMMENDER',
                   style: GoogleFonts.jetBrainsMono(
-                    color: AppTheme.isDark ? Colors.white70 : AppTheme.accent, 
-                    fontSize: 10, 
-                    fontWeight: FontWeight.bold
-                  )
+                    color: AppTheme.isDark ? Colors.white70 : AppTheme.accent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -1828,16 +2277,29 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               },
               style: TextStyle(color: AppTheme.textMain, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'Search topics to get AI repository recommendations...',
-                hintStyle: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                prefixIcon: Icon(Icons.search, color: AppTheme.textSecondary, size: 20),
+                hintText:
+                    'Search topics to get AI repository recommendations...',
+                hintStyle: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: AppTheme.isDark ? const Color(0x1AFFFFFF) : const Color(0x0A000000),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                fillColor: AppTheme.isDark
+                    ? const Color(0x1AFFFFFF)
+                    : const Color(0x0A000000),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -1863,8 +2325,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
 
   Widget _filterChip(AppState state, String label) {
     final isSelected = state.repoFilter == label;
-    final int count = label == 'All' 
-        ? state.allRepositories.length 
+    final int count = label == 'All'
+        ? state.allRepositories.length
         : state.allRepositories.where((r) => r.difficulty == label).length;
 
     return GestureDetector(
@@ -1873,13 +2335,13 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? AppTheme.accent.withValues(alpha: 0.85) 
+          color: isSelected
+              ? AppTheme.accent.withValues(alpha: 0.85)
               : Colors.white.withValues(alpha: AppTheme.isDark ? 0.08 : 0.45),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected 
-                ? AppTheme.accent.withValues(alpha: 0.5) 
+            color: isSelected
+                ? AppTheme.accent.withValues(alpha: 0.5)
                 : AppTheme.border,
             width: 1,
           ),
@@ -1887,7 +2349,9 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         child: Text(
           '$label ($count)',
           style: TextStyle(
-            color: isSelected ? (AppTheme.isDark ? Colors.black : Colors.white) : AppTheme.textSecondary,
+            color: isSelected
+                ? (AppTheme.isDark ? Colors.black : Colors.white)
+                : AppTheme.textSecondary,
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -1913,17 +2377,37 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${repo.owner} / ${repo.name}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary, fontSize: 12)),
+                        Text(
+                          '${repo.owner} / ${repo.name}',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: AppTheme.textSecondary,
+                                fontSize: 12,
+                              ),
+                        ),
                         const SizedBox(height: 4),
-                        Text(repo.description, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textMain)),
+                        Text(
+                          repo.description,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.textMain),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 16),
                   Column(
                     children: [
-                      Text('${repo.impactScore}', style: Theme.of(context).textTheme.displayMedium),
-                      Text('MATCH', style: GoogleFonts.jetBrainsMono(fontSize: 8, color: AppTheme.textSecondary)),
+                      Text(
+                        '${repo.impactScore}',
+                        style: Theme.of(context).textTheme.displayMedium,
+                      ),
+                      Text(
+                        'MATCH',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 8,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -1934,15 +2418,33 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 runSpacing: 8,
                 children: [
                   ...repo.tags.map((tag) => _tagWidget(tag, AppTheme.accent)),
-                  _tagWidget(repo.difficulty, repo.difficulty == 'Advanced' ? AppTheme.destructive : repo.difficulty == 'Intermediate' ? AppTheme.peach : AppTheme.success),
+                  _tagWidget(
+                    repo.difficulty,
+                    repo.difficulty == 'Advanced'
+                        ? AppTheme.destructive
+                        : repo.difficulty == 'Intermediate'
+                        ? AppTheme.peach
+                        : AppTheme.success,
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Learning Value', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 11)),
-                  Text('${repo.impactScore}/100', style: GoogleFonts.jetBrainsMono(fontSize: 11, color: AppTheme.textMain)),
+                  Text(
+                    'Learning Value',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontSize: 11),
+                  ),
+                  Text(
+                    '${repo.impactScore}/100',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 11,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1967,9 +2469,20 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: AppTheme.isDark ? const Color(0xFF1E1E24) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('${repo.owner} / ${repo.name}', style: TextStyle(color: AppTheme.textMain, fontSize: 16, fontWeight: FontWeight.bold)),
+          backgroundColor: AppTheme.isDark
+              ? const Color(0xFF1E1E24)
+              : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            '${repo.owner} / ${repo.name}',
+            style: TextStyle(
+              color: AppTheme.textMain,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1979,11 +2492,22 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: repo.difficulty == 'Advanced' ? AppTheme.destructive : repo.difficulty == 'Intermediate' ? AppTheme.peach : AppTheme.success,
+                  color: repo.difficulty == 'Advanced'
+                      ? AppTheme.destructive
+                      : repo.difficulty == 'Intermediate'
+                      ? AppTheme.peach
+                      : AppTheme.success,
                 ),
               ),
               const SizedBox(height: 12),
-              Text(repo.description, style: TextStyle(color: AppTheme.textMain, fontSize: 13, height: 1.4)),
+              Text(
+                repo.description,
+                style: TextStyle(
+                  color: AppTheme.textMain,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
               const Divider(height: 24, color: Colors.white12),
               Text(
                 'WHY RECOMMENDED:',
@@ -1994,13 +2518,28 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(repo.whyRecommended, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.3)),
+              Text(
+                repo.whyRecommended,
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 12,
+                  height: 1.3,
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildMetricCell('Match Score', '${repo.impactScore}%', AppTheme.accent),
-                  _buildMetricCell('Difficulty', repo.difficulty, AppTheme.peach),
+                  _buildMetricCell(
+                    'Match Score',
+                    '${repo.impactScore}%',
+                    AppTheme.accent,
+                  ),
+                  _buildMetricCell(
+                    'Difficulty',
+                    repo.difficulty,
+                    AppTheme.peach,
+                  ),
                 ],
               ),
             ],
@@ -2025,9 +2564,19 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       ),
       child: Column(
         children: [
-          Text(val, style: GoogleFonts.jetBrainsMono(fontSize: 14, fontWeight: FontWeight.bold, color: col)),
+          Text(
+            val,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: col,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 9, color: AppTheme.textSecondary)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 9, color: AppTheme.textSecondary),
+          ),
         ],
       ),
     );
@@ -2044,11 +2593,19 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6, height: 6,
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(label, style: GoogleFonts.inter(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -2057,5 +2614,4 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
   Widget _buildReviewerTab(BuildContext context, AppState state) {
     return const ReviewerScreen();
   }
-
 }
