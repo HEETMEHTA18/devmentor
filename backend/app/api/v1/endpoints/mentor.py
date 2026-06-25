@@ -282,15 +282,22 @@ async def mentor_chat(
         ]
 
         import time
+
         start_time = time.time()
         async with httpx.AsyncClient() as client:
             try:
                 while current_iteration < max_iterations:
                     if time.time() - start_time > 70:
-                        logger.warning("Agentic loop approaching 100s Render timeout. Breaking early.")
-                        final_reply = reply if 'reply' in locals() else "Task is taking too long to finish. OpenClaw is still processing in the background."
+                        logger.warning(
+                            "Agentic loop approaching 100s Render timeout. Breaking early."
+                        )
+                        final_reply = (
+                            reply
+                            if "reply" in locals()
+                            else "Task is taking too long to finish. OpenClaw is still processing in the background."
+                        )
                         break
-                    
+
                     response = await client.post(
                         url,
                         json={
