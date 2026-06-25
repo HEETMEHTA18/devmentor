@@ -126,7 +126,9 @@ async def get_developer_timeline(
                 }
             )
     except Exception as e:
-        logger.warning("Failed to fetch Cognee memory for timeline due to an internal error.")
+        logger.warning(
+            "Failed to fetch Cognee memory for timeline due to an internal error."
+        )
 
     # Sort the unified timeline descending by date
     timeline.sort(key=lambda x: x["date_obj"], reverse=True)
