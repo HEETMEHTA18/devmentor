@@ -151,6 +151,7 @@ class GithubAgentService:
     ) -> str:
         """Use OpenClaw or NVIDIA to generate file content for a coding task."""
         from app.services.openclaw_service import OpenClawService
+
         openclaw = OpenClawService()
 
         if not openclaw.enabled and not settings.nvidia_api_key:

@@ -399,7 +399,9 @@ async def voice_pipeline(
     3. If a repo is targeted, writes it to GitHub via GithubAgentService.
     4. AI 2 (Project Builder) reads prompt.md and implements the project.
     """
-    logger.info(f"Received Voice Pipeline request: '{request.transcript}' for repo '{request.repo_url}'")
+    logger.info(
+        f"Received Voice Pipeline request: '{request.transcript}' for repo '{request.repo_url}'"
+    )
     repo_url = request.repo_url or "https://github.com/HEETMEHTA18/tatvik"
     branch = request.branch or "tatvik-voice-pipeline"
 
@@ -419,6 +421,7 @@ async def voice_pipeline(
 
     try:
         from app.api.v1.endpoints.advanced import call_ai
+
         prompt_content = await call_ai(prompt_gen_instruction, task_type="heavy")
         if not prompt_content or len(prompt_content.strip()) < 20:
             prompt_content = (
@@ -445,7 +448,7 @@ async def voice_pipeline(
     # Step 2: Write prompt.md locally
     local_paths = [
         "/home/heet18/Projects/devmentor/.autodev/prompt.md",
-        "/home/heet18/Projects/devmentor/.autodevs/prompt.md"
+        "/home/heet18/Projects/devmentor/.autodevs/prompt.md",
     ]
     for p in local_paths:
         try:
@@ -459,7 +462,7 @@ async def voice_pipeline(
     # Step 3: Run the second AI (OpenClaw / GithubAgentService) on the generated prompt.md
     pr_url = None
     agent_message = "Local prompt written."
-    
+
     task = (
         f"Read and execute the instructions specified in '.autodev/prompt.md' (or '.autodevs/prompt.md') "
         f"in the repository. Implement all feature logic, verify compilation, "
@@ -468,11 +471,14 @@ async def voice_pipeline(
 
     try:
         from app.services.github_agent_service import GithubAgentService
+
         github_agent = GithubAgentService()
         if github_agent.enabled:
             owner, repo_name = github_agent._parse_owner_repo(repo_url)
             if owner and repo_name:
-                logger.info(f"Writing prompt.md to remote branch '{branch}' via GitHub API")
+                logger.info(
+                    f"Writing prompt.md to remote branch '{branch}' via GitHub API"
+                )
                 await github_agent._create_branch(owner, repo_name, branch)
                 await github_agent._put_file(
                     owner=owner,
@@ -481,7 +487,7 @@ async def voice_pipeline(
                     content=prompt_content,
                     message="chore: add voice pipeline prompt.md",
                     sha=None,
-                    branch=branch
+                    branch=branch,
                 )
                 await github_agent._put_file(
                     owner=owner,
@@ -490,30 +496,34 @@ async def voice_pipeline(
                     content=prompt_content,
                     message="chore: add voice pipeline prompts.md",
                     sha=None,
-                    branch=branch
+                    branch=branch,
                 )
-                
+
                 result = await _openclaw.execute_task(
-                    repo_url=repo_url,
-                    task_description=task,
-                    branch_name=branch
+                    repo_url=repo_url, task_description=task, branch_name=branch
                 )
                 if result.get("success"):
                     pr_url = result.get("pull_request_url")
-                    agent_message = result.get("message", "Voice pipeline executed successfully.")
+                    agent_message = result.get(
+                        "message", "Voice pipeline executed successfully."
+                    )
                 else:
-                    agent_message = result.get("error", "OpenClaw failed to execute voice pipeline.")
+                    agent_message = result.get(
+                        "error", "OpenClaw failed to execute voice pipeline."
+                    )
         else:
             result = await _openclaw.execute_task(
-                repo_url=repo_url,
-                task_description=task,
-                branch_name=branch
+                repo_url=repo_url, task_description=task, branch_name=branch
             )
             if result.get("success"):
                 pr_url = result.get("pull_request_url")
-                agent_message = result.get("message", "Voice pipeline executed successfully.")
+                agent_message = result.get(
+                    "message", "Voice pipeline executed successfully."
+                )
             else:
-                agent_message = result.get("error", "OpenClaw failed to execute voice pipeline.")
+                agent_message = result.get(
+                    "error", "OpenClaw failed to execute voice pipeline."
+                )
     except Exception as e:
         logger.error(f"Error executing Voice Pipeline task: {e}")
         agent_message = f"Error: {e}"
@@ -522,7 +532,7 @@ async def voice_pipeline(
         success=True,
         message=agent_message,
         prompt_content=prompt_content,
-        pull_request_url=pr_url
+        pull_request_url=pr_url,
     )
 
 

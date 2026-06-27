@@ -412,7 +412,9 @@ async def mentor_chat(
                         )
 
                         if response.status_code != 200:
-                            logger.error(f"Chat API error (status {response.status_code}): {response.text}")
+                            logger.error(
+                                f"Chat API error (status {response.status_code}): {response.text}"
+                            )
                             break
 
                         data = response.json()

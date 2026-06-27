@@ -95,9 +95,9 @@ class OpenClawService:
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Please run the following terminal command and return its output: {command}"
+                    "content": f"Please run the following terminal command and return its output: {command}",
                 }
-            ]
+            ],
         }
 
         async with httpx.AsyncClient() as client:
