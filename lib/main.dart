@@ -15,20 +15,20 @@ void main() {
     ProviderScope(
       child: p.ChangeNotifierProvider(
         create: (_) => AppState(),
-        child: const DevMentorApp(),
+        child: const TatvikApp(),
       ),
     ),
   );
 }
 
-class DevMentorApp extends StatefulWidget {
-  const DevMentorApp({super.key});
+class TatvikApp extends StatefulWidget {
+  const TatvikApp({super.key});
 
   @override
-  State<DevMentorApp> createState() => _DevMentorAppState();
+  State<TatvikApp> createState() => _TatvikAppState();
 }
 
-class _DevMentorAppState extends State<DevMentorApp> {
+class _TatvikAppState extends State<TatvikApp> {
   late final GoRouter _router;
 
   @override
@@ -47,7 +47,7 @@ class _DevMentorAppState extends State<DevMentorApp> {
     AppTheme.isDark = appState.isDarkTheme;
 
     return MaterialApp.router(
-      title: 'DevMentor',
+      title: 'Tatvik',
       debugShowCheckedModeBanner: false,
       theme: appState.isDarkTheme ? AppTheme.darkTheme : AppTheme.lightTheme,
       routerConfig: _router,

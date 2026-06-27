@@ -1,4 +1,4 @@
-# DevMentor
+# Tatvik
 > **The AI Operating System for Developers**
 > 
 > Powered by **Tatvik** — Developer Intelligence Engine
@@ -6,7 +6,7 @@
 ## Mission
 Build the world's most intelligent developer platform that continuously understands, connects, explains, predicts, and personalizes everything happening across the software ecosystem.
 
-Unlike traditional news aggregators, DevMentor transforms fragmented developer information into actionable intelligence. A developer should never need to open dozens of websites separately—Tatvik understands the ecosystem and delivers only what matters.
+Unlike traditional news aggregators, Tatvik transforms fragmented developer information into actionable intelligence. A developer should never need to open dozens of websites separately—Tatvik understands the ecosystem and delivers only what matters.
 
 ## Documentation
 Comprehensive project documentation can be found in the [docs/](docs/) directory:

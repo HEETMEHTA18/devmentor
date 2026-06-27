@@ -1,6 +1,6 @@
 # AI Resume Tailoring & Google Drive Integration Guide
 
-This document provides a comprehensive integration and feature guide for the automated PDF-to-Google Drive resume-tailoring pipeline in the DevMentor AI Coach application.
+This document provides a comprehensive integration and feature guide for the automated PDF-to-Google Drive resume-tailoring pipeline in the Tatvik AI Coach application.
 
 ---
 
@@ -66,7 +66,7 @@ async def mentor_chat(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     ...
-    system_prompt = "You are DevMentor AI, a professional career coach..."
+    system_prompt = "You are Tatvik AI, a professional career coach..."
     if request.resume_context:
         system_prompt += f"\n\nActive Resume Context:\n{request.resume_context}"
     ...

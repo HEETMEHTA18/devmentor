@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:devmentor/providers/app_state.dart';
-import 'package:devmentor/routes/route_paths.dart';
-import 'package:devmentor/screens/main_navigation_screen.dart';
+import 'package:tatvik/providers/app_state.dart';
+import 'package:tatvik/routes/route_paths.dart';
+import 'package:tatvik/screens/main_navigation_screen.dart';
 
 void main() {
   testWidgets('Navigation tab switching test', (WidgetTester tester) async {

@@ -620,7 +620,7 @@ This is simulated offline prompts.md content.
   List<Map<String, dynamic>> notifications = [
     {
       'id': 'welcome',
-      'title': 'Welcome to DevMentor Pro',
+      'title': 'Welcome to Tatvik Pro',
       'body': 'AI Mentor is initialized and waiting to review your projects.',
       'timestamp': DateTime.now().subtract(const Duration(hours: 1)),
       'isRead': false,
@@ -811,7 +811,7 @@ This is simulated offline prompts.md content.
   // Chat
   List<MentorMessage> chatMessages = [
     MentorMessage(
-      content: 'Hello! I am your DevMentor. How can I help you grow today?',
+      content: 'Hello! I am your Tatvik. How can I help you grow today?',
       role: MessageRole.assistant,
       timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
     ),
@@ -1042,7 +1042,7 @@ This is simulated offline prompts.md content.
     _currentChatSessionId = DateTime.now().millisecondsSinceEpoch.toString();
     chatMessages = [
       MentorMessage(
-        content: 'Hello! I am your DevMentor. How can I help you grow today?',
+        content: 'Hello! I am your Tatvik. How can I help you grow today?',
         role: MessageRole.assistant,
         timestamp: DateTime.now(),
       ),
@@ -1093,7 +1093,7 @@ This is simulated offline prompts.md content.
         _currentChatSessionId = null;
         chatMessages = [
           MentorMessage(
-            content: 'Hello! I am your DevMentor. How can I help you grow today?',
+            content: 'Hello! I am your Tatvik. How can I help you grow today?',
             role: MessageRole.assistant,
             timestamp: DateTime.now(),
           ),
@@ -1113,7 +1113,7 @@ This is simulated offline prompts.md content.
       _currentChatSessionId = null;
       chatMessages = [
         MentorMessage(
-          content: 'Hello! I am your DevMentor. How can I help you grow today?',
+          content: 'Hello! I am your Tatvik. How can I help you grow today?',
           role: MessageRole.assistant,
           timestamp: DateTime.now(),
         ),
@@ -1238,7 +1238,7 @@ This is simulated offline prompts.md content.
             commitsUri,
             headers: {
               'Accept': 'application/vnd.github.v3+json',
-              'User-Agent': 'DevMentor-App',
+              'User-Agent': 'Tatvik-App',
             },
           );
           if (commitsResponse.statusCode == 200) {
@@ -2666,7 +2666,7 @@ This is simulated offline prompts.md content.
             score: 72,
             technologies: ['Flutter', 'Dart'],
             workflow: 'Debugging',
-            projectName: 'devmentor-app',
+            projectName: 'tatvik-app',
             createdAt: DateTime.now().subtract(const Duration(days: 1)),
           ),
           PromptItem(

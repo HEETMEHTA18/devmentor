@@ -1776,7 +1776,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                '4. In the DevMentor app, enter your GitHub handle in settings, then tap the Sync GitHub Prompts cloud button at the top of the Prompts tab.',
+                                '4. In the Tatvik app, enter your GitHub handle in settings, then tap the Sync GitHub Prompts cloud button at the top of the Prompts tab.',
                                 style: GoogleFonts.inter(
                                   fontSize: 13,
                                   color: AppTheme.textSecondary,
@@ -1887,7 +1887,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'export DEVMENTOR_TOKEN="your_copied_token"',
+                                  'export TATVIK_TOKEN="your_copied_token"',
                                   style: GoogleFonts.firaCode(
                                     fontSize: 12,
                                     color: AppTheme.textMain,
@@ -1913,7 +1913,7 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'python autodevs_cli_simulator.py "how to create centered container" devmentor-app',
+                                  'python autodevs_cli_simulator.py "how to create centered container" tatvik-app',
                                   style: GoogleFonts.firaCode(
                                     fontSize: 12,
                                     color: AppTheme.textMain,

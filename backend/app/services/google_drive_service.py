@@ -60,12 +60,12 @@ class GoogleDriveService:
     @classmethod
     async def get_or_create_resumes_folder(cls, access_token: str) -> str | None:
         """
-        Retrieves the folder ID for 'resumes_devmentor', creating it if it doesn't exist.
+        Retrieves the folder ID for 'resumes_tatvik', creating it if it doesn't exist.
         """
         headers = {
             "Authorization": f"Bearer {access_token}",
         }
-        folder_name = "resumes_devmentor"
+        folder_name = "resumes_tatvik"
 
         # 1. Search for existing folder
         try:
@@ -175,7 +175,7 @@ class GoogleDriveService:
                 "synced_at": "Just now (local)",
             }
 
-        # Resolve resumes_devmentor folder
+        # Resolve resumes_tatvik folder
         folder_id = await cls.get_or_create_resumes_folder(access_token)
 
         try:
@@ -183,7 +183,7 @@ class GoogleDriveService:
             metadata = {"name": safe_filename, "mimeType": mime_type}
             if folder_id:
                 metadata["parents"] = [folder_id]
-            boundary = b"google_drive_upload_boundary_devmentor"
+            boundary = b"google_drive_upload_boundary_tatvik"
             headers = {
                 "Authorization": f"Bearer {access_token}",
                 "Content-Type": f"multipart/related; boundary={boundary.decode()}",

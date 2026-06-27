@@ -140,9 +140,9 @@ class PushNotificationService {
     }
 
     const androidDetails = AndroidNotificationDetails(
-      'devmentor_push',
-      'DevMentor Notifications',
-      channelDescription: 'Push notifications for DevMentor background and foreground events.',
+      'tatvik_push',
+      'Tatvik Notifications',
+      channelDescription: 'Push notifications for Tatvik background and foreground events.',
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -150,7 +150,7 @@ class PushNotificationService {
 
     await _localNotifications.show(
       notification.hashCode,
-      notification.title ?? 'DevMentor',
+      notification.title ?? 'Tatvik',
       notification.body ?? '',
       details,
       payload: jsonEncode(message.data),
@@ -174,7 +174,7 @@ class PushNotificationService {
         body: jsonEncode({
           'token': token,
           'platform': kIsWeb ? 'web' : 'mobile',
-          'device_name': 'DevMentor',
+          'device_name': 'Tatvik',
         }),
       );
 

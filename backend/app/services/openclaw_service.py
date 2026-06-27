@@ -193,7 +193,7 @@ class OpenClawService:
         url = f"{self.api_url}/v1/voice/stream/init"
         payload = {
             "model": "gemini-2.5-flash",
-            "system_instruction": f"You are DevMentor Voice. Use 'memory-core' to remember user details. Context: {context_prompt}",
+            "system_instruction": f"You are Tatvik Voice. Use 'memory-core' to remember user details. Context: {context_prompt}",
         }
         async with httpx.AsyncClient() as client:
             try:

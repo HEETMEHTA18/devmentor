@@ -20,7 +20,7 @@ class VoiceReviewScreen extends StatefulWidget {
 class _VoiceReviewScreenState extends State<VoiceReviewScreen> {
   final _transcriptController = TextEditingController();
   final _repoController = TextEditingController(
-    text: 'https://github.com/HEETMEHTA18/devmentor',
+    text: 'https://github.com/HEETMEHTA18/tatvik',
   );
   bool _isLoading = false;
   Map<String, dynamic>? _reviewData;

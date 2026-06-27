@@ -73,7 +73,7 @@ class CogneeService:
                 "answer": str(profile_data),
             },
             "dataset_name": dataset_name,
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
         }
 
         async with httpx.AsyncClient() as client:
@@ -104,7 +104,7 @@ class CogneeService:
         url = f"{self.base_url}/api/v1/recall"
         payload = {
             "query": f"developer profile metadata weaknesses strengths mistakes user_{user_id}",
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
             "search_type": "GRAPH_COMPLETION",
         }
 
@@ -187,7 +187,7 @@ class CogneeService:
         url = f"{self.base_url}/api/v1/recall"
         payload = {
             "query": f"For repository {repo_name}: {query}",
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
             "search_type": "HYBRID_COMPLETION",
         }
 
@@ -230,7 +230,7 @@ class CogneeService:
                 "answer": str(review_data),
             },
             "dataset_name": dataset_name,
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
         }
 
         async with httpx.AsyncClient() as client:
@@ -269,7 +269,7 @@ class CogneeService:
                 "answer": mistake_description,
             },
             "dataset_name": dataset_name,
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
         }
 
         async with httpx.AsyncClient() as client:
@@ -301,7 +301,7 @@ class CogneeService:
                 f"Include security, performance, architecture, and "
                 f"maintainability trends."
             ),
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
             "search_type": "GRAPH_COMPLETION",
         }
 
@@ -328,7 +328,7 @@ class CogneeService:
         url = f"{self.base_url}/api/v1/recall"
         payload = {
             "query": question,
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
             "search_type": "HYBRID_COMPLETION",
         }
 
@@ -363,7 +363,7 @@ class CogneeService:
                 f"architecture_score, and maintainability_score from every "
                 f"review session. Return the raw data."
             ),
-            "session_id": f"devmentor_{user_id}",
+            "session_id": f"tatvik_{user_id}",
             "search_type": "GRAPH_COMPLETION",
         }
 

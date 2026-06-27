@@ -167,7 +167,7 @@ def github_languages(
 
 async def get_github_contributions(username: str, access_token: str, year: int) -> list:
     url = "https://api.github.com/graphql"
-    headers = {"Authorization": f"bearer {access_token}", "User-Agent": "DevMentor-App"}
+    headers = {"Authorization": f"bearer {access_token}", "User-Agent": "Tatvik-App"}
 
     start_date = f"{year}-01-01T00:00:00Z"
     end_date = f"{year}-12-31T23:59:59Z"
@@ -330,7 +330,7 @@ async def github_day_activity(
     url = "https://api.github.com/graphql"
     headers = {
         "Authorization": f"bearer {profile.access_token}",
-        "User-Agent": "DevMentor-App",
+        "User-Agent": "Tatvik-App",
     }
 
     query = """
@@ -490,7 +490,7 @@ async def github_following_activity(
 
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "DevMentor-App",
+        "User-Agent": "Tatvik-App",
     }
     if access_token:
         headers["Authorization"] = f"Bearer {access_token}"
@@ -613,7 +613,7 @@ async def github_file_content(
 
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "DevMentor-App",
+        "User-Agent": "Tatvik-App",
     }
     if access_token:
         headers["Authorization"] = f"Bearer {access_token}"
@@ -678,7 +678,7 @@ async def get_public_stats(
 
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "DevMentor-App",
+        "User-Agent": "Tatvik-App",
     }
 
     # Attempt to load a token from the DB to avoid unauthenticated rate limiting
@@ -732,7 +732,7 @@ async def get_public_stats(
                 "total_commits": 145,
                 "repos": [
                     {
-                        "name": "devmentor",
+                        "name": "tatvik",
                         "stargazers_count": 8,
                         "language": "Dart",
                         "description": "Mock repo description",

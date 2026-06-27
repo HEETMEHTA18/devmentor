@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="DevMentor API", version="0.1.0")
+app = FastAPI(title="Tatvik API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://(devsmentor\.vercel\.app|devmentor\.vercel\.app|tatvik\.vercel\.app)|http://(localhost|127\.0\.0\.1)(:[0-9]+)?",
+    allow_origin_regex=r"https://(devsmentor\.vercel\.app|tatvik\.vercel\.app|tatvik\.vercel\.app)|http://(localhost|127\.0\.0\.1)(:[0-9]+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,14 +32,14 @@ async def periodic_pulse_scanner():
     await asyncio.sleep(5)
     while True:
         try:
-            logger.info("DevMentor Pulse scanner running...")
+            logger.info("Tatvik Pulse scanner running...")
             db = SessionLocal()
             try:
                 await run_pulse_pipeline(db)
             finally:
                 db.close()
         except Exception as e:
-            logger.error(f"Error in DevMentor Pulse scanner: {e}")
+            logger.error(f"Error in Tatvik Pulse scanner: {e}")
         # Run scan every hour (3600 seconds)
         await asyncio.sleep(3600)
 
@@ -54,7 +54,7 @@ async def periodic_huggingface_ping():
     url = (
         settings.openclaw_api_url.replace("/v1", "")
         if settings.openclaw_api_url
-        else "https://heetmehta18-openclaw-devmentor.hf.space"
+        else "https://heetmehta18-openclaw-tatvik.hf.space"
     )
 
     while True:
@@ -178,7 +178,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
     return {
-        "message": "Welcome to DevMentor API. Visit /docs or /redoc for interactive API documentation."
+        "message": "Welcome to Tatvik API. Visit /docs or /redoc for interactive API documentation."
     }
 
 

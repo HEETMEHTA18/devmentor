@@ -1,7 +1,7 @@
-# DevMentor Architecture
+# Tatvik Architecture
 
 ## System Overview
-DevMentor uses a production-oriented, modular, service-based architecture built for mobile-first developer intelligence. The frontend is a Flutter application, the backend is a FastAPI service, and stateful data is persisted in PostgreSQL with Redis for caching and rate limiting.
+Tatvik uses a production-oriented, modular, service-based architecture built for mobile-first developer intelligence. The frontend is a Flutter application, the backend is a FastAPI service, and stateful data is persisted in PostgreSQL with Redis for caching and rate limiting.
 
 The system is designed around four core layers:
 

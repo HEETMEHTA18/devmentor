@@ -6,8 +6,8 @@ class Settings(BaseSettings):
 
     environment: str = "development"
     api_v1_prefix: str = "/api/v1"
-    project_name: str = "DevMentor API"
-    database_url: str = "sqlite:///./devmentor.db"
+    project_name: str = "Tatvik API"
+    database_url: str = "sqlite:///./tatvik.db"
     jwt_secret_key: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_access_expire_minutes: int = 10080  # 7 days (60 * 24 * 7)

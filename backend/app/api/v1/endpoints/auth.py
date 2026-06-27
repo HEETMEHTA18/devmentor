@@ -144,7 +144,7 @@ async def google_callback(
             headers={"Authorization": f"Bearer {access_token}"},
         )
         google_user = profile_response.json()
-        email = google_user.get("email") or "google-user@devmentor.com"
+        email = google_user.get("email") or "google-user@tatvik.com"
 
         stmt = select(GoogleProfile).where(GoogleProfile.user_id == user_id)
         profile = db.scalar(stmt)

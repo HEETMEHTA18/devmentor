@@ -6,7 +6,7 @@ async def main():
     service = OpenClawService()
     print("Sending request to OpenClaw...")
     result = await service.execute_task(
-        repo_url="https://github.com/HEETMEHTA18/devmentor",
+        repo_url="https://github.com/HEETMEHTA18/tatvik",
         task_description="Analyze architecture",
         branch_name="main",
     )

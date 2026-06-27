@@ -29,7 +29,7 @@ class UniversalEventRequest(BaseModel):
     project_name: Optional[str] = None
     file_context: Optional[str] = None
 
-    # New DevMentorEventPayload fields
+    # New TatvikEventPayload fields
     event: Optional[str] = None
     session_id: Optional[str] = None
     timestamp: Optional[str] = None
@@ -56,9 +56,9 @@ async def receive_prompt_event(
 ):
     """
     Receive an AutoDevs event, refine the prompt, score it, extract tech/workflow, and save it.
-    Supports both legacy PromptEventRequest and new structured DevMentorEventPayload.
+    Supports both legacy PromptEventRequest and new structured TatvikEventPayload.
     """
-    # 1. Handle DevMentorEventPayload structure
+    # 1. Handle TatvikEventPayload structure
     if payload.event:
         event_type = payload.event
         session_id = payload.session_id or (payload.data or {}).get("session_id")
@@ -581,7 +581,7 @@ async def sync_github_prompts(
         else:
             # Fetch public repositories dynamically using GitHub API
             async with httpx.AsyncClient() as client:
-                headers = {"User-Agent": "DevMentor-App"}
+                headers = {"User-Agent": "Tatvik-App"}
                 if access_token:
                     headers["Authorization"] = f"Bearer {access_token}"
                 try:
@@ -640,7 +640,7 @@ async def sync_github_prompts(
                 )
                 headers = {
                     "Accept": "application/vnd.github.v3+json",
-                    "User-Agent": "DevMentor-App",
+                    "User-Agent": "Tatvik-App",
                 }
                 if access_token:
                     headers["Authorization"] = f"Bearer {access_token}"
@@ -779,7 +779,7 @@ class GithubPushRequest(BaseModel):
     owner: str
     name: str
     commit_message: Optional[str] = (
-        "chore: upgrade prompts via DevMentor Prompt Intelligence"
+        "chore: upgrade prompts via Tatvik Prompt Intelligence"
     )
 
 
@@ -833,7 +833,7 @@ async def push_github_prompts(
     md_lines = [
         f"# Prompts for {payload.project_name}",
         "",
-        "This file is automatically updated by DevMentor Prompt Intelligence.",
+        "This file is automatically updated by Tatvik Prompt Intelligence.",
         "",
     ]
     for p in prompts:
@@ -859,7 +859,7 @@ async def push_github_prompts(
     url = f"https://api.github.com/repos/{payload.owner}/{payload.name}/contents/.autodevs/prompts.md"
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "DevMentor-App",
+        "User-Agent": "Tatvik-App",
         "Authorization": f"Bearer {access_token}",
     }
 
@@ -876,7 +876,7 @@ async def push_github_prompts(
         )
         put_payload = {
             "message": payload.commit_message
-            or "chore: upgrade prompts via DevMentor Prompt Intelligence",
+            or "chore: upgrade prompts via Tatvik Prompt Intelligence",
             "content": encoded_content,
         }
         if sha:

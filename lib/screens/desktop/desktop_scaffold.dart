@@ -50,7 +50,7 @@ class DesktopScaffold extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Text(
-                    'DevMentor',
+                    'Tatvik',
                     style: GoogleFonts.inter(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,

@@ -19,7 +19,7 @@ class ReviewerScreen extends StatefulWidget {
 }
 
 class _ReviewerScreenState extends State<ReviewerScreen> {
-  final _pathController = TextEditingController(text: 'https://github.com/HEETMEHTA18/devmentor');
+  final _pathController = TextEditingController(text: 'https://github.com/HEETMEHTA18/tatvik');
   bool _isLoading = false;
   Map<String, dynamic>? _reviewData;
   String _errorMsg = '';

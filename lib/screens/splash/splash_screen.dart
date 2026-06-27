@@ -55,7 +55,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 24),
               // Wordmark
               Text(
-                'DEVMENTOR',
+                'TATVIK',
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

@@ -1,6 +1,6 @@
-# DevMentor - Completed Progress Report & Architecture
+# Tatvik - Completed Progress Report & Architecture
 
-DevMentor is a premium, high-fidelity developer mentoring and growth-coaching application. This document summarizes all features, designs, database schemas, and AI services completed and integrated to date.
+Tatvik is a premium, high-fidelity developer mentoring and growth-coaching application. This document summarizes all features, designs, database schemas, and AI services completed and integrated to date.
 
 ---
 
@@ -50,21 +50,21 @@ DevMentor is a premium, high-fidelity developer mentoring and growth-coaching ap
 ## 📁 Key File Map
 
 ### Frontend (Flutter Web)
-* [lib/main.dart](file:///home/heet18/Projects/devmentor/lib/main.dart): Entrypoint initializing application states and routes.
-* [lib/providers/app_state.dart](file:///home/heet18/Projects/devmentor/lib/providers/app_state.dart): State container managing theme toggling, chat histories, repositories, contribution data fetching, and advanced feature requests.
-* [lib/screens/home/home_screen.dart](file:///home/heet18/Projects/devmentor/lib/screens/home/home_screen.dart): Renders the main dashboard, Developer DNA, Weekly Growth Report, profile roasts, score metrics, the clickable heatmap grid, and the theme switcher.
-* [lib/screens/repositories/discover_repos_screen.dart](file:///home/heet18/Projects/devmentor/lib/screens/repositories/discover_repos_screen.dart): Explores repositories, reviews resumes, evaluates projects, and scans opportunities.
-* [lib/screens/roadmap/roadmap_screen.dart](file:///home/heet18/Projects/devmentor/lib/screens/roadmap/roadmap_screen.dart): Traces milestones, learning paths, developer battle mode, and open-source copilot blueprints.
-* [lib/screens/profile/profile_screen.dart](file:///home/heet18/Projects/devmentor/lib/screens/profile/profile_screen.dart): Stores developer goals and tech stacks to personalize AI recommendation engines.
-* [lib/core/theme/app_theme.dart](file:///home/heet18/Projects/devmentor/lib/core/theme/app_theme.dart): High-contrast colors, text themes, and solid card structures for maximum accessibility.
+* [lib/main.dart](file:///home/heet18/Projects/tatvik/lib/main.dart): Entrypoint initializing application states and routes.
+* [lib/providers/app_state.dart](file:///home/heet18/Projects/tatvik/lib/providers/app_state.dart): State container managing theme toggling, chat histories, repositories, contribution data fetching, and advanced feature requests.
+* [lib/screens/home/home_screen.dart](file:///home/heet18/Projects/tatvik/lib/screens/home/home_screen.dart): Renders the main dashboard, Developer DNA, Weekly Growth Report, profile roasts, score metrics, the clickable heatmap grid, and the theme switcher.
+* [lib/screens/repositories/discover_repos_screen.dart](file:///home/heet18/Projects/tatvik/lib/screens/repositories/discover_repos_screen.dart): Explores repositories, reviews resumes, evaluates projects, and scans opportunities.
+* [lib/screens/roadmap/roadmap_screen.dart](file:///home/heet18/Projects/tatvik/lib/screens/roadmap/roadmap_screen.dart): Traces milestones, learning paths, developer battle mode, and open-source copilot blueprints.
+* [lib/screens/profile/profile_screen.dart](file:///home/heet18/Projects/tatvik/lib/screens/profile/profile_screen.dart): Stores developer goals and tech stacks to personalize AI recommendation engines.
+* [lib/core/theme/app_theme.dart](file:///home/heet18/Projects/tatvik/lib/core/theme/app_theme.dart): High-contrast colors, text themes, and solid card structures for maximum accessibility.
 
 ### Backend (FastAPI)
-* [backend/app/main.py](file:///home/heet18/Projects/devmentor/backend/app/main.py): Sets up ASGI application, CORS middleware, and spawns the 24/7 RSS periodic tech news RSS scanner task.
-* [backend/app/services/news_scanner.py](file:///home/heet18/Projects/devmentor/backend/app/services/news_scanner.py): Asynchronous feed fetcher and parsing logic.
-* [backend/app/api/v1/endpoints/advanced.py](file:///home/heet18/Projects/devmentor/backend/app/api/v1/endpoints/advanced.py): Houses endpoints for developer archetypes, profile roasts, resume matching, project values, skill battlegrounds, and open-source issue copilots.
-* [backend/app/api/v1/endpoints/github.py](file:///home/heet18/Projects/devmentor/backend/app/api/v1/endpoints/github.py): Serves year-wise contribution arrays and daily activity lists using GitHub GraphQL.
-* [backend/app/api/v1/endpoints/mentor.py](file:///home/heet18/Projects/devmentor/backend/app/api/v1/endpoints/mentor.py): Standard AI mentor chat router integrating Groq, Gemini, and real-time tech news injection.
-* [backend/app/api/v1/endpoints/roadmap.py](file:///home/heet18/Projects/devmentor/backend/app/api/v1/endpoints/roadmap.py): Employs JSON response modes in the LLMs to construct custom 5-milestone career roadmaps based on repositories.
+* [backend/app/main.py](file:///home/heet18/Projects/tatvik/backend/app/main.py): Sets up ASGI application, CORS middleware, and spawns the 24/7 RSS periodic tech news RSS scanner task.
+* [backend/app/services/news_scanner.py](file:///home/heet18/Projects/tatvik/backend/app/services/news_scanner.py): Asynchronous feed fetcher and parsing logic.
+* [backend/app/api/v1/endpoints/advanced.py](file:///home/heet18/Projects/tatvik/backend/app/api/v1/endpoints/advanced.py): Houses endpoints for developer archetypes, profile roasts, resume matching, project values, skill battlegrounds, and open-source issue copilots.
+* [backend/app/api/v1/endpoints/github.py](file:///home/heet18/Projects/tatvik/backend/app/api/v1/endpoints/github.py): Serves year-wise contribution arrays and daily activity lists using GitHub GraphQL.
+* [backend/app/api/v1/endpoints/mentor.py](file:///home/heet18/Projects/tatvik/backend/app/api/v1/endpoints/mentor.py): Standard AI mentor chat router integrating Groq, Gemini, and real-time tech news injection.
+* [backend/app/api/v1/endpoints/roadmap.py](file:///home/heet18/Projects/tatvik/backend/app/api/v1/endpoints/roadmap.py): Employs JSON response modes in the LLMs to construct custom 5-milestone career roadmaps based on repositories.
 
 ---
 

@@ -19,7 +19,7 @@ class AutoFixScreen extends StatefulWidget {
 
 class _AutoFixScreenState extends State<AutoFixScreen> {
   final _repoController = TextEditingController(
-    text: 'https://github.com/HEETMEHTA18/devmentor',
+    text: 'https://github.com/HEETMEHTA18/tatvik',
   );
   final _issuesController = TextEditingController();
   bool _isLoading = false;

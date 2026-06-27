@@ -30,7 +30,7 @@ class {class_name}Agent(TatvikAgent):
         pass
 """
 
-agent_dir = "/home/heet18/Projects/devmentor/backend/app/tatvik/agents"
+agent_dir = "/home/heet18/Projects/tatvik/backend/app/tatvik/agents"
 
 for name, filename, resp in agents:
     filepath = os.path.join(agent_dir, filename)

@@ -91,7 +91,7 @@ class PulseEngine:
             return {}
 
         system_prompt = (
-            "You are DevMentor AI. Analyze this tech content. Extract JSON: "
+            "You are Tatvik AI. Analyze this tech content. Extract JSON: "
             '{"summary": "3 lines max", "beginner_explanation": "...", "advanced_explanation": "...", '
             '"tags": ["list", "of", "tags"], "sentiment": "positive/neutral/negative", '
             '"related_technologies": ["React", "Node"]}'
@@ -129,7 +129,7 @@ class PulseEngine:
 
     async def ingest_source(self, url: str, source_type: str = "rss"):
         """Pipeline execution per source"""
-        logger.info(f"DevMentor Pulse Ingesting: {url} via {source_type}")
+        logger.info(f"Tatvik Pulse Ingesting: {url} via {source_type}")
 
         # 1. Fetch
         items = []
@@ -176,7 +176,7 @@ class PulseEngine:
 
 
 async def run_pulse_pipeline(db: Session):
-    """Main scheduler trigger for DevMentor Pulse"""
+    """Main scheduler trigger for Tatvik Pulse"""
     engine = PulseEngine(db)
 
     sources = [

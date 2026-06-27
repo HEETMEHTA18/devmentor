@@ -60,11 +60,11 @@ def seed_database(db: Session):
         for uid in user_ids:
             count = db.scalar(select(Repository).where(Repository.user_id == uid))
             if not count:
-                # Add devmentor and autodev repositories as defaults
+                # Add tatvik and autodev repositories as defaults
                 repos = [
                     {
-                        "full_name": "HEETMEHTA18/devmentor",
-                        "name": "devmentor",
+                        "full_name": "HEETMEHTA18/tatvik",
+                        "name": "tatvik",
                         "description": "Premium developer mentor coach with prompt intelligence telemetry and iOS liquid glass navigation.",
                     },
                     {
@@ -81,7 +81,7 @@ def seed_database(db: Session):
                         owner="HEETMEHTA18",
                         name=r["name"],
                         description=r["description"],
-                        language="Dart" if r["name"] == "devmentor" else "Go",
+                        language="Dart" if r["name"] == "tatvik" else "Go",
                         difficulty="Intermediate",
                         impact_score=95,
                         why_recommended="Active development repository with high volume of commits.",
@@ -106,7 +106,7 @@ def seed_database(db: Session):
                         "score": 92,
                         "technologies": "Flutter, Dart, CSS",
                         "workflow": "Feature Building",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 1,
                     },
                     {
@@ -115,7 +115,7 @@ def seed_database(db: Session):
                         "score": 88,
                         "technologies": "Flutter, Dart, Testing",
                         "workflow": "Testing",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 2,
                     },
                     {
@@ -124,7 +124,7 @@ def seed_database(db: Session):
                         "score": 95,
                         "technologies": "Flutter, Dart, Testing",
                         "workflow": "Debugging",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 3,
                     },
                     {
@@ -133,7 +133,7 @@ def seed_database(db: Session):
                         "score": 90,
                         "technologies": "FastAPI, Python, GitHub API",
                         "workflow": "Feature Building",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 4,
                     },
                     {
@@ -142,7 +142,7 @@ def seed_database(db: Session):
                         "score": 85,
                         "technologies": "Flutter, Dart",
                         "workflow": "Feature Building",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 5,
                     },
                     {
@@ -151,7 +151,7 @@ def seed_database(db: Session):
                         "score": 89,
                         "technologies": "HTML, PWA, JSON",
                         "workflow": "DevOps",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 6,
                     },
                     {
@@ -160,7 +160,7 @@ def seed_database(db: Session):
                         "score": 82,
                         "technologies": "Bash, Shell, Linux",
                         "workflow": "DevOps",
-                        "project": "devmentor",
+                        "project": "tatvik",
                         "days_ago": 7,
                     },
                 ]

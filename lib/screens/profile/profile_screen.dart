@@ -169,7 +169,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 40),
             Center(
               child: Text(
-                'DEVMENTOR v1.0.1',
+                'TATVIK v1.0.1',
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 10,
                   color: AppTheme.textSecondary.withValues(alpha: 0.5),
@@ -622,7 +622,7 @@ class ProfileScreen extends StatelessWidget {
                           context,
                           Icons.analytics_outlined,
                           'Share Usage Analytics',
-                          'Help us improve DevMentor by sending anonymous usage statistics.',
+                          'Help us improve Tatvik by sending anonymous usage statistics.',
                           state.shareAnalytics,
                           (val) {
                             state.togglePreference('analytics');
@@ -635,7 +635,7 @@ class ProfileScreen extends StatelessWidget {
                           context,
                           Icons.security_outlined,
                           'Two-Factor Authentication',
-                          'Add an extra layer of protection to your DevMentor account.',
+                          'Add an extra layer of protection to your Tatvik account.',
                           state.twoFactorAuth,
                           (val) {
                             state.togglePreference('2fa');
@@ -818,7 +818,7 @@ class ProfileScreen extends StatelessWidget {
                       _buildFAQItem(
                         context,
                         'How does the AI calculate my Developer Score?',
-                        'DevMentor analyzes your commit activity, code complexity, testing coverage, and architectural patterns in linked GitHub repositories to calculate your score.',
+                        'Tatvik analyzes your commit activity, code complexity, testing coverage, and architectural patterns in linked GitHub repositories to calculate your score.',
                       ),
                       _buildFAQItem(
                         context,
@@ -929,7 +929,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Are you sure you want to sign out from DevMentor?',
+                  'Are you sure you want to sign out from Tatvik?',
                   style: TextStyle(color: AppTheme.textSecondary),
                 ),
                 const SizedBox(height: 24),

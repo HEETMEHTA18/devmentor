@@ -142,7 +142,7 @@ async def call_gemini(system_prompt: str, user_prompt: str) -> str:
 
 GITHUB_API_HEADERS = {
     "Accept": "application/vnd.github.v3+json",
-    "User-Agent": "DevMentor-App",
+    "User-Agent": "Tatvik-App",
 }
 
 
@@ -861,7 +861,7 @@ async def get_whats_new(
         async with httpx.AsyncClient() as client:
             headers = {
                 "Accept": "application/vnd.github.v3+json",
-                "User-Agent": "DevMentor-App",
+                "User-Agent": "Tatvik-App",
             }
             gh_res = await client.get(
                 f"https://api.github.com/search/repositories?q=stars:>50+created:>{date_limit}&sort=stars&order=desc",
@@ -958,7 +958,7 @@ async def get_whats_new(
             },
             {
                 "title": "FastAPI + PWA Integration Guide",
-                "channel": "Devmentor",
+                "channel": "Tatvik",
                 "url": "https://youtube.com",
             },
         ]

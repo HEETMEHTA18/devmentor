@@ -155,7 +155,7 @@ async def smart_mentor(
         )
 
     prompt = (
-        "You are DevMentor, a senior AI coding mentor. "
+        "You are Tatvik, a senior AI coding mentor. "
         "You remember the developer's history and give personalized advice.\n\n"
         f"{context}"
         f"Developer's question: {request.question}\n\n"
@@ -202,7 +202,7 @@ async def auto_fix_pr(
     to automatically fix them and open a Pull Request.
     """
     issues_text = "\n".join(f"- {issue}" for issue in request.issues)
-    branch = request.branch or "devmentor-auto-fix"
+    branch = request.branch or "tatvik-auto-fix"
 
     task = (
         f"Clone {request.repo_url}. Create a new branch called "
@@ -321,7 +321,7 @@ async def voice_code_review(
     Accepts a voice transcript (from speech-to-text) and triggers a
     code review. Uses OpenClaw's talk-voice plugin context.
     """
-    repo_url = request.repo_url or "https://github.com/HEETMEHTA18/devmentor"
+    repo_url = request.repo_url or "https://github.com/HEETMEHTA18/tatvik"
 
     # Use OpenClaw to analyze the repo based on the voice command
     task = (

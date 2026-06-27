@@ -52,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Connect your GitHub to start your personalized journey with DevMentor.',
+                'Connect your GitHub to start your personalized journey with Tatvik.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 48),

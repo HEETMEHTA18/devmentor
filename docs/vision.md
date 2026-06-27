@@ -1,6 +1,6 @@
-# DevMentor: The AI Operating System for Developers
+# Tatvik: The AI Operating System for Developers
 
-> **DevMentor — The AI Operating System for Developers**
+> **Tatvik — The AI Operating System for Developers**
 > 
 > **Powered by Tatvik — Developer Intelligence Engine**
 
@@ -8,7 +8,7 @@
 
 Build the world's most intelligent developer platform that continuously understands, connects, explains, predicts, and personalizes everything happening across the software ecosystem.
 
-Unlike traditional news aggregators, DevMentor transforms fragmented developer information into actionable intelligence.
+Unlike traditional news aggregators, Tatvik transforms fragmented developer information into actionable intelligence.
 
 A developer should never need to open Product Hunt, GitHub Trending, Hacker News, Dev.to, Reddit, engineering blogs, documentation sites, security feeds, research papers, or dozens of newsletters separately.
 
@@ -43,7 +43,7 @@ Tatvik should continuously improve without manual intervention.
 ## High-Level Architecture
 
 ```
-              DevMentor
+              Tatvik
                     │
     ┌───────────────┼────────────────┐
     ▼               ▼                ▼
@@ -194,6 +194,6 @@ Desktop should not simply stretch the mobile UI. It should be designed as a prof
 ## Long-Term Vision
 
 The goal is for developers to say:
-> *"I don't check ten different websites anymore. I open DevMentor, and Tatvik tells me what matters, why it matters, and what I should do next."*
+> *"I don't check ten different websites anymore. I open Tatvik, and Tatvik tells me what matters, why it matters, and what I should do next."*
 
-This positions DevMentor as a daily operating system for developers rather than another content aggregator.
+This positions Tatvik as a daily operating system for developers rather than another content aggregator.

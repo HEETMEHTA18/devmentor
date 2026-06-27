@@ -716,7 +716,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
               children: [
                 // Sender Name
                 Text(
-                  isUser ? 'You' : 'DevMentor AI',
+                  isUser ? 'You' : 'Tatvik AI',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,

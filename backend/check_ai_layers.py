@@ -65,7 +65,7 @@ async def test_cognee():
             "name": "Heet Mehta",
             "skills": ["Python", "FastAPI", "Flutter", "React"],
             "weaknesses": ["System Design", "Kubernetes"],
-            "last_project": "DevMentor AI OS",
+            "last_project": "Tatvik AI OS",
             "goal": "Become a Full-Stack AI Engineer",
         },
     )
@@ -86,7 +86,7 @@ async def test_cognee():
     print(f"\n  [Test] Indexing a mock repository...")
     index_result = await service.index_repository(
         user_id="test_user_001",
-        repo_name="devmentor",
+        repo_name="tatvik",
         codebase_files=[
             {"path": "backend/app/main.py", "content": "FastAPI app entry point"},
             {
@@ -104,7 +104,7 @@ async def test_cognee():
     print(f"\n  [Test] Querying repository memory...")
     query_result = await service.query_repository_memory(
         user_id="test_user_001",
-        repo_name="devmentor",
+        repo_name="tatvik",
         query="What does the config module do?",
     )
     if isinstance(query_result, list):
@@ -133,7 +133,7 @@ async def test_openclaw():
     # Test 2: Execute a task
     print(f"\n  [Test] Dispatching a coding task to OpenClaw...")
     task_result = await service.execute_task(
-        repo_url="https://github.com/heetmehta18/devmentor",
+        repo_url="https://github.com/heetmehta18/tatvik",
         task_description="Add a /health endpoint that returns status: ok and version: 1.0",
         branch_name="feature/health-endpoint",
     )
@@ -167,7 +167,7 @@ async def test_openclaw():
 # ─────────────────────────────────────────────
 async def main():
     print(f"\n{BOLD}{'═'*50}")
-    print(f"   DevMentor AI OS — Integration Test Suite")
+    print(f"   Tatvik AI OS — Integration Test Suite")
     print(f"{'═'*50}{RESET}")
 
     await test_cognee()

@@ -104,8 +104,8 @@ async def call_ai_json(prompt: str, task_type: str = "general") -> dict:
         url = "https://openrouter.ai/api/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {settings.openrouter_api_key}",
-            "HTTP-Referer": "https://devmentor.ai",
-            "X-Title": "DevMentor",
+            "HTTP-Referer": "https://tatvik.ai",
+            "X-Title": "Tatvik",
             "Content-Type": "application/json",
         }
         # Choose a free model on OpenRouter depending on task

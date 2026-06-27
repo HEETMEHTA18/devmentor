@@ -9,7 +9,7 @@ from app.core.config import settings
 
 async def test_huggingface_ping():
     print("\n--- Testing Hugging Face OpenClaw Space ---")
-    url = settings.openclaw_api_url.replace("/v1", "") if settings.openclaw_api_url else "https://heetmehta18-openclaw-devmentor.hf.space"
+    url = settings.openclaw_api_url.replace("/v1", "") if settings.openclaw_api_url else "https://heetmehta18-openclaw-tatvik.hf.space"
     print(f"Pinging {url}...")
     try:
         async with httpx.AsyncClient() as client:
@@ -23,7 +23,7 @@ async def test_huggingface_ping():
         print(f"ERROR: Failed to ping Hugging Face space: {e}")
 
 async def test_pulse_ingestion():
-    print("\n--- Testing DevMentor Pulse Ingestion ---")
+    print("\n--- Testing Tatvik Pulse Ingestion ---")
     Base.metadata.create_all(bind=engine)
     
     db = SessionLocal()

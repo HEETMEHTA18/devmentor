@@ -2292,7 +2292,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'DevMentor uses your GitHub profile to build your developer DNA, calculate your ratings, and generate your custom career milestones.',
+                  'Tatvik uses your GitHub profile to build your developer DNA, calculate your ratings, and generate your custom career milestones.',
                   style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 20),

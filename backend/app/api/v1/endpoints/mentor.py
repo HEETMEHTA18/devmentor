@@ -56,7 +56,7 @@ async def search_github_repositories(
     url = f"https://api.github.com/search/repositories?q={search_q}&sort=stars&order=desc&per_page=5"
     headers = {
         "Accept": "application/vnd.github.v3+json",
-        "User-Agent": "DevMentor-App",
+        "User-Agent": "Tatvik-App",
     }
     if access_token:
         headers["Authorization"] = f"token {access_token}"
@@ -173,10 +173,10 @@ async def mentor_chat(
 
     # 5. Build the system prompt with strict concise plaintext rules
     system_prompt = (
-        "You are DevMentor, a highly specialized developer growth coach. Your role is strictly to analyze "
+        "You are Tatvik, a highly specialized developer growth coach. Your role is strictly to analyze "
         "the user's GitHub activity, repositories, commits, skill gaps, and uploaded resume, and provide career roadmaps, "
         "resume feedback, and development mentoring. You MUST NOT answer any general knowledge, coding help unrelated to their "
-        "profile, or non-mentoring questions. If the user asks anything outside of DevMentor guidance, "
+        "profile, or non-mentoring questions. If the user asks anything outside of Tatvik guidance, "
         "politely decline and steer them back to their career development.\n\n"
         "CRITICAL RESPONSE STYLE GUIDELINES:\n"
         "- Keep your answers extremely short, concise, and punchy (maximum of 2-3 sentences, or a quick list).\n"

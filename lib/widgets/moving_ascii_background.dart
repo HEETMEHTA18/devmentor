@@ -81,7 +81,7 @@ class _MovingAsciiBackgroundState extends State<MovingAsciiBackground>
   ];
 
   static const List<String> _techWords = [
-    'DEVMENTOR', 'FLUTTER', 'DART', 'PYTHON', 'KUBERNETES', 'AI.INSIGHTS', 'DEVELOPER.DNA',
+    'TATVIK', 'FLUTTER', 'DART', 'PYTHON', 'KUBERNETES', 'AI.INSIGHTS', 'DEVELOPER.DNA',
     'PROMPT.HUB', 'GIT.SYNC', 'ROAST.ME', 'ROADMAP', 'AUTODEV', 'TELEMETRY', 'SYSTEM.OK',
     'BUILD.SUCCESS', 'MAIN.DART', 'REPOS', 'CHAT.MENTOR', 'PIPELINE', 'INTEGRATE'
   ];

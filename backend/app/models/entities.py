@@ -252,7 +252,7 @@ class WeeklyDigest(Base):
 
 class PulseItem(Base):
     """
-    DevMentor Pulse Data Ingestion Engine Model
+    Tatvik Pulse Data Ingestion Engine Model
     Stores normalized data from various tech sources (RSS, APIs, etc.)
     """
 

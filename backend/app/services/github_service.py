@@ -183,7 +183,7 @@ class GithubService:
         """
         try:
             async with httpx.AsyncClient() as client:
-                headers = {"User-Agent": "DevMentor-App"}
+                headers = {"User-Agent": "Tatvik-App"}
 
                 # Check if we can find any access token in the database to raise rate limits
                 access_token = None
@@ -258,7 +258,7 @@ class GithubService:
                         f"https://api.github.com/search/commits?q=author:{login}",
                         headers={
                             "Accept": "application/vnd.github.v3+json",
-                            "User-Agent": "DevMentor-App",
+                            "User-Agent": "Tatvik-App",
                             **(
                                 {"Authorization": f"Bearer {access_token}"}
                                 if access_token
