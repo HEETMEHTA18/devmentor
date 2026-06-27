@@ -175,31 +175,6 @@ class HomeScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Full width World Monitor directly in dashboard for Desktop Web
-                                  if (kIsWeb)
-                                    Container(
-                                      height: 450,
-                                      margin: const EdgeInsets.only(bottom: 24),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(24),
-                                        border: Border.all(
-                                          color: AppTheme.border,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.2,
-                                            ),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(24),
-                                        child: const WorldMonitorScreen(),
-                                      ),
-                                    ),
                                   _buildScoreSection(context, appState),
                                   const SizedBox(height: 24),
                                   _buildActivityHeatmap(context, appState),

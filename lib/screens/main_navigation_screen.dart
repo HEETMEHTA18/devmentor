@@ -529,16 +529,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final totalWidth = constraints.maxWidth;
-                              final itemWidth = totalWidth / 5;
+                              final itemWidth = totalWidth / 6;
                               return Stack(
                                 children: [
                                   // iOS Liquid Glass Pill Indicator
                                   AnimatedPositioned(
                                     duration: const Duration(milliseconds: 350),
                                     curve: Curves.easeOutCubic,
-                                    left: _selectedIndex >= 4
-                                        ? (_selectedIndex - 1) * itemWidth + 6
-                                        : _selectedIndex * itemWidth + 6,
+                                    left: _selectedIndex * itemWidth + 6,
                                     top: 6,
                                     bottom: 6,
                                     width: itemWidth - 12,
@@ -702,6 +700,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                                           width: itemWidth,
                                           isSelected: _selectedIndex == 3,
                                           onTap: () => _onTabSelected(3),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 4,
+                                          label: 'World',
+                                          icon: Icons.public_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 4,
+                                          onTap: () => _onTabSelected(4),
                                         ),
                                         _MainNavigationItem(
                                           index: 5,
