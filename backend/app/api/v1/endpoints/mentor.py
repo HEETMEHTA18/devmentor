@@ -1,5 +1,6 @@
 import logging
 import httpx
+from datetime import datetime
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -279,7 +280,7 @@ async def mentor_chat(
             final_reply = f"Command executed successfully. Check the terminal output."
         else:
             final_reply = "Task execution completed."
-            
+
     if settings.nvidia_api_key:
         import re
 
@@ -301,7 +302,7 @@ async def mentor_chat(
             try:
                 if final_reply:
                     current_iteration = max_iterations
-                    
+
                 while current_iteration < max_iterations:
                     if time.time() - start_time > 70:
                         logger.warning(
@@ -398,35 +399,44 @@ async def mentor_chat(
                             "provider": "nvidia",
                         },
                     )
-                    
+
                     # 🚀 New TATVIK Feature: Per-Project Codebase Memory Mindmaps
                     # If the prompt or AI output contains codebase insights, map it to the repo project
                     # Find potential repo links or use the primary selected repo
                     import re
-                    repo_matches = re.findall(r"github\.com/([\w.-]+/[\w.-]+)", payload.message)
-                    primary_repo = repo_matches[0] if repo_matches else "general_mindmap"
-                    
+
+                    repo_matches = re.findall(
+                        r"github\.com/([\w.-]+/[\w.-]+)", payload.message
+                    )
+                    primary_repo = (
+                        repo_matches[0] if repo_matches else "general_mindmap"
+                    )
+
                     # Clean up the name for the graph
                     project_name = primary_repo.replace("/", "_").replace(".", "_")
-                    
-                    if openclaw_result or "scan" in payload.message.lower() or "explore" in payload.message.lower():
+
+                    if (
+                        openclaw_result
+                        or "scan" in payload.message.lower()
+                        or "explore" in payload.message.lower()
+                    ):
                         # We have actionable insights to save into the mindmap
                         insight_data = {
                             "prompt": payload.message,
                             "ai_summary": final_reply,
-                            "openclaw_tasks": openclaw_result
+                            "openclaw_tasks": openclaw_result,
                         }
-                        
+
                         # Create a mock item to hold the memory ID
                         class MockItem:
                             id = f"mem_{int(datetime.now().timestamp())}"
-                            
+
                         await cognee_client.build_knowledge_graph_from_item(
-                            repo_name=project_name, 
-                            item=MockItem(), 
-                            enriched_data=insight_data
+                            repo_name=project_name,
+                            item=MockItem(),
+                            enriched_data=insight_data,
                         )
-                        
+
                 except Exception as e:
                     logger.error(f"Failed to sync codebase memory to Cognee: {e}")
 
