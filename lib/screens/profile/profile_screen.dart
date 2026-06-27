@@ -81,6 +81,26 @@ class ProfileScreen extends StatelessWidget {
               ),
               _buildSettingItem(
                 context,
+                Icons.bug_report_outlined,
+                'Test Notification Banner',
+                trailing: 'Test',
+                onTap: () {
+                  appState.addNotification(
+                    title: 'Test Notification 🚀',
+                    body: 'This is a beautifully styled test banner.',
+                    type: 'opportunity',
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Test notification dispatched'),
+                      backgroundColor: AppTheme.accent,
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                },
+              ),
+              _buildSettingItem(
+                context,
                 Icons.auto_awesome_outlined,
                 'AI Insights',
                 hasSwitch: true,
