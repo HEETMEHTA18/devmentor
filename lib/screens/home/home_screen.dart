@@ -389,26 +389,30 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${state.developerScore}',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textMain,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${state.developerScore}',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textMain,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '/10',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
+                          Text(
+                            '/10',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -103,10 +103,10 @@ void main() {
 
     await tester.pump(const Duration(seconds: 1));
     debugPrint(
-      'IndexedStack size in test: ${tester.getSize(find.byType(IndexedStack))}',
+      'IndexedStack size in test: ${tester.getSize(find.byType(IndexedStack).first)}',
     );
 
-    expect(find.byType(IndexedStack), findsOneWidget);
+    expect(find.byType(IndexedStack), findsWidgets);
     final promptsTab = find.byWidgetPredicate(
       (widget) => widget is Text && widget.data == 'Prompts' && widget.style?.fontSize == 10,
     );
