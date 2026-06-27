@@ -431,6 +431,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
             DesktopScaffold(
               selectedIndex: _selectedIndex,
               onTabSelected: _onTabSelected,
+              constrainBodyWidth: _selectedIndex != 4, // Allow World Monitor to be full width
               body: IndexedStack(
                 index: _selectedIndex,
                 children: _screens,
