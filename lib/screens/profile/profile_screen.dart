@@ -722,6 +722,29 @@ class ProfileScreen extends StatelessWidget {
                             );
                           },
                         ),
+                        const SizedBox(height: 16),
+                        // 3. Biometric / Face ID Switch
+                        _buildSheetSwitch(
+                          context,
+                          Icons.fingerprint_rounded,
+                          'Face ID / Biometric Lock',
+                          'Require biometric authentication to open Tatvik.',
+                          state.biometricLock,
+                          (val) {
+                            state.togglePreference('biometric');
+                            setModalState(() {});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  state.biometricLock
+                                      ? 'Face ID / Biometric Lock Enabled.'
+                                      : 'Face ID / Biometric Lock Disabled.',
+                                ),
+                                backgroundColor: AppTheme.success,
+                              ),
+                            );
+                          },
+                        ),
                         const SizedBox(height: 20),
                         // Action Buttons
                         Row(
@@ -772,6 +795,29 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 24),
+                        // Legal section
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _showTermsAndConditions(context);
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.gavel_rounded, size: 16, color: AppTheme.textSecondary),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Terms and Conditions',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  decoration: TextDecoration.underline,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -1559,6 +1605,83 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+  void _showTermsAndConditions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: AppTheme.border, width: 1.5)),
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Terms and Conditions',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppTheme.textMain,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Text(
+                    '''1. Acceptance of Terms
+By using Tatvik ("the App"), you agree to be bound by these Terms and Conditions.
+
+2. Security & Privacy
+Tatvik processes code and metadata locally where possible. However, the AI functionalities utilize the OpenClaw pipeline. By using this service, you agree not to submit extremely sensitive credentials, though we automatically redact API keys and PII.
+
+3. Face ID / Biometrics
+If enabled, Tatvik uses the device's native biometric APIs. Tatvik does not store your biometric data.
+
+4. Intellectual Property
+Code generated by Tatvik's AI is free to use in your projects under your own responsibility.
+
+5. Liability
+Tatvik is provided "as is". We are not liable for any code issues, bugs, or downtime caused by generated or suggested code.
+
+6. Account Termination
+We reserve the right to suspend accounts that abuse our API rate limits or violate these terms.''',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: LiquidGlassButton(
+                  onPressed: () => Navigator.pop(context),
+                  color: AppTheme.accent,
+                  child: const Text('I Understand'),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

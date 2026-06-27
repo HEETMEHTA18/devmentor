@@ -61,6 +61,7 @@ class AppState extends ChangeNotifier {
       weeklyReport = prefs.getBool('pref_report') ?? false;
       shareAnalytics = prefs.getBool('pref_analytics') ?? true;
       twoFactorAuth = prefs.getBool('pref_2fa') ?? false;
+      biometricLock = prefs.getBool('pref_biometric') ?? false;
       githubUsernameLocked = prefs.getBool('pref_github_locked') ?? false;
 
       // Immediately load cached GitHub statistics to avoid mock/zero flashes on app reopen
@@ -1274,6 +1275,7 @@ This is simulated offline prompts.md content.
   bool weeklyReport = false;
   bool shareAnalytics = true;
   bool twoFactorAuth = false;
+  bool biometricLock = false;
   bool githubUsernameLocked = false;
   String? sessionLoginTimestamp;
 
@@ -2869,9 +2871,15 @@ This is simulated offline prompts.md content.
       shareAnalytics = !shareAnalytics;
       await prefs.setBool('pref_analytics', shareAnalytics);
     }
-    if (key == '2fa') {
-      twoFactorAuth = !twoFactorAuth;
-      await prefs.setBool('pref_2fa', twoFactorAuth);
+    switch (key) {
+      case '2fa':
+        twoFactorAuth = !twoFactorAuth;
+        await prefs.setBool('pref_2fa', twoFactorAuth);
+        break;
+      case 'biometric':
+        biometricLock = !biometricLock;
+        await prefs.setBool('pref_biometric', biometricLock);
+        break;
     }
     if (key == 'github_lock') {
       githubUsernameLocked = !githubUsernameLocked;
