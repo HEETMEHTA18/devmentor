@@ -8,8 +8,10 @@ from sqlalchemy import select
 from app.api.deps import get_current_user_id, get_db
 from app.core.config import settings
 from app.models.entities import Repository, TechNews, GithubProfile
-from app.services.cognee_service import CogneeService
+from app.services.git_service import get_github_client
 from app.services.openclaw_service import OpenClawService
+from app.tatvik.graph.cognee_client import cognee_client
+import re
 from app.services.github_agent_service import GithubAgentService
 
 router = APIRouter()
@@ -209,6 +211,8 @@ async def mentor_chat(
         "create pr",
         "open pr",
         "make a pr",
+        "raise a pr",
+        "raise pr",
         "create pull request",
         "fix this bug",
         "implement this",
@@ -266,6 +270,16 @@ async def mentor_chat(
         return cleaned.strip()
 
     # 7. Agentic Loop - Call AI API (up to 3 iterations for ReAct)
+    final_reply = ""
+    if openclaw_result:
+        # Fast path: bypass LLM if we already executed a task to avoid Render 100s timeout
+        if openclaw_result.get("pull_request_url"):
+            final_reply = f"I have executed the task! You can view the Pull Request here: {openclaw_result['pull_request_url']}"
+        elif openclaw_result.get("output"):
+            final_reply = f"Command executed successfully. Check the terminal output."
+        else:
+            final_reply = "Task execution completed."
+            
     if settings.nvidia_api_key:
         import re
 
@@ -274,7 +288,6 @@ async def mentor_chat(
         # Initialize loop variables
         max_iterations = 3
         current_iteration = 0
-        final_reply = ""
         agent_messages = [
             {"role": "system", "content": system_prompt},
             *safe_history,
@@ -286,6 +299,9 @@ async def mentor_chat(
         start_time = time.time()
         async with httpx.AsyncClient() as client:
             try:
+                if final_reply:
+                    current_iteration = max_iterations
+                    
                 while current_iteration < max_iterations:
                     if time.time() - start_time > 70:
                         logger.warning(
@@ -373,6 +389,7 @@ async def mentor_chat(
 
                 # After loop finishes, save long-term memory
                 try:
+                    # Original profile update
                     await _cognee_service.add_developer_profile(
                         user_id,
                         {
@@ -381,8 +398,37 @@ async def mentor_chat(
                             "provider": "nvidia",
                         },
                     )
-                except Exception:
-                    pass
+                    
+                    # 🚀 New TATVIK Feature: Per-Project Codebase Memory Mindmaps
+                    # If the prompt or AI output contains codebase insights, map it to the repo project
+                    # Find potential repo links or use the primary selected repo
+                    import re
+                    repo_matches = re.findall(r"github\.com/([\w.-]+/[\w.-]+)", payload.message)
+                    primary_repo = repo_matches[0] if repo_matches else "general_mindmap"
+                    
+                    # Clean up the name for the graph
+                    project_name = primary_repo.replace("/", "_").replace(".", "_")
+                    
+                    if openclaw_result or "scan" in payload.message.lower() or "explore" in payload.message.lower():
+                        # We have actionable insights to save into the mindmap
+                        insight_data = {
+                            "prompt": payload.message,
+                            "ai_summary": final_reply,
+                            "openclaw_tasks": openclaw_result
+                        }
+                        
+                        # Create a mock item to hold the memory ID
+                        class MockItem:
+                            id = f"mem_{int(datetime.now().timestamp())}"
+                            
+                        await cognee_client.build_knowledge_graph_from_item(
+                            repo_name=project_name, 
+                            item=MockItem(), 
+                            enriched_data=insight_data
+                        )
+                        
+                except Exception as e:
+                    logger.error(f"Failed to sync codebase memory to Cognee: {e}")
 
                 response_data = {
                     "user_id": user_id,
@@ -400,7 +446,7 @@ async def mentor_chat(
                 logging.getLogger(__name__).error(f"Error calling NVIDIA: {e}")
 
     api_key = settings.gemini_api_key
-    if api_key:
+    if api_key and not final_reply:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={api_key}"
         async with httpx.AsyncClient() as client:
             try:
