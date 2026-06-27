@@ -248,3 +248,42 @@ class WeeklyDigest(Base):
     topic: Mapped[str] = mapped_column(String(255))
     digest_text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class PulseItem(Base):
+    """
+    DevMentor Pulse Data Ingestion Engine Model
+    Stores normalized data from various tech sources (RSS, APIs, etc.)
+    """
+
+    __tablename__ = "pulse_items"
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid4())
+    )
+    title: Mapped[str] = mapped_column(String(512), index=True)
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source: Mapped[str] = mapped_column(String(255), index=True)
+    url: Mapped[str] = mapped_column(String(1024), unique=True)
+    author: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    category: Mapped[str | None] = mapped_column(String(255), index=True)
+    tags: Mapped[str | None] = mapped_column(
+        String(1024), nullable=True
+    )  # JSON array as string
+    difficulty: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    reading_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    language: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    license: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    trending_score: Mapped[int] = mapped_column(Integer, default=0)
+    sentiment: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    related_repositories: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # JSON array
+    related_technologies: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # JSON array
+    thumbnail: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    image: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    metadata_blob: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON blob
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

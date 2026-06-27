@@ -10,7 +10,7 @@ from app.core.logging import configure_logging
 from app.db.base import Base
 from app.db.session import engine, SessionLocal
 import asyncio
-from app.services.news_scanner import scan_tech_news
+from app.services.pulse_engine import run_pulse_pipeline
 
 configure_logging()
 logger = logging.getLogger(__name__)
@@ -28,18 +28,18 @@ app.add_middleware(
 )
 
 
-async def periodic_news_scanner():
+async def periodic_pulse_scanner():
     await asyncio.sleep(5)
     while True:
         try:
-            logger.info("Periodic news scanner running...")
+            logger.info("DevMentor Pulse scanner running...")
             db = SessionLocal()
             try:
-                await scan_tech_news(db)
+                await run_pulse_pipeline(db)
             finally:
                 db.close()
         except Exception as e:
-            logger.error(f"Error in periodic news scanner: {e}")
+            logger.error(f"Error in DevMentor Pulse scanner: {e}")
         # Run scan every hour (3600 seconds)
         await asyncio.sleep(3600)
 
@@ -107,7 +107,7 @@ def startup_event():
     except Exception as e:
         logger.error(f"Error seeding database on startup: {e}")
 
-    asyncio.create_task(periodic_news_scanner())
+    asyncio.create_task(periodic_pulse_scanner())
     asyncio.create_task(periodic_huggingface_ping())
 
 

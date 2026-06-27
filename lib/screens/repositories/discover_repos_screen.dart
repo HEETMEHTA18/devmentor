@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/animated_copy_button.dart';
 import '../../providers/app_state.dart';
+import '../../widgets/tatvik_loader.dart';
 import '../../models/repository.dart';
 import '../mentor/mentor_chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -70,11 +71,11 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           break;
         case 2:
           tabContent = _buildResumeTab(context, appState);
-          tabTitle = 'AI Resume Reviewer';
+          tabTitle = 'Tatvik Resume Reviewer';
           break;
         case 3:
           tabContent = _buildProjectTab(context, appState);
-          tabTitle = 'AI Project Evaluator';
+          tabTitle = 'Tatvik Project Evaluator';
           break;
         case 4:
           tabContent = _buildAwesomeListsTab(context, appState);
@@ -239,7 +240,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               ),
             ),
 
-            // Section: AI Developer Tools
+            // Section: Tatvik Intelligence
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(
@@ -249,7 +250,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   bottom: 12,
                 ),
                 child: Text(
-                  'AI Developer Tools',
+                  'Tatvik Intelligence',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -269,14 +270,14 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                       _buildDiscoverRow(
                         icon: Icons.description_rounded,
                         iconColor: const Color(0xFF5856D6),
-                        label: 'AI Resume Reviewer',
+                        label: 'Tatvik Resume Reviewer',
                         onTap: () => setState(() => _activeTab = 2),
                         showDivider: true,
                       ),
                       _buildDiscoverRow(
                         icon: Icons.workspace_premium_rounded,
                         iconColor: const Color(0xFFFF2D55),
-                        label: 'AI Project Evaluator',
+                        label: 'Tatvik Project Evaluator',
                         onTap: () => setState(() => _activeTab = 3),
                         showDivider: true,
                       ),
@@ -348,7 +349,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.all(40),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: TatvikLoader(),
                 ),
               )
             else if (appState.followingActivity.isEmpty)
@@ -1675,7 +1676,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
 
   Widget _buildAwesomeListsTab(BuildContext context, AppState state) {
     if (state.isLoadingAwesomeLists) {
-      return const Center(child: CircularProgressIndicator());
+      return const TatvikLoader();
     }
 
     final lists = state.awesomeLists;
@@ -2132,7 +2133,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                         color: AppTheme.accent,
                       ),
                       label: Text(
-                        'DISCUSS WITH AI MENTOR',
+                        'DISCUSS WITH TATVIK',
                         style: GoogleFonts.jetBrainsMono(
                           fontWeight: FontWeight.bold,
                           fontSize: 11,

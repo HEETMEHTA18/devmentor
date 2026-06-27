@@ -19,6 +19,8 @@ import 'repositories/discover_repos_screen.dart';
 import 'roadmap/roadmap_screen.dart';
 import 'profile/profile_screen.dart';
 import 'prompts/prompt_hub_screen.dart';
+import 'desktop/desktop_scaffold.dart';
+import 'world/world_monitor_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -60,7 +62,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
     WalkthroughStep(
       icon: Icons.grid_view_rounded,
       title: 'Personalized Hub 🚀',
-      description: 'Your home dashboard showing AI Insights, Developer DNA, and your profile Roast. All dynamically tailored to your stack and goals.',
+      description: 'Your home dashboard showing Tatvik Insights, Developer DNA, and your profile Roast. All dynamically tailored to your stack and goals.',
       tabIndex: 0,
     ),
     WalkthroughStep(
@@ -71,7 +73,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
     ),
     WalkthroughStep(
       icon: Icons.psychology_outlined,
-      title: 'AI Mentor Chat & Prompts 💬',
+      title: 'Tatvik Chat & Prompts 💬',
       description: 'Interact with your AI Mentor. Save topics directly to your Development Memory to customize your future roadmaps.',
       tabIndex: 2,
     ),
@@ -411,8 +413,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final bool isMobileBrowser = kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+    final isDesktop = MediaQuery.of(context).size.width > 800;
 
     return AnimatedBuilder(
       animation: _transitionAnimation,
@@ -424,12 +426,21 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> with Single
       },
       child: Stack(
         children: [
-          Scaffold(
-            backgroundColor: Colors.transparent,
-            extendBody: true,
-            body: IndexedStack(
-              index: _selectedIndex,
-              children: _screens,
+          if (isDesktop)
+            DesktopScaffold(
+              centerFeed: IndexedStack(
+                index: _selectedIndex,
+                children: _screens,
+              ),
+              rightContextPanel: const WorldMonitorScreen(),
+            )
+          else
+            Scaffold(
+              backgroundColor: Colors.transparent,
+              extendBody: true,
+              body: IndexedStack(
+                index: _selectedIndex,
+                children: _screens,
             ),
             bottomNavigationBar: SafeArea(
               child: Padding(
