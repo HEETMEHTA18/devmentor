@@ -21,7 +21,7 @@ app = FastAPI(title="DevMentor API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://(devsmentor\.vercel\.app|devmentor\.vercel\.app)|http://(localhost|127\.0\.0\.1)(:[0-9]+)?",
+    allow_origin_regex=r"https://(devsmentor\.vercel\.app|devmentor\.vercel\.app|tatvik\.vercel\.app)|http://(localhost|127\.0\.0\.1)(:[0-9]+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
