@@ -10,6 +10,8 @@ import '../mentor/mentor_chat_screen.dart';
 import '../../widgets/liquid_glass_button.dart';
 import 'timeline_screen.dart';
 import '../intelligence/developer_growth_screen.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -727,9 +729,32 @@ class ProfileScreen extends StatelessWidget {
                           'Two-Factor Authentication',
                           'Add an extra layer of protection to your Tatvik account.',
                           state.twoFactorAuth,
-                          (val) {
+                          (val) async {
+                            if (!state.twoFactorAuth) {
+                              // Simulating enabling 2FA
+                              bool? confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: AppTheme.surface,
+                                  title: Text('Enable 2FA', style: TextStyle(color: AppTheme.textMain)),
+                                  content: Text('A verification code has been sent to your registered email/phone. Enter it below to enable 2FA.\n\n(Simulation: Just tap Confirm)', style: TextStyle(color: AppTheme.textSecondary)),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Confirm'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm != true) return;
+                            }
                             state.togglePreference('2fa');
                             setModalState(() {});
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -750,19 +775,45 @@ class ProfileScreen extends StatelessWidget {
                           'Face ID / Biometric Lock',
                           'Require biometric authentication to open Tatvik.',
                           state.biometricLock,
-                          (val) {
-                            state.togglePreference('biometric');
-                            setModalState(() {});
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  state.biometricLock
-                                      ? 'Face ID / Biometric Lock Enabled.'
-                                      : 'Face ID / Biometric Lock Disabled.',
-                                ),
-                                backgroundColor: AppTheme.success,
-                              ),
-                            );
+                          (val) async {
+                            final LocalAuthentication auth = LocalAuthentication();
+                            bool authenticated = false;
+                            try {
+                              authenticated = await auth.authenticate(
+                                localizedReason: state.biometricLock
+                                    ? 'Authenticate to disable Biometric Lock'
+                                    : 'Authenticate to enable Biometric Lock',
+                                biometricOnly: true,
+                                persistAcrossBackgrounding: true,
+                              );
+                            } on PlatformException catch (e) {
+                              debugPrint('Biometric Error: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Biometrics not available on this device. ($e)'),
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+                            if (authenticated) {
+                              state.togglePreference('biometric');
+                              setModalState(() {});
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      state.biometricLock
+                                          ? 'Face ID / Biometric Lock Enabled.'
+                                          : 'Face ID / Biometric Lock Disabled.',
+                                    ),
+                                    backgroundColor: AppTheme.success,
+                                  ),
+                                );
+                              }
+                            }
                           },
                         ),
                         const SizedBox(height: 20),
