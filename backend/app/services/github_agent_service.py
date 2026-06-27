@@ -170,11 +170,11 @@ class GithubAgentService:
                     url,
                     json={
                         "model": "meta/llama-3.3-70b-instruct",
-                        "messages": [{"role": "user", "content": prompt}]
+                        "messages": [{"role": "user", "content": prompt}],
                     },
                     headers={
                         "Authorization": f"Bearer {settings.nvidia_api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     timeout=30.0,
                 )

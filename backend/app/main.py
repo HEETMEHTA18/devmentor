@@ -47,11 +47,16 @@ async def periodic_news_scanner():
 async def periodic_huggingface_ping():
     import httpx
     from app.core.config import settings
+
     await asyncio.sleep(10)
-    
+
     # Base URL of HF Space
-    url = settings.openclaw_api_url.replace("/v1", "") if settings.openclaw_api_url else "https://heetmehta18-openclaw-devmentor.hf.space"
-    
+    url = (
+        settings.openclaw_api_url.replace("/v1", "")
+        if settings.openclaw_api_url
+        else "https://heetmehta18-openclaw-devmentor.hf.space"
+    )
+
     while True:
         try:
             logger.info(f"Pinging HuggingFace Space to keep alive: {url}")
