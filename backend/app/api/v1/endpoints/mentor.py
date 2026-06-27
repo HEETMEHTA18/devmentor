@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.api.deps import get_current_user_id, get_db
 from app.core.config import settings
 from app.models.entities import Repository, TechNews, GithubProfile
-from app.services.git_service import get_github_client
+from app.services.cognee_service import CogneeService
 from app.services.openclaw_service import OpenClawService
 from app.tatvik.graph.cognee_client import cognee_client
 import re
