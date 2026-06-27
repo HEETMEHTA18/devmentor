@@ -128,21 +128,22 @@ class HomeScreen extends StatelessWidget {
                                   right: 0,
                                   top: 0,
                                   child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.accent,
                                       shape: BoxShape.circle,
+                                      border: Border.all(color: AppTheme.surface, width: 2),
                                     ),
                                     constraints: const BoxConstraints(
-                                      minWidth: 14,
-                                      minHeight: 14,
+                                      minWidth: 18,
+                                      minHeight: 18,
                                     ),
                                     child: Center(
                                       child: Text(
                                         '${appState.unreadNotificationsCount}',
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 8,
+                                          fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -253,31 +254,6 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       header,
-                      // World Monitor for Mobile Web
-                      if (kIsWeb)
-                        Container(
-                          height: 350,
-                          margin: const EdgeInsets.only(bottom: 24),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: AppTheme.border,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha: 0.2,
-                                ),
-                                blurRadius: 16,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: const WorldMonitorScreen(),
-                          ),
-                        ),
                       _buildScoreSection(context, appState),
                       const SizedBox(height: 32),
                       _buildActivityHeatmap(context, appState),
@@ -2418,22 +2394,32 @@ class HomeScreen extends StatelessWidget {
                 child: Container(
                   height: MediaQuery.of(context).size.height * 0.7,
                   decoration: BoxDecoration(
-                    color: AppTheme.isDark
-                        ? const Color(0xE6121214)
-                        : const Color(0xE6F8F9FA),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
+                    color: AppTheme.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(30),
                     ),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1,
+                    border: Border(
+                      top: BorderSide(
+                        color: AppTheme.border,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 24),
+                          decoration: BoxDecoration(
+                            color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -2892,20 +2878,30 @@ class HomeScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppTheme.isDark
-              ? const Color(0xFF1E1E24)
-              : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: SingleChildScrollView(child: detailContent),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Close', style: TextStyle(color: AppTheme.accent)),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(24),
+          child: GlassCard(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                detailContent,
+                const SizedBox(height: 32),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: LiquidGlassButton(
+                    onPressed: () => Navigator.pop(context),
+                    color: AppTheme.accent,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    borderRadius: 12,
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
