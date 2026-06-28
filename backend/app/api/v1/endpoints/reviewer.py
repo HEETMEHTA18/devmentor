@@ -37,7 +37,9 @@ async def run_continuous_code_review(
     Continuous Code Reviewer: Analyzes architecture, security, performance, accessibility.
     Dispatches task to OpenClaw to analyze the repo, then uses Gemini to generate standard scores.
     """
-    if not settings.nvidia_api_key:
+    if not (
+        settings.gemini_api_key or settings.groq_api_key or settings.openrouter_api_key
+    ):
         raise HTTPException(status_code=500, detail="LLM API key not configured")
 
     # 1. Ask OpenClaw to clone and analyze the codebase structure
@@ -61,7 +63,11 @@ async def run_continuous_code_review(
 
     if claw_result.get("success") is False:
         error_msg = str(claw_result.get("error", raw_analysis))
-        if "ReadTimeout" in error_msg or "Timeout" in error_msg:
+        if (
+            "readtimeout" in error_msg.lower()
+            or "timeout" in error_msg.lower()
+            or "timed out" in error_msg.lower()
+        ):
             return ReviewResponse(
                 success=False,
                 security_score=0,
@@ -136,6 +142,8 @@ async def run_continuous_code_review(
             raise HTTPException(
                 status_code=500, detail="LLM failed to output valid JSON for review."
             )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Code Reviewer Exception: {e}")
         raise HTTPException(status_code=500, detail=str(e))

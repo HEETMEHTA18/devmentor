@@ -52,7 +52,9 @@ class OpenClawService:
         self.enabled = bool(self.api_key)
 
         # Force stub mode during automated tests to avoid real HTTP calls
-        if settings.environment == "testing":
+        import sys
+
+        if settings.environment == "testing" or "pytest" in sys.modules:
             self.enabled = False
 
         if not self.enabled:
@@ -100,11 +102,17 @@ class OpenClawService:
                     "success": False,
                     "error": "An error occurred during tool execution.",
                 }
+            except httpx.TimeoutException as e:
+                logger.warning(f"OpenClaw dispatch timed out: {e}")
+                return {
+                    "success": False,
+                    "error": f"OpenClaw dispatch timed out: {str(e)}",
+                }
             except Exception as e:
                 logger.exception("OpenClaw dispatch failed")
                 return {
                     "success": False,
-                    "error": "An error occurred during tool execution.",
+                    "error": f"An error occurred during tool execution: {str(e)}",
                 }
 
     def _stub(self, tool_id: str, capability: str, params: dict) -> dict:
