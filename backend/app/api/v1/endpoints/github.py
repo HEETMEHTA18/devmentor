@@ -500,6 +500,11 @@ async def github_following_activity(
     async with httpx.AsyncClient() as client:
         try:
             res = await client.get(url, headers=headers, timeout=12.0)
+            if res.status_code == 401 and "Authorization" in headers:
+                logger.warning("GitHub token returned 401. Retrying following-activity unauthenticated.")
+                del headers["Authorization"]
+                res = await client.get(url, headers=headers, timeout=12.0)
+
             if res.status_code == 200:
                 events = res.json()
                 structured_events = []
@@ -719,6 +724,15 @@ async def get_public_stats(
                 headers=headers,
                 timeout=8.0,
             )
+            if profile_response.status_code == 401 and "Authorization" in headers:
+                logger.warning("GitHub token returned 401. Retrying profile fetch unauthenticated.")
+                del headers["Authorization"]
+                profile_response = await client.get(
+                    f"https://api.github.com/users/{clean_username}",
+                    headers=headers,
+                    timeout=8.0,
+                )
+
             if profile_response.status_code == 404:
                 raise HTTPException(status_code=404, detail="GitHub user not found")
             elif profile_response.status_code != 200:

@@ -247,47 +247,59 @@ class PulseEngine:
         elif source_type == "github":
             items = await self.fetch_github_api(url)
 
-        # 2. Normalize & Deduplicate
-        for item in items:
-            if self.deduplicate(item["url"]):
-                continue
+        try:
+            # 2. Normalize & Deduplicate
+            for item in items:
+                try:
+                    if self.deduplicate(item["url"]):
+                        continue
 
-            # 3. AI Summarize & Tag
-            enriched = await self.ai_enrichment(item["title"], item["description"])
+                    # 3. AI Summarize & Tag
+                    enriched = await self.ai_enrichment(item["title"], item["description"])
+                    if not enriched:
+                        enriched = {}
 
-            # Proactively space out requests to stay within free-tier rate limits (15 RPM)
-            if settings.gemini_api_key:
-                await asyncio.sleep(4.0)
+                    # Proactively space out requests to stay within free-tier rate limits (15 RPM)
+                    if settings.gemini_api_key:
+                        await asyncio.sleep(4.0)
 
-            # 4. Store
-            db_item = PulseItem(
-                title=item["title"],
-                url=item["url"],
-                description=item["description"],
-                source=item["source"],
-                language=item.get("language"),
-                summary=enriched.get("summary", ""),
-                tags=json.dumps(enriched.get("tags", [])),
-                sentiment=enriched.get("sentiment", "neutral"),
-                related_technologies=json.dumps(
-                    enriched.get("related_technologies", [])
-                ),
-                metadata_blob=json.dumps(
-                    {
-                        "beginner_explanation": enriched.get("beginner_explanation"),
-                        "advanced_explanation": enriched.get("advanced_explanation"),
-                    }
-                ),
-                created_at=datetime.utcnow(),
-            )
+                    # 4. Store
+                    db_item = PulseItem(
+                        title=item["title"],
+                        url=item["url"],
+                        description=item["description"],
+                        source=item["source"],
+                        language=item.get("language"),
+                        summary=enriched.get("summary", ""),
+                        tags=json.dumps(enriched.get("tags", [])),
+                        sentiment=enriched.get("sentiment", "neutral"),
+                        related_technologies=json.dumps(
+                            enriched.get("related_technologies", [])
+                        ),
+                        metadata_blob=json.dumps(
+                            {
+                                "beginner_explanation": enriched.get("beginner_explanation"),
+                                "advanced_explanation": enriched.get("advanced_explanation"),
+                            }
+                        ),
+                        created_at=datetime.utcnow(),
+                    )
 
-            self.db.add(db_item)
-            # 5. Cognee (Mock Integration - Graph Store)
-            logger.info(f"Would push {item['title']} to Cognee Knowledge Graph")
+                    self.db.add(db_item)
+                    # 5. Cognee (Mock Integration - Graph Store)
+                    logger.info(f"Would push {item['title']} to Cognee Knowledge Graph")
+                except Exception as item_error:
+                    logger.error(f"Failed to process individual pulse item {item.get('url')}: {item_error}")
+                    self.db.rollback()
+                    # Re-raise to skip rest of this source and clean transaction state
+                    raise item_error
 
-        self.db.commit()
+            self.db.commit()
+        except Exception as source_error:
+            logger.error(f"Error processing source {url}: {source_error}")
+            self.db.rollback()
+
         import gc
-
         gc.collect()
 
 

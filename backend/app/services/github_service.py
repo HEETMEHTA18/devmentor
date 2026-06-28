@@ -223,6 +223,13 @@ class GithubService:
                 profile_response = await client.get(
                     f"https://api.github.com/users/{username}", headers=headers
                 )
+                if profile_response.status_code == 401 and "Authorization" in headers:
+                    logger.warning("GitHub token returned 401. Retrying unauthenticated.")
+                    del headers["Authorization"]
+                    profile_response = await client.get(
+                        f"https://api.github.com/users/{username}", headers=headers
+                    )
+
                 if profile_response.status_code != 200:
                     raise ValueError(
                         f"Failed to fetch GitHub profile for {username}: {profile_response.text}"
@@ -256,6 +263,14 @@ class GithubService:
                     f"https://api.github.com/users/{username}/repos?per_page=100",
                     headers=headers,
                 )
+                if repos_response.status_code == 401 and "Authorization" in headers:
+                    logger.warning("GitHub token returned 401. Retrying repos fetch unauthenticated.")
+                    del headers["Authorization"]
+                    repos_response = await client.get(
+                        f"https://api.github.com/users/{username}/repos?per_page=100",
+                        headers=headers,
+                    )
+
                 if repos_response.status_code != 200:
                     raise ValueError(
                         f"Failed to fetch GitHub repositories for {username}: {repos_response.text}"
@@ -266,19 +281,26 @@ class GithubService:
                 # Fetch total commits using Search Commits API
                 total_commits = 0
                 try:
+                    search_headers = {
+                        "Accept": "application/vnd.github.v3+json",
+                        "User-Agent": "Tatvik-App",
+                    }
+                    if "Authorization" in headers:
+                        search_headers["Authorization"] = headers["Authorization"]
+
                     commits_response = await client.get(
                         f"https://api.github.com/search/commits?q=author:{login}",
-                        headers={
-                            "Accept": "application/vnd.github.v3+json",
-                            "User-Agent": "Tatvik-App",
-                            **(
-                                {"Authorization": f"Bearer {access_token}"}
-                                if access_token
-                                else {}
-                            ),
-                        },
+                        headers=search_headers,
                         timeout=8.0,
                     )
+                    if commits_response.status_code == 401 and "Authorization" in search_headers:
+                        logger.warning("GitHub token returned 401. Retrying commits search unauthenticated.")
+                        del search_headers["Authorization"]
+                        commits_response = await client.get(
+                            f"https://api.github.com/search/commits?q=author:{login}",
+                            headers=search_headers,
+                            timeout=8.0,
+                        )
                     if commits_response.status_code == 200:
                         total_commits = commits_response.json().get("total_count", 0)
                 except Exception as ce:
