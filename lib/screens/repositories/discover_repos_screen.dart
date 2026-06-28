@@ -268,20 +268,6 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
                   child: Column(
                     children: [
                       _buildDiscoverRow(
-                        icon: Icons.description_rounded,
-                        iconColor: const Color(0xFF5856D6),
-                        label: 'Tatvik Resume Reviewer',
-                        onTap: () => setState(() => _activeTab = 2),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
-                        icon: Icons.workspace_premium_rounded,
-                        iconColor: const Color(0xFFFF2D55),
-                        label: 'Tatvik Project Evaluator',
-                        onTap: () => setState(() => _activeTab = 3),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
                         icon: Icons.travel_explore_rounded,
                         iconColor: const Color(0xFF0A84FF),
                         label: 'Deep Research Agent',
