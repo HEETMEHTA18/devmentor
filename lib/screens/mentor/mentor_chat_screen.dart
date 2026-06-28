@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -30,6 +31,10 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   bool _isListening = false;
+  bool _hasText = false;
+  String _previousText = '';
+  int _lastMessageCount = 0;
+  bool _lastTypingState = false;
 
   void _toggleListening(AppState state) {
     if (_isListening) {
@@ -174,15 +179,81 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
   void initState() {
     super.initState();
     HardwareKeyboard.instance.addHandler(_handleKeyPress);
+    _controller.addListener(_onTextChanged);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final appState = Provider.of<AppState>(context, listen: false);
+      appState.addListener(_onAppStateChanged);
+      _lastMessageCount = appState.chatMessages.length;
+      _lastTypingState = appState.isMentorTyping;
+    });
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKeyPress);
+    _controller.removeListener(_onTextChanged);
+    try {
+      final appState = Provider.of<AppState>(context, listen: false);
+      appState.removeListener(_onAppStateChanged);
+    } catch (_) {}
     _focusNode.dispose();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    final currentText = _controller.text;
+    
+    // Update button active state dynamically like ChatGPT
+    final textNotEmpty = currentText.trim().isNotEmpty;
+    if (textNotEmpty != _hasText) {
+      setState(() {
+        _hasText = textNotEmpty;
+      });
+    }
+
+    final diff = currentText.length - _previousText.length;
+    if (diff > 8) {
+      final addedText = currentText.substring(currentText.length - diff);
+      // Heuristic to detect a paste operation (size change + whitespace/newline/special chars)
+      final isPaste = diff > 20 || 
+                      addedText.contains(' ') || 
+                      addedText.contains('\n') || 
+                      addedText.contains('{') || 
+                      addedText.contains('/') ||
+                      addedText.contains('.');
+      if (isPaste) {
+        _previousText = currentText;
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (!mounted) return;
+          final textToSend = _controller.text.trim();
+          if (textToSend.isNotEmpty) {
+            final appState = Provider.of<AppState>(context, listen: false);
+            appState.sendMessage(textToSend);
+            _controller.clear();
+            _previousText = '';
+            _scrollToBottom();
+            _focusNode.requestFocus();
+          }
+        });
+        return;
+      }
+    }
+    _previousText = currentText;
+  }
+
+  void _onAppStateChanged() {
+    if (!mounted) return;
+    final appState = Provider.of<AppState>(context, listen: false);
+    if (appState.chatMessages.length != _lastMessageCount ||
+        appState.isMentorTyping != _lastTypingState) {
+      _lastMessageCount = appState.chatMessages.length;
+      _lastTypingState = appState.isMentorTyping;
+      _scrollToBottom();
+    }
   }
 
   bool _handleKeyPress(KeyEvent event) {
@@ -319,14 +390,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                   ),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppTheme.accent,
-                        ),
-                      ),
+                      const BouncingDotsIndicator(),
                       const SizedBox(width: 12),
                       Text(
                         'Tatvik is thinking...',
@@ -1174,7 +1238,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  GestureDetector(
+                   GestureDetector(
                     onTap: () {
                       final text = _controller.text.trim();
                       if (text.isNotEmpty) {
@@ -1184,22 +1248,25 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                         _focusNode.requestFocus();
                       }
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.accent,
+                        color: _hasText ? AppTheme.accent : Colors.white10,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.accent.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        boxShadow: _hasText
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.accent.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_upward_rounded,
-                        color: Colors.white,
+                        color: _hasText ? Colors.white : Colors.white38,
                         size: 18,
                       ),
                     ),
@@ -1320,6 +1387,58 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class BouncingDotsIndicator extends StatefulWidget {
+  const BouncingDotsIndicator({super.key});
+
+  @override
+  State<BouncingDotsIndicator> createState() => _BouncingDotsIndicatorState();
+}
+
+class _BouncingDotsIndicatorState extends State<BouncingDotsIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final double delay = index * 0.2;
+            final double value = (sin((_controller.value * 2 * pi) - (delay * 2 * pi)) + 1) / 2;
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2.5),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: AppTheme.accent.withValues(alpha: 0.3 + 0.7 * value),
+                shape: BoxShape.circle,
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }
