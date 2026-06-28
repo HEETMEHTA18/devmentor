@@ -29,7 +29,6 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
   String _searchQuery = '';
   int _activeTab = 0;
   final _resumeController = TextEditingController();
-  final _projectController = TextEditingController();
   final _jobTitleController = TextEditingController();
   final _jobDescController = TextEditingController();
   final _researchUrlController = TextEditingController();
@@ -37,9 +36,20 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
   int _researchSubTab = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final appState = Provider.of<AppState>(context, listen: false);
+      if (appState.followingActivity.isEmpty) {
+        appState.fetchFollowingActivity();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _resumeController.dispose();
-    _projectController.dispose();
     _jobTitleController.dispose();
     _jobDescController.dispose();
     _researchUrlController.dispose();
@@ -74,8 +84,8 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
           tabTitle = 'Tatvik Resume Reviewer';
           break;
         case 3:
-          tabContent = _buildProjectTab(context, appState);
-          tabTitle = 'Tatvik Project Evaluator';
+          tabContent = Container();
+          tabTitle = 'Removed';
           break;
         case 4:
           tabContent = _buildAwesomeListsTab(context, appState);
@@ -1433,232 +1443,7 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
     );
   }
 
-  Widget _buildProjectTab(BuildContext context, AppState state) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.workspace_premium_rounded,
-                      color: AppTheme.peach,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'EVALUATE PROJECT IDEA',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: AppTheme.textMain,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _projectController,
-                  maxLines: 2,
-                  style: TextStyle(color: AppTheme.textMain, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'Enter project name (e.g. Expense Tracker)...',
-                    hintStyle: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: AppTheme.border),
-                    ),
-                    filled: true,
-                    fillColor: AppTheme.isDark
-                        ? const Color(0x10FFFFFF)
-                        : const Color(0x05000000),
-                    contentPadding: const EdgeInsets.all(16),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: state.isEvaluatingProject
-                        ? null
-                        : () {
-                            if (_projectController.text.trim().isNotEmpty) {
-                              state.evaluateProject(
-                                _projectController.text.trim(),
-                              );
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.peach,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: state.isEvaluatingProject
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            'GET VALUE SCORE & PATH',
-                            style: GoogleFonts.jetBrainsMono(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: AppTheme.isDark
-                                  ? Colors.black
-                                  : Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-                if (state.isRateLimited) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.destructive.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppTheme.destructive.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.warning_amber_rounded,
-                          color: AppTheme.destructive,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Rate limit exceeded. Please wait a few minutes before trying again.',
-                            style: TextStyle(
-                              color: AppTheme.destructive,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (state.evaluatedProjectScore != null) ...[
-            const SizedBox(height: 24),
-            _buildSectionHeader(context, 'Evaluation Insights'),
-            const SizedBox(height: 12),
-            GlassCard(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'RESUME VALUE SCORE',
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      Text(
-                        '${state.evaluatedProjectScore}/10',
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: state.evaluatedProjectScore! >= 7
-                              ? AppTheme.success
-                              : state.evaluatedProjectScore! >= 5
-                              ? AppTheme.peach
-                              : AppTheme.destructive,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    state.evaluatedProjectExplanation ?? '',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.textMain,
-                      height: 1.4,
-                    ),
-                  ),
-                  const Divider(height: 32, color: Colors.white12),
-                  Text(
-                    '4-STEP PREMIUM UPGRADE PATH',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.accent,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ...(state.evaluatedProjectUpgradePath ?? []).map(
-                    (step) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 2),
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppTheme.accent.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.upgrade_rounded,
-                              color: AppTheme.accent,
-                              size: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              step,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildAwesomeListsTab(BuildContext context, AppState state) {
     if (state.isLoadingAwesomeLists) {

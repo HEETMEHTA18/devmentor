@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Set a default 15-second timeout for all HTTPX requests during integration tests
+httpx._config.DEFAULT_TIMEOUT_CONFIG = httpx.Timeout(15.0)
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -394,6 +397,10 @@ class TestJiraLive:
         creds = base64.b64encode(f"{email}:{JIRA_TOKEN}".encode()).decode()
         headers = {"Authorization": f"Basic {creds}", "Accept": "application/json"}
         r = httpx.get(f"{JIRA_URL}/rest/api/3/myself", headers=headers)
+        if r.status_code == 404 and "Site temporarily unavailable" in r.text:
+            pytest.skip(
+                "Jira site temporarily unavailable (suspended or sandbox expired)"
+            )
         assert r.status_code == 200, "Auth failed"
         me = r.json()
         print("\n  ✅ Jira user checked")
@@ -410,6 +417,10 @@ class TestJiraLive:
         creds = base64.b64encode(f"{email}:{JIRA_TOKEN}".encode()).decode()
         headers = {"Authorization": f"Basic {creds}", "Accept": "application/json"}
         r = httpx.get(f"{JIRA_URL}/rest/api/3/project", headers=headers)
+        if r.status_code == 404 and "Site temporarily unavailable" in r.text:
+            pytest.skip(
+                "Jira site temporarily unavailable (suspended or sandbox expired)"
+            )
         assert r.status_code == 200, "Failed"
         projects = r.json()
         print("\n  ✅ Jira projects checked")

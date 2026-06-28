@@ -144,7 +144,10 @@ class GithubAgentService:
                 return {"success": True, "pr_url": resp.json()["html_url"]}
             else:
                 logger.error(f"GitHub PR error {resp.status_code}: {resp.text}")
-                return {"success": False, "error": "Failed to create pull request on GitHub."}
+                return {
+                    "success": False,
+                    "error": "Failed to create pull request on GitHub.",
+                }
 
     async def _ai_generate_content(
         self, task: str, existing_content: str = "", file_path: str = ""

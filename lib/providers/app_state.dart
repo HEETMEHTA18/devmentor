@@ -1978,29 +1978,35 @@ This is simulated offline prompts.md content.
   Future<void> fetchActivityData({bool force = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final lastTime =
-          prefs.getInt('activity_data_timestamp_$selectedActivityYear') ?? 0;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (!force && (now - lastTime) < 3600000) {
-        // 1 hour
-        final cachedRaw = prefs.getString(
-          'activity_data_cache_$selectedActivityYear',
-        );
-        if (cachedRaw != null) {
-          final List<dynamic> rawList = jsonDecode(cachedRaw);
-          activityData = rawList
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-          notifyListeners();
-          return;
-        }
+      final cachedRaw = prefs.getString(
+        'activity_data_cache_$selectedActivityYear',
+      );
+      if (cachedRaw != null) {
+        final List<dynamic> rawList = jsonDecode(cachedRaw);
+        activityData = rawList
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error reading activity data cache: $e');
     }
 
-    isLoadingActivity = true;
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime =
+          prefs.getInt('activity_data_timestamp_$selectedActivityYear') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 300000 && activityData.isNotEmpty) {
+        return;
+      }
+    } catch (_) {}
+
+    if (activityData.isEmpty) {
+      isLoadingActivity = true;
+      notifyListeners();
+    }
+
     try {
       final String urlString =
           '${AppConfig.apiBaseUrl}/github/activity?year=$selectedActivityYear';
@@ -2043,29 +2049,35 @@ This is simulated offline prompts.md content.
   Future<void> fetchFollowingActivity({bool force = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final lastTime =
-          prefs.getInt('following_activity_timestamp_$githubUsername') ?? 0;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      if (!force && (now - lastTime) < 1800000) {
-        // 30 minutes
-        final cachedRaw = prefs.getString(
-          'following_activity_cache_$githubUsername',
-        );
-        if (cachedRaw != null) {
-          final List<dynamic> rawEvents = jsonDecode(cachedRaw);
-          followingActivity = rawEvents
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList();
-          notifyListeners();
-          return;
-        }
+      final cachedRaw = prefs.getString(
+        'following_activity_cache_$githubUsername',
+      );
+      if (cachedRaw != null) {
+        final List<dynamic> rawEvents = jsonDecode(cachedRaw);
+        followingActivity = rawEvents
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+        notifyListeners();
       }
     } catch (e) {
       debugPrint('Error reading following activity cache: $e');
     }
 
-    isLoadingFollowingActivity = true;
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime =
+          prefs.getInt('following_activity_timestamp_$githubUsername') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!force && (now - lastTime) < 300000 && followingActivity.isNotEmpty) {
+        return;
+      }
+    } catch (_) {}
+
+    if (followingActivity.isEmpty) {
+      isLoadingFollowingActivity = true;
+      notifyListeners();
+    }
+
     try {
       final response = await http.get(
         Uri.parse(

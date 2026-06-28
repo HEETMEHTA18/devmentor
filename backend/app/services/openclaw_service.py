@@ -96,10 +96,16 @@ class OpenClawService:
                 logger.error(
                     f"OpenClaw returned {response.status_code}: {response.text}"
                 )
-                return {"success": False, "error": "An error occurred during tool execution."}
+                return {
+                    "success": False,
+                    "error": "An error occurred during tool execution.",
+                }
             except Exception as e:
                 logger.exception("OpenClaw dispatch failed")
-                return {"success": False, "error": "An error occurred during tool execution."}
+                return {
+                    "success": False,
+                    "error": "An error occurred during tool execution.",
+                }
 
     def _stub(self, tool_id: str, capability: str, params: dict) -> dict:
         """Returns a stub response for dry-run mode."""

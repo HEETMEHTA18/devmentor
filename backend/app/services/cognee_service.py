@@ -115,7 +115,9 @@ class CogneeService:
                 )
                 if response.status_code == 200:
                     return {"results": response.json()}
-                logger.error(f"Failed to recall developer profile (status {response.status_code})")
+                logger.error(
+                    f"Failed to recall developer profile (status {response.status_code})"
+                )
                 return {"results": [], "success": False}
             except Exception as e:
                 logger.exception("Failed to query Cognee Cloud profile")
