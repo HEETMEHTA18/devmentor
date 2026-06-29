@@ -11,7 +11,7 @@ import '../../core/config/app_config.dart';
 
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
-import '../mentor/mentor_chat_screen.dart';
+import '../mentor/task_command_screen.dart';
 import '../../widgets/liquid_glass_button.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -123,7 +123,10 @@ class HomeScreen extends StatelessWidget {
                                     decoration: BoxDecoration(
                                       color: AppTheme.accent,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: AppTheme.surface, width: 2),
+                                      border: Border.all(
+                                        color: AppTheme.surface,
+                                        width: 2,
+                                      ),
                                     ),
                                     constraints: const BoxConstraints(
                                       minWidth: 18,
@@ -160,8 +163,12 @@ class HomeScreen extends StatelessWidget {
                   final bool isTablet = w > 600 && w <= 900;
 
                   double scoreWidth = isDesktop ? w * 0.55 - spacing : w;
-                  double dnaWidth = isDesktop ? w * 0.45 - spacing : (isTablet ? w * 0.5 - spacing : w);
-                  double roastWidth = isDesktop ? w * 0.45 - spacing : (isTablet ? w * 0.5 - spacing : w);
+                  double dnaWidth = isDesktop
+                      ? w * 0.45 - spacing
+                      : (isTablet ? w * 0.5 - spacing : w);
+                  double roastWidth = isDesktop
+                      ? w * 0.45 - spacing
+                      : (isTablet ? w * 0.5 - spacing : w);
                   double activityWidth = isDesktop ? w * 0.55 - spacing : w;
                   double weeklyWidth = isDesktop ? w * 0.4 - spacing : w;
                   double digestWidth = isDesktop ? w * 0.6 - spacing : w;
@@ -209,25 +216,52 @@ class HomeScreen extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      Icon(Icons.code_rounded, color: AppTheme.accent),
+                                      Icon(
+                                        Icons.code_rounded,
+                                        color: AppTheme.accent,
+                                      ),
                                       const SizedBox(width: 12),
                                       Text(
                                         'TOP LANGUAGES',
-                                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 1.5,
-                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 1.5,
+                                            ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 24),
                                   Row(
                                     children: [
-                                      Expanded(child: _buildLanguageBar(context, 'TypeScript', 0.65, AppTheme.accent)),
+                                      Expanded(
+                                        child: _buildLanguageBar(
+                                          context,
+                                          'TypeScript',
+                                          0.65,
+                                          AppTheme.accent,
+                                        ),
+                                      ),
                                       const SizedBox(width: 16),
-                                      Expanded(child: _buildLanguageBar(context, 'Rust', 0.20, AppTheme.peach)),
+                                      Expanded(
+                                        child: _buildLanguageBar(
+                                          context,
+                                          'Rust',
+                                          0.20,
+                                          AppTheme.peach,
+                                        ),
+                                      ),
                                       const SizedBox(width: 16),
-                                      Expanded(child: _buildLanguageBar(context, 'Python', 0.15, AppTheme.blue)),
+                                      Expanded(
+                                        child: _buildLanguageBar(
+                                          context,
+                                          'Python',
+                                          0.15,
+                                          AppTheme.blue,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -236,7 +270,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 100), // FAB space
+                      const SizedBox(height: 180), // FAB space
                     ],
                   );
                 },
@@ -261,7 +295,7 @@ class HomeScreen extends StatelessWidget {
           child: FloatingActionButton(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const MentorChatScreen()),
+                MaterialPageRoute(builder: (_) => const TaskCommandScreen()),
               );
             },
             elevation: 0,
@@ -335,7 +369,9 @@ class HomeScreen extends StatelessWidget {
           children: [
             // Score Pill
             SizedBox(
-              width: isMobile ? constraints.maxWidth : (constraints.maxWidth - spacing) * 0.45,
+              width: isMobile
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - spacing) * 0.45,
               child: GlassCard(
                 padding: const EdgeInsets.all(24),
                 child: Row(
@@ -350,7 +386,9 @@ class HomeScreen extends StatelessWidget {
                             value: scoreProgress,
                             strokeWidth: 6,
                             backgroundColor: AppTheme.border,
-                            valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              scoreColor,
+                            ),
                           ),
                         ),
                         Text(
@@ -398,20 +436,49 @@ class HomeScreen extends StatelessWidget {
             ),
             // Stats Pills Container
             SizedBox(
-              width: isMobile ? constraints.maxWidth : (constraints.maxWidth - spacing) * 0.55,
+              width: isMobile
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - spacing) * 0.55,
               child: Row(
                 children: [
-                  Expanded(child: _buildBentoStat(context, '${state.repos}', 'Repos', Icons.folder_open, AppTheme.neonPurple)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildBentoStat(context, '${state.commits}', 'Commits', Icons.history, AppTheme.neonGreen)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildBentoStat(context, '${state.stars}', 'Stars', Icons.star_border, AppTheme.neonOrange)),
+                  Expanded(
+                    child: _buildBentoStat(
+                      context,
+                      '${state.repos}',
+                      'Repos',
+                      Icons.folder_open,
+                      AppTheme.neonPurple,
+                      isMobile,
+                    ),
+                  ),
+                  SizedBox(width: isMobile ? 8 : 16),
+                  Expanded(
+                    child: _buildBentoStat(
+                      context,
+                      '${state.commits}',
+                      'Commits',
+                      Icons.history,
+                      AppTheme.neonGreen,
+                      isMobile,
+                    ),
+                  ),
+                  SizedBox(width: isMobile ? 8 : 16),
+                  Expanded(
+                    child: _buildBentoStat(
+                      context,
+                      '${state.stars}',
+                      'Stars',
+                      Icons.star_border,
+                      AppTheme.neonOrange,
+                      isMobile,
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         );
-      }
+      },
     );
   }
 
@@ -421,31 +488,39 @@ class HomeScreen extends StatelessWidget {
     String label,
     IconData icon,
     Color color,
+    bool isMobile,
   ) {
     return GlassCard(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      padding: EdgeInsets.symmetric(
+        vertical: isMobile ? 16 : 20,
+        horizontal: isMobile ? 8 : 12,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 24, color: color),
+          Icon(icon, size: isMobile ? 20 : 24, color: color),
           const SizedBox(height: 12),
           Text(
             value,
             style: GoogleFonts.outfit(
-              fontSize: 24,
+              fontSize: isMobile ? 20 : 24,
               fontWeight: FontWeight.w800,
               color: AppTheme.textMain,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.spaceMono(
-              fontSize: 10,
+              fontSize: isMobile ? 9 : 10,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
+              letterSpacing: 0.5,
               color: AppTheme.textSecondary,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -609,27 +684,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title, {
-    VoidCallback? onSeeAll,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        if (onSeeAll != null)
-          TextButton(
-            onPressed: onSeeAll,
-            child: Text(
-              'View all >',
-              style: TextStyle(color: AppTheme.accent, fontSize: 12),
-            ),
-          ),
-      ],
     );
   }
 
@@ -909,9 +963,7 @@ class HomeScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceElevated,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.border,
-                  ),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: IconButton(
                   icon: Icon(
@@ -1040,126 +1092,128 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildDnaSection(BuildContext context, AppState state) {
     if (!state.aiInsights) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          _buildSectionHeader(context, 'Developer DNA Engine'),
-          const SizedBox(height: 12),
-          GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    color: AppTheme.peach.withValues(alpha: 0.8),
-                    size: 40,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'AI Insights Disabled',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Developer DNA analysis is currently disabled in your Settings preferences.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  LiquidGlassButton(
-                    onPressed: () {
-                      state.togglePreference('ai');
-                    },
-                    color: AppTheme.peach.withValues(alpha: 0.2),
-                    borderRadius: 16,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    child: Text(
-                      'Enable AI Insights',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.peach,
-                      ),
-                    ),
-                  ),
-                ],
+      return GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Developer DNA Engine',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.lock_outline_rounded,
+                color: AppTheme.peach.withValues(alpha: 0.8),
+                size: 40,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'AI Insights Disabled',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textMain,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Developer DNA analysis is currently disabled in your Settings preferences.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              LiquidGlassButton(
+                onPressed: () {
+                  state.togglePreference('ai');
+                },
+                color: AppTheme.peach.withValues(alpha: 0.2),
+                borderRadius: 16,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                child: Text(
+                  'Enable AI Insights',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.peach,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       );
     }
 
     if (state.isLoadingDna) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          _buildSectionHeader(context, 'Developer DNA Engine'),
-          const SizedBox(height: 12),
-          GlassCard(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      return GlassCard(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Developer DNA Engine',
+              style: GoogleFonts.spaceMono(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
               children: [
-                Row(
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        shape: BoxShape.circle,
-                      ),
+                      width: 120,
+                      height: 16,
+                      color: Colors.white.withValues(alpha: 0.15),
                     ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 16,
-                          color: Colors.white.withValues(alpha: 0.15),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          width: 80,
-                          height: 10,
-                          color: Colors.white.withValues(alpha: 0.08),
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 80,
+                      height: 10,
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  height: 12,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 200,
-                  height: 12,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              height: 12,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 200,
+              height: 12,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ],
+        ),
       );
     }
 
@@ -1188,264 +1242,267 @@ class HomeScreen extends StatelessWidget {
       arcColor = AppTheme.blue;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 32),
-        _buildSectionHeader(context, 'Developer DNA Engine'),
-        const SizedBox(height: 12),
-        GlassCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Developer DNA Engine',
+            style: GoogleFonts.spaceMono(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: arcColor.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          archetype.toUpperCase(),
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: arcColor,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Alignment Score: $score%',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                desc,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textMain,
-                  height: 1.4,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: arcColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
+                child: Text(emoji, style: const TextStyle(fontSize: 28)),
               ),
-              const Divider(height: 32, color: Colors.white12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'STRENGTHS',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.success,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...strengths.map(
-                          (s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_rounded,
-                                  color: AppTheme.success,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    s,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      archetype.toUpperCase(),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: arcColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'WEAKNESSES',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.destructive,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...weaknesses.map(
-                          (w) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.close_rounded,
-                                  color: AppTheme.destructive,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    w,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppTheme.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Alignment Score: $score%',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            desc,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.textMain,
+              height: 1.4,
+            ),
+          ),
+          const Divider(height: 32, color: Colors.white12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'STRENGTHS',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.success,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...strengths.map(
+                      (s) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.check_rounded,
+                              color: AppTheme.success,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                s,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'WEAKNESSES',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.destructive,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...weaknesses.map(
+                      (w) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.close_rounded,
+                              color: AppTheme.destructive,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                w,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildWeeklyReportSection(BuildContext context, AppState state) {
     if (!state.weeklyReport) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          _buildSectionHeader(context, 'AI Weekly Growth Report'),
-          const SizedBox(height: 12),
-          GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    color: AppTheme.accent.withValues(alpha: 0.8),
-                    size: 40,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Weekly Report Disabled',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'AI Weekly Progress and Growth reports are disabled in Settings.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  LiquidGlassButton(
-                    onPressed: () {
-                      state.togglePreference('report');
-                    },
-                    color: AppTheme.accent.withValues(alpha: 0.2),
-                    borderRadius: 16,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    child: Text(
-                      'Enable Weekly Report',
-                      style: GoogleFonts.outfit(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.accent,
-                      ),
-                    ),
-                  ),
-                ],
+      return GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'AI Weekly Growth Report',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.lock_outline_rounded,
+                color: AppTheme.accent.withValues(alpha: 0.8),
+                size: 40,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Weekly Report Disabled',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textMain,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'AI Weekly Progress and Growth reports are disabled in Settings.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              LiquidGlassButton(
+                onPressed: () {
+                  state.togglePreference('report');
+                },
+                color: AppTheme.accent.withValues(alpha: 0.2),
+                borderRadius: 16,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                child: Text(
+                  'Enable Weekly Report',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.accent,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       );
     }
 
     if (state.isLoadingWeeklyReport) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          _buildSectionHeader(context, 'AI Weekly Growth Report'),
-          const SizedBox(height: 12),
-          GlassCard(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 150,
-                  height: 16,
-                  color: Colors.white.withValues(alpha: 0.15),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(
-                    4,
-                    (index) => Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+      return GlassCard(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'AI Weekly Growth Report',
+              style: GoogleFonts.spaceMono(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              width: 150,
+              height: 16,
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(
+                4,
+                (index) => Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  height: 10,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Container(
+              width: double.infinity,
+              height: 10,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ],
+        ),
       );
     }
 
@@ -1457,175 +1514,176 @@ class HomeScreen extends StatelessWidget {
         ? chartData.reduce((curr, next) => curr > next ? curr : next)
         : 1;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 32),
-        _buildSectionHeader(context, 'AI Weekly Growth Report'),
-        const SizedBox(height: 12),
-        GlassCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'AI Weekly Growth Report',
+            style: GoogleFonts.spaceMono(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'THIS WEEK',
-                        style: GoogleFonts.jetBrainsMono(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textSecondary,
+                  Text(
+                    'THIS WEEK',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '+$explored Repos • +$skills Skills',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.success.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Improved $improvement%',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 60,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(chartData.length, (i) {
+                final val = chartData[i];
+                final double heightPct = maxVal > 0 ? (val / maxVal) : 0.0;
+                final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: 14,
+                          height: 40 * heightPct + 4,
+                          decoration: BoxDecoration(
+                            color: AppTheme.accent.withValues(
+                              alpha: heightPct.clamp(0.2, 1.0),
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '+$explored Repos • +$skills Skills',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textMain,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      days[i],
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 9,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+          if (state.weeklyAchievements != null ||
+              (state.weeklyNextSteps != null &&
+                  state.weeklyNextSteps!.isNotEmpty)) ...[
+            const Divider(height: 32, color: Colors.white12),
+            if (state.weeklyAchievements != null) ...[
+              Text(
+                'WEEKLY ACHIEVEMENTS',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.blue,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 6),
+              MarkdownBody(
+                data: state.weeklyAchievements!,
+                selectable: true,
+                styleSheet: MarkdownStyleSheet(
+                  p: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppTheme.textMain,
+                    height: 1.4,
+                  ),
+                  listBullet: TextStyle(color: AppTheme.accent),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (state.weeklyNextSteps != null &&
+                state.weeklyNextSteps!.isNotEmpty) ...[
+              Text(
+                'NEXT ACTION STEPS',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.accent,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...state.weeklyNextSteps!.map(
+                (step) => Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.arrow_right_rounded,
+                        color: AppTheme.accent,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          step,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.success.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Improved $improvement%',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.success,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 60,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: List.generate(chartData.length, (i) {
-                    final val = chartData[i];
-                    final double heightPct = maxVal > 0 ? (val / maxVal) : 0.0;
-                    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Container(
-                              width: 14,
-                              height: 40 * heightPct + 4,
-                              decoration: BoxDecoration(
-                                color: AppTheme.accent.withValues(
-                                  alpha: heightPct.clamp(0.2, 1.0),
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          days[i],
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 9,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
                 ),
               ),
-              if (state.weeklyAchievements != null ||
-                  (state.weeklyNextSteps != null &&
-                      state.weeklyNextSteps!.isNotEmpty)) ...[
-                const Divider(height: 32, color: Colors.white12),
-                if (state.weeklyAchievements != null) ...[
-                  Text(
-                    'WEEKLY ACHIEVEMENTS',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.blue,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  MarkdownBody(
-                    data: state.weeklyAchievements!,
-                    selectable: true,
-                    styleSheet: MarkdownStyleSheet(
-                      p: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppTheme.textMain,
-                        height: 1.4,
-                      ),
-                      listBullet: TextStyle(color: AppTheme.accent),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-                if (state.weeklyNextSteps != null &&
-                    state.weeklyNextSteps!.isNotEmpty) ...[
-                  Text(
-                    'NEXT ACTION STEPS',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.accent,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...state.weeklyNextSteps!.map(
-                    (step) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.arrow_right_rounded,
-                            color: AppTheme.accent,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              step,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
             ],
-          ),
-        ),
-      ],
+          ],
+        ],
+      ),
     );
   }
 
@@ -2080,106 +2138,97 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildRoastSection(BuildContext context, AppState state) {
     if (!state.aiInsights) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          Text(
-            'GitHub Profile Roast',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.lock_outline_rounded,
-                    color: AppTheme.peach.withValues(alpha: 0.8),
-                    size: 40,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Profile Roast Locked',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textMain,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Profile roast generation requires AI Insights to be enabled in Settings.',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
+      return GlassCard(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'GitHub Profile Roast',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.lock_outline_rounded,
+                color: AppTheme.peach.withValues(alpha: 0.8),
+                size: 40,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Profile Roast Locked',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textMain,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Profile roast generation requires AI Insights to be enabled in Settings.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       );
     }
 
     if (state.isLoadingRoast) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'GitHub Profile Roast',
-                style: Theme.of(context).textTheme.titleMedium,
+      return GlassCard(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'GitHub Profile Roast',
+              style: GoogleFonts.spaceMono(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textSecondary,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          GlassCard(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            const SizedBox(height: 24),
+            Row(
               children: [
-                Row(
-                  children: [
-                    const Text('🔥', style: TextStyle(fontSize: 24)),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 100,
-                      height: 14,
-                      color: Colors.white.withValues(alpha: 0.15),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                const Text('🔥', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
                 Container(
-                  width: double.infinity,
-                  height: 12,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 12,
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 180,
-                  height: 12,
-                  color: Colors.white.withValues(alpha: 0.08),
+                  width: 100,
+                  height: 14,
+                  color: Colors.white.withValues(alpha: 0.15),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              height: 12,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              height: 12,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 180,
+              height: 12,
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+          ],
+        ),
       );
     }
 
@@ -2194,119 +2243,117 @@ class HomeScreen extends StatelessWidget {
           "Choose descriptive names instead of 'test-app' or 'demo-1'.",
         ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 32),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'GitHub Profile Roast',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            if (state.isLoadingRoast)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              TextButton.icon(
-                onPressed: () {
-                  state.fetchProfileRoast();
-                },
-                icon: const Icon(Icons.fireplace_rounded, size: 14),
-                label: Text(
-                  'ROAST ME',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.destructive,
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(50, 30),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        GlassCard(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Text('🔥', style: TextStyle(fontSize: 24)),
-                  const SizedBox(width: 12),
-                  Text(
-                    'BRUTAL REVIEW',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.destructive,
-                    ),
-                  ),
-                ],
-              ),
-              MarkdownBody(
-                data: roastText,
-                selectable: true,
-                styleSheet: MarkdownStyleSheet(
-                  p: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    fontStyle: FontStyle.italic,
-                    color: AppTheme.textMain,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Text(
-                'CLEANUP TIPS:',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 10,
+                'GitHub Profile Roast',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textSecondary,
                 ),
               ),
-              const SizedBox(height: 8),
-              ...tips.map(
-                (t) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '•',
-                        style: TextStyle(
-                          color: AppTheme.accent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          t,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
+              if (state.isLoadingRoast)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                TextButton.icon(
+                  onPressed: () {
+                    state.fetchProfileRoast();
+                  },
+                  icon: const Icon(Icons.fireplace_rounded, size: 14),
+                  label: Text(
+                    'ROAST ME',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.destructive,
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(50, 30),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 24)),
+              const SizedBox(width: 12),
+              Text(
+                'BRUTAL REVIEW',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.destructive,
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          MarkdownBody(
+            data: roastText,
+            selectable: true,
+            styleSheet: MarkdownStyleSheet(
+              p: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                fontStyle: FontStyle.italic,
+                color: AppTheme.textMain,
+                height: 1.4,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'CLEANUP TIPS:',
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...tips.map(
+            (t) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '•',
+                    style: TextStyle(
+                      color: AppTheme.accent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      t,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2333,10 +2380,7 @@ class HomeScreen extends StatelessWidget {
                       top: Radius.circular(30),
                     ),
                     border: Border(
-                      top: BorderSide(
-                        color: AppTheme.border,
-                        width: 1.5,
-                      ),
+                      top: BorderSide(color: AppTheme.border, width: 1.5),
                     ),
                   ),
                   padding: const EdgeInsets.all(24),
@@ -2349,7 +2393,9 @@ class HomeScreen extends StatelessWidget {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 24),
                           decoration: BoxDecoration(
-                            color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                            color: AppTheme.textSecondary.withValues(
+                              alpha: 0.3,
+                            ),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -2828,7 +2874,10 @@ class HomeScreen extends StatelessWidget {
                   child: LiquidGlassButton(
                     onPressed: () => Navigator.pop(context),
                     color: AppTheme.accent,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     borderRadius: 12,
                     child: const Text('Close'),
                   ),

@@ -627,12 +627,14 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<Map<String, String>>(
-                        value: state.promptRepoSources.firstWhere(
-                          (r) =>
-                              r['owner'] == state.selectedRepoOwner &&
-                              r['name'] == state.selectedRepoName,
-                          orElse: () => state.promptRepoSources.first,
-                        ),
+                        value: state.promptRepoSources.isEmpty
+                            ? null
+                            : state.promptRepoSources.firstWhere(
+                                (r) =>
+                                    r['owner'] == state.selectedRepoOwner &&
+                                    r['name'] == state.selectedRepoName,
+                                orElse: () => state.promptRepoSources.first,
+                              ),
                         isExpanded: true,
                         dropdownColor: isDark
                             ? const Color(0xFF1E1E1E)
@@ -653,11 +655,16 @@ class _PromptHubScreenState extends State<PromptHubScreen> {
                               owner: newRepo['owner'],
                               repo: newRepo['name'],
                             );
+                            if (mounted) {
+                              setState(() {});
+                            }
                             await state.refreshGithubPromptsMarkdown(
                               owner: newRepo['owner'],
                               repo: newRepo['name'],
                             );
-                            setState(() {});
+                            if (mounted) {
+                              setState(() {});
+                            }
                           }
                         },
                       ),

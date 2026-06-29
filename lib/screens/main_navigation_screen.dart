@@ -21,7 +21,6 @@ import 'roadmap/roadmap_screen.dart';
 import 'profile/profile_screen.dart';
 import 'prompts/prompt_hub_screen.dart';
 import 'desktop/desktop_scaffold.dart';
-import 'world/world_monitor_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialTabIndex;

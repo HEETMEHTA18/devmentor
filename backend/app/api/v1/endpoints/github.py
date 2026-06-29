@@ -664,8 +664,12 @@ async def github_file_content(
                         detail="GitHub API error. Please try again later.",
                     )
 
-            # If we exhausted all paths
-            raise HTTPException(status_code=404, detail="File not found on GitHub.")
+            # If we exhausted all paths, return empty content gracefully instead of raising a 404 error
+            return {
+                "content": "",
+                "status": "not_found",
+                "error": "File not found on GitHub."
+            }
         except HTTPException as he:
             raise he
         except Exception:

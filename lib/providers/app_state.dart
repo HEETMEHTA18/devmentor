@@ -288,7 +288,7 @@ class AppState extends ChangeNotifier {
             return;
           }
         }
-        githubPromptsMarkdown = '';
+        githubPromptsMarkdown = null;
         githubPromptsMarkdownUpdatedAt = null;
       }
     } catch (e) {
@@ -447,8 +447,14 @@ This is simulated offline prompts.md content.
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final markdownText = data['content'] as String? ?? '';
-        if (markdownText.isEmpty) {
-          return 'GitHub returned an empty prompts.md file.';
+        final status = data['status'] as String? ?? '';
+        final error = data['error'] as String? ?? '';
+
+        if (status == 'not_found' || error.isNotEmpty || markdownText.isEmpty) {
+          if (githubPromptsMarkdown == null || githubPromptsMarkdown!.isEmpty) {
+            githubPromptsMarkdown = null;
+          }
+          return error.isNotEmpty ? error : 'No prompts.md file found in this repository.';
         }
 
         githubPromptsMarkdown = markdownText;
@@ -469,9 +475,15 @@ This is simulated offline prompts.md content.
         return 'prompts.md synced from GitHub.';
       }
 
+      if (githubPromptsMarkdown == null || githubPromptsMarkdown!.isEmpty) {
+        githubPromptsMarkdown = null;
+      }
       return 'Failed to load prompts.md: ${response.statusCode}';
     } catch (e) {
       debugPrint('Error syncing prompts.md: $e');
+      if (githubPromptsMarkdown == null || githubPromptsMarkdown!.isEmpty) {
+        githubPromptsMarkdown = null;
+      }
       return 'Failed to load prompts.md: $e';
     } finally {
       isLoadingGithubPromptsMarkdown = false;
