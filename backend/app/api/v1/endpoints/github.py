@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,6 +8,8 @@ from app.api.deps import get_current_user_id, get_optional_user_id, get_db
 from app.models.entities import GithubProfile, Repository
 from app.models.user import User
 from app.services.github_service import GithubService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -501,7 +504,9 @@ async def github_following_activity(
         try:
             res = await client.get(url, headers=headers, timeout=12.0)
             if res.status_code == 401 and "Authorization" in headers:
-                logger.warning("GitHub token returned 401. Retrying following-activity unauthenticated.")
+                logger.warning(
+                    "GitHub token returned 401. Retrying following-activity unauthenticated."
+                )
                 del headers["Authorization"]
                 res = await client.get(url, headers=headers, timeout=12.0)
 
@@ -680,9 +685,6 @@ async def get_public_stats(
     db: Session = Depends(get_db),
 ):
     import httpx
-    import logging
-
-    logger = logging.getLogger(__name__)
 
     # Strip any leading '@'
     clean_username = username.strip().replace("@", "")
@@ -725,7 +727,9 @@ async def get_public_stats(
                 timeout=8.0,
             )
             if profile_response.status_code == 401 and "Authorization" in headers:
-                logger.warning("GitHub token returned 401. Retrying profile fetch unauthenticated.")
+                logger.warning(
+                    "GitHub token returned 401. Retrying profile fetch unauthenticated."
+                )
                 del headers["Authorization"]
                 profile_response = await client.get(
                     f"https://api.github.com/users/{clean_username}",

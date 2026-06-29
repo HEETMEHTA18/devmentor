@@ -255,7 +255,9 @@ class PulseEngine:
                         continue
 
                     # 3. AI Summarize & Tag
-                    enriched = await self.ai_enrichment(item["title"], item["description"])
+                    enriched = await self.ai_enrichment(
+                        item["title"], item["description"]
+                    )
                     if not enriched:
                         enriched = {}
 
@@ -278,8 +280,12 @@ class PulseEngine:
                         ),
                         metadata_blob=json.dumps(
                             {
-                                "beginner_explanation": enriched.get("beginner_explanation"),
-                                "advanced_explanation": enriched.get("advanced_explanation"),
+                                "beginner_explanation": enriched.get(
+                                    "beginner_explanation"
+                                ),
+                                "advanced_explanation": enriched.get(
+                                    "advanced_explanation"
+                                ),
                             }
                         ),
                         created_at=datetime.utcnow(),
@@ -289,7 +295,9 @@ class PulseEngine:
                     # 5. Cognee (Mock Integration - Graph Store)
                     logger.info(f"Would push {item['title']} to Cognee Knowledge Graph")
                 except Exception as item_error:
-                    logger.error(f"Failed to process individual pulse item {item.get('url')}: {item_error}")
+                    logger.error(
+                        f"Failed to process individual pulse item {item.get('url')}: {item_error}"
+                    )
                     self.db.rollback()
                     # Re-raise to skip rest of this source and clean transaction state
                     raise item_error
@@ -300,6 +308,7 @@ class PulseEngine:
             self.db.rollback()
 
         import gc
+
         gc.collect()
 
 

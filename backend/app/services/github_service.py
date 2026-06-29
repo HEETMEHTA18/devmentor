@@ -224,7 +224,9 @@ class GithubService:
                     f"https://api.github.com/users/{username}", headers=headers
                 )
                 if profile_response.status_code == 401 and "Authorization" in headers:
-                    logger.warning("GitHub token returned 401. Retrying unauthenticated.")
+                    logger.warning(
+                        "GitHub token returned 401. Retrying unauthenticated."
+                    )
                     del headers["Authorization"]
                     profile_response = await client.get(
                         f"https://api.github.com/users/{username}", headers=headers
@@ -264,7 +266,9 @@ class GithubService:
                     headers=headers,
                 )
                 if repos_response.status_code == 401 and "Authorization" in headers:
-                    logger.warning("GitHub token returned 401. Retrying repos fetch unauthenticated.")
+                    logger.warning(
+                        "GitHub token returned 401. Retrying repos fetch unauthenticated."
+                    )
                     del headers["Authorization"]
                     repos_response = await client.get(
                         f"https://api.github.com/users/{username}/repos?per_page=100",
@@ -293,8 +297,13 @@ class GithubService:
                         headers=search_headers,
                         timeout=8.0,
                     )
-                    if commits_response.status_code == 401 and "Authorization" in search_headers:
-                        logger.warning("GitHub token returned 401. Retrying commits search unauthenticated.")
+                    if (
+                        commits_response.status_code == 401
+                        and "Authorization" in search_headers
+                    ):
+                        logger.warning(
+                            "GitHub token returned 401. Retrying commits search unauthenticated."
+                        )
                         del search_headers["Authorization"]
                         commits_response = await client.get(
                             f"https://api.github.com/search/commits?q=author:{login}",
