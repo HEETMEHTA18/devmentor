@@ -40,6 +40,11 @@ class GlassCard extends StatelessWidget {
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.10 : 0.02),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
         ],
       ),
       child: ClipRRect(
@@ -52,11 +57,14 @@ class GlassCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
+              // Liquid glass shader layer - decorative, doesn't intercept taps
               Positioned.fill(
-                child: OCLiquidGlass(
-                  borderRadius: borderRadius,
-                  color: glassColor,
-                  child: const SizedBox.expand(),
+                child: IgnorePointer(
+                  child: OCLiquidGlass(
+                    borderRadius: borderRadius,
+                    color: glassColor,
+                    child: const SizedBox.expand(),
+                  ),
                 ),
               ),
               Container(

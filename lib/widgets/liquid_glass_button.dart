@@ -70,14 +70,14 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 80),
-      reverseDuration: const Duration(milliseconds: 140),
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 160),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.93).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeInOutCubic,
-        reverseCurve: Curves.easeOutBack, // iOS bouncy spring effect
+        reverseCurve: Curves.easeOutBack,
       ),
     );
   }
@@ -91,7 +91,7 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
   void _handleTapDown(TapDownDetails details) {
     if (widget.onPressed != null) {
       _animationController.forward();
-      HapticFeedback.lightImpact(); // Apple tactile haptic feedback
+      HapticFeedback.lightImpact();
     }
   }
 
@@ -133,7 +133,7 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
     }
 
     // Build the visual container with layered Apple Liquid Glass styles
-    Widget glassContainer = ClipRRect(
+    final glassContainer = ClipRRect(
       borderRadius: BorderRadius.circular(widget.borderRadius),
       child: BackdropFilter(
         filter: ImageFilter.blur(
@@ -226,12 +226,14 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
+                    // Glass shader layer - decorative only, doesn't intercept taps
                     Positioned.fill(
-                      child: OCLiquidGlass(
-                        borderRadius: widget.borderRadius,
-                        color: Colors
-                            .transparent, // backing color handled in glassContainer
-                        child: const SizedBox.expand(),
+                      child: IgnorePointer(
+                        child: OCLiquidGlass(
+                          borderRadius: widget.borderRadius,
+                          color: Colors.transparent,
+                          child: const SizedBox.expand(),
+                        ),
                       ),
                     ),
                     glassContainer,

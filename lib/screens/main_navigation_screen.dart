@@ -547,22 +547,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                                     top: 6,
                                     bottom: 6,
                                     width: itemWidth - 12,
-                                    child: OCLiquidGlassGroup(
-                                      settings: const OCLiquidGlassSettings(
-                                        refractStrength: -0.07,
-                                        blurRadiusPx: 4.0,
-                                        specStrength: 28.0,
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          // 1. Refractive liquid glass shader
-                                          Positioned.fill(
-                                            child: OCLiquidGlass(
-                                              borderRadius: 22,
-                                              color: Colors.transparent,
-                                              child: const SizedBox.expand(),
+                                      child: OCLiquidGlassGroup(
+                                        settings: const OCLiquidGlassSettings(
+                                          refractStrength: -0.07,
+                                          blurRadiusPx: 4.0,
+                                          specStrength: 28.0,
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            // 1. Refractive liquid glass shader (decorative, doesn't intercept taps)
+                                            Positioned.fill(
+                                              child: IgnorePointer(
+                                                child: OCLiquidGlass(
+                                                  borderRadius: 22,
+                                                  color: Colors.transparent,
+                                                  child: const SizedBox.expand(),
+                                                ),
+                                              ),
                                             ),
-                                          ),
                                           // 2. High fidelity glass container backing (with sheen and thin border)
                                           Positioned.fill(
                                             child: Container(
