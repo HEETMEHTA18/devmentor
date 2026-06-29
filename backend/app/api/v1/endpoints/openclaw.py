@@ -229,18 +229,22 @@ async def execute_tool_capability(
         )
 
     openclaw = OpenClawService()
-    result = await openclaw.execute_tool_capability(
-        tool_id=body.tool_id,
-        capability=body.capability,
-        parameters=body.parameters,
-        user_context=body.user_context,
-    )
-    return {
-        "success": result.get("success", False),
-        "tool_id": body.tool_id,
-        "capability": body.capability,
-        "result": result,
-    }
+    try:
+        result = await openclaw.execute_tool_capability(
+            tool_id=body.tool_id,
+            capability=body.capability,
+            parameters=body.parameters,
+            user_context=body.user_context,
+        )
+        return {
+            "success": result.get("success", False),
+            "tool_id": body.tool_id,
+            "capability": body.capability,
+            "result": result,
+        }
+    except Exception:
+        logger.exception("Tool execution failed")
+        raise HTTPException(status_code=500, detail="Tool execution failed")
 
 
 # ── High-Level Workflow Shortcuts ─────────────────────────────────────────────
@@ -258,45 +262,61 @@ async def ship_release(
     openclaw = OpenClawService()
     planner = TatvikPlanner()
 
-    workflow = await planner.plan_workflow(
-        goal=f"Ship release {body.version} for {body.repo}",
-        user_id=user_id,
-    )
+    try:
+        workflow = await planner.plan_workflow(
+            goal=f"Ship release {body.version} for {body.repo}",
+            user_id=user_id,
+        )
+    except Exception:
+        logger.exception("Workflow planning failed")
+        raise HTTPException(status_code=500, detail="Workflow planning failed")
 
     steps_executed = []
 
-    # 1. Create GitHub release
-    r1 = await openclaw.github_create_release(
-        repo=body.repo, tag=body.version, notes=body.changelog
-    )
-    steps_executed.append({"step": "GitHub Release", "result": r1})
-
-    # 2. Update Notion
-    r2 = await openclaw.notion_create_doc(
-        title=f"Release {body.version} — {body.repo}",
-        content=body.changelog,
-        parent_id=body.notion_parent_id,
-    )
-    steps_executed.append({"step": "Notion Docs", "result": r2})
-
-    # 3. Deploy
-    if body.deploy_target == "vercel":
-        r3 = await openclaw.vercel_deploy(repo=body.repo)
-    else:
-        r3 = await openclaw.execute_tool_capability(
-            "railway", "deploy", {"project": body.repo, "service": "web"}
+    try:
+        r1 = await openclaw.github_create_release(
+            repo=body.repo, tag=body.version, notes=body.changelog
         )
-    steps_executed.append(
-        {"step": f"{body.deploy_target.title()} Deploy", "result": r3}
-    )
+        steps_executed.append({"step": "GitHub Release", "result": r1})
+    except Exception as e:
+        logger.warning("GitHub release step failed: %s", e)
+        steps_executed.append({"step": "GitHub Release", "error": "step failed"})
 
-    # 4. Notify Slack
-    r4 = await openclaw.slack_post_release_notes(
-        channel=body.slack_channel,
-        version=body.version,
-        notes=body.changelog,
-    )
-    steps_executed.append({"step": "Slack Notification", "result": r4})
+    try:
+        r2 = await openclaw.notion_create_doc(
+            title=f"Release {body.version} — {body.repo}",
+            content=body.changelog,
+            parent_id=body.notion_parent_id,
+        )
+        steps_executed.append({"step": "Notion Docs", "result": r2})
+    except Exception as e:
+        logger.warning("Notion step failed: %s", e)
+        steps_executed.append({"step": "Notion Docs", "error": "step failed"})
+
+    try:
+        if body.deploy_target == "vercel":
+            r3 = await openclaw.vercel_deploy(repo=body.repo)
+        else:
+            r3 = await openclaw.execute_tool_capability(
+                "railway", "deploy", {"project": body.repo, "service": "web"}
+            )
+        steps_executed.append(
+            {"step": f"{body.deploy_target.title()} Deploy", "result": r3}
+        )
+    except Exception as e:
+        logger.warning("Deploy step failed: %s", e)
+        steps_executed.append({"step": "Deploy", "error": "step failed"})
+
+    try:
+        r4 = await openclaw.slack_post_release_notes(
+            channel=body.slack_channel,
+            version=body.version,
+            notes=body.changelog,
+        )
+        steps_executed.append({"step": "Slack Notification", "result": r4})
+    except Exception as e:
+        logger.warning("Slack step failed: %s", e)
+        steps_executed.append({"step": "Slack Notification", "error": "step failed"})
 
     return {
         "success": True,
@@ -318,17 +338,25 @@ async def process_meeting(
     openclaw = OpenClawService()
     steps = []
 
-    r1 = await openclaw.notion_create_meeting_notes(
-        title=body.title, transcript=body.transcript
-    )
-    steps.append({"step": "Notion Meeting Notes", "result": r1})
+    try:
+        r1 = await openclaw.notion_create_meeting_notes(
+            title=body.title, transcript=body.transcript
+        )
+        steps.append({"step": "Notion Meeting Notes", "result": r1})
+    except Exception as e:
+        logger.warning("Meeting notes step failed: %s", e)
+        steps.append({"step": "Notion Meeting Notes", "error": "step failed"})
 
     if body.notify_slack_channel:
-        r2 = await openclaw.slack_post_message(
-            channel=body.notify_slack_channel,
-            message=f"📋 Meeting notes from *{body.title}* have been saved to Notion.",
-        )
-        steps.append({"step": "Slack Notification", "result": r2})
+        try:
+            r2 = await openclaw.slack_post_message(
+                channel=body.notify_slack_channel,
+                message=f"Meeting notes from *{body.title}* have been saved to Notion.",
+            )
+            steps.append({"step": "Slack Notification", "result": r2})
+        except Exception as e:
+            logger.warning("Slack step failed: %s", e)
+            steps.append({"step": "Slack Notification", "error": "step failed"})
 
     return {"success": True, "steps_executed": steps}
 
@@ -342,12 +370,16 @@ async def execute_legacy_task(
     user_id: str = Depends(get_current_user_id),
 ):
     openclaw = OpenClawService()
-    result = await openclaw.execute_task(
-        repo_url=body.repo_url,
-        task_description=body.task_description,
-        branch_name=body.branch_name,
-    )
-    return result
+    try:
+        result = await openclaw.execute_task(
+            repo_url=body.repo_url,
+            task_description=body.task_description,
+            branch_name=body.branch_name,
+        )
+        return result
+    except Exception:
+        logger.exception("Task execution failed")
+        raise HTTPException(status_code=500, detail="Task execution failed")
 
 
 @router.post("/command", summary="[Legacy] Run a terminal command inside OpenClaw")
@@ -356,8 +388,12 @@ async def run_terminal_command(
     user_id: str = Depends(get_current_user_id),
 ):
     openclaw = OpenClawService()
-    result = await openclaw.run_terminal_command(command=body.command)
-    return result
+    try:
+        result = await openclaw.run_terminal_command(command=body.command)
+        return result
+    except Exception:
+        logger.exception("Command execution failed")
+        raise HTTPException(status_code=500, detail="Command execution failed")
 
 
 # ── Webhook Ingestion ─────────────────────────────────────────────────────────

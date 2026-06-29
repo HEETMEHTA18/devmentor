@@ -542,7 +542,22 @@ async def mentor_chat(
                         ),
                     }
                     if openclaw_result:
-                        response_data["openclaw_task"] = openclaw_result
+                        safe_fields = {
+                            k: v
+                            for k, v in openclaw_result.items()
+                            if k
+                            in (
+                                "pull_request_url",
+                                "output",
+                                "message",
+                                "success",
+                                "task_id",
+                                "status",
+                            )
+                            and not isinstance(v, (Exception, type(None)))
+                        }
+                        if safe_fields:
+                            response_data["openclaw_task"] = safe_fields
                     return response_data
 
                 except Exception as e:

@@ -141,8 +141,8 @@ class TestGitHubLive:
         """Check what scopes the token has."""
         skip_if_missing("GITHUB_TOKEN")
         r = httpx.get(f"{self.BASE}/user", headers=self.HEADERS)
-        scopes = r.headers.get("X-OAuth-Scopes", "not shown for fine-grained tokens")
-        print(f"\n  ✅ Token scopes: {scopes}")
+        r.headers.get("X-OAuth-Scopes", "not shown for fine-grained tokens")
+        print(f"\n  ✅ Token scopes checked")
         assert r.status_code == 200
 
 
