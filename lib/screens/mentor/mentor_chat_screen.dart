@@ -16,8 +16,6 @@ import '../../widgets/liquid_glass_background.dart';
 import '../../widgets/animated_copy_button.dart';
 import '../../utils/speech_helper.dart';
 import '../../widgets/liquid_glass_button.dart';
-import '../intelligence/voice_review_screen.dart';
-import '../intelligence/auto_fix_screen.dart';
 
 class MentorChatScreen extends StatefulWidget {
   const MentorChatScreen({super.key});
@@ -364,8 +362,8 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
                           keyboardDismissBehavior:
                               ScrollViewKeyboardDismissBehavior.onDrag,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
+                            horizontal: 16,
+                            vertical: 8,
                           ),
                           itemCount: messages.length,
                           itemBuilder: (context, index) {
@@ -384,18 +382,15 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
               ),
               if (appState.isMentorTyping)
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
+                  padding: const EdgeInsets.only(left: 20, top: 4, bottom: 4),
                   child: Row(
                     children: [
                       const BouncingDotsIndicator(),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Text(
                         'Tatvik is thinking...',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: AppTheme.textSecondary,
                           fontStyle: FontStyle.italic,
                         ),
@@ -766,53 +761,33 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
+          constraints: const BoxConstraints(maxWidth: 680),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo
+              const SizedBox(height: 40),
               Container(
-                width: 72,
-                height: 72,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppTheme.accent, width: 2),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.accent.withValues(alpha: 0.15),
-                      blurRadius: 20,
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    colors: [AppTheme.accent, AppTheme.secondaryAccent],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 36,
-                  color: AppTheme.accent,
-                ),
+                child: const Icon(Icons.auto_awesome_rounded, size: 24, color: Colors.white),
               ),
               const SizedBox(height: 24),
               Text(
-                'How can I help you grow today?',
+                'How can I help you?',
                 style: GoogleFonts.inter(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                   color: AppTheme.textMain,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Ask about your roadmap, request a code roast, or practice interviews.',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
               _buildSuggestionGrid(state),
-              const SizedBox(height: 24),
-              _buildActionButtons(context),
             ],
           ),
         ),
@@ -820,191 +795,88 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context) {
-    return Row(
+  Widget _buildSuggestionGrid(AppState state) {
+    final suggestions = [
+      ('🔥', 'Roast my code', 'Get critical feedback on your repository style.'),
+      ('🗺️', 'Explain my roadmap', 'Understand the next milestone in your career.'),
+      ('💼', 'Mock interview prep', 'Challenge yourself with high-impact tech questions.'),
+      ('💻', 'Suggest a project', 'Get real-world recommendations matching your stack.'),
+      ('⚡', 'Execute a task', 'Let OpenClaw write code or create a PR for you.'),
+      ('🖥️', 'Run terminal', 'Run a command in the agent sandbox environment.'),
+    ];
+
+    return Column(
       children: [
-        Expanded(
-          child: LiquidGlassButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const VoiceReviewScreen()),
-              );
-            },
-            color: AppTheme.secondaryAccent,
-            borderRadius: 16,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.mic_rounded, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Voice Code Review',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: LiquidGlassButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AutoFixScreen()),
-              );
-            },
-            color: AppTheme.blue,
-            borderRadius: 16,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.auto_fix_high_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Auto-Fix Generator',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: suggestions.map((s) {
+            return _buildSuggestionChip(state, s.$1, s.$2, s.$3);
+          }).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildSuggestionGrid(AppState state) {
-    final suggestions = [
-      {
-        'icon': '🔥',
-        'title': 'Roast my code',
-        'desc': 'Get critical feedback on your repository style.',
-      },
-      {
-        'icon': '🗺️',
-        'title': 'Explain my roadmap',
-        'desc': 'Understand the next milestone in your career.',
-      },
-      {
-        'icon': '💼',
-        'title': 'Mock interview prep',
-        'desc': 'Challenge yourself with high-impact tech questions.',
-      },
-      {
-        'icon': '💻',
-        'title': 'Suggest a project',
-        'desc': 'Get real-world recommendations matching your stack.',
-      },
-      {
-        'icon': '⚡',
-        'title': 'Execute a task',
-        'desc': 'Let OpenClaw write code or create a PR for you.',
-      },
-      {
-        'icon': '🖥️',
-        'title': 'Run terminal',
-        'desc': 'Run a command in the agent sandbox environment.',
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 2.0,
-      ),
-      itemCount: suggestions.length,
-      itemBuilder: (context, index) {
-        final item = suggestions[index];
-        return InkWell(
-          onTap: () {
-            String cleanText = item['title']!;
-            if (cleanText == 'Roast my code') {
-              cleanText = 'Roast my current code quality';
-            } else if (cleanText == 'Explain my roadmap') {
-              cleanText =
-                  'Explain my current roadmap milestone and what to do next';
-            } else if (cleanText == 'Mock interview prep') {
-              cleanText =
-                  'Give me a challenging technical mock interview question';
-            } else if (cleanText == 'Suggest a project') {
-              cleanText =
-                  'Suggest a real-world coding project based on my stack';
-            } else if (cleanText == 'Execute a task') {
-              cleanText =
-                  'Execute a task: add a /health endpoint that returns {status: ok} to my first synced repository';
-            } else if (cleanText == 'Run terminal') {
-              cleanText =
-                  'Run terminal command: echo Hello from OpenClaw agent';
-            }
-            state.sendMessage(cleanText);
-            _scrollToBottom();
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
-              border: Border.all(color: AppTheme.border, width: 1.0),
-              borderRadius: BorderRadius.circular(16),
+  Widget _buildSuggestionChip(AppState state, String icon, String title, String desc) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          String cleanText = title;
+          if (title == 'Roast my code') {
+            cleanText = 'Roast my current code quality';
+          } else if (title == 'Explain my roadmap') {
+            cleanText = 'Explain my current roadmap milestone and what to do next';
+          } else if (title == 'Mock interview prep') {
+            cleanText = 'Give me a challenging technical mock interview question';
+          } else if (title == 'Suggest a project') {
+            cleanText = 'Suggest a real-world coding project based on my stack';
+          } else if (title == 'Execute a task') {
+            cleanText = 'Execute a task: add a /health endpoint that returns {status: ok} to my first synced repository';
+          } else if (title == 'Run terminal') {
+            cleanText = 'Run terminal command: echo Hello from OpenClaw agent';
+          }
+          state.sendMessage(cleanText);
+          _scrollToBottom();
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 280),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.04)
+                : Colors.black.withValues(alpha: 0.03),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.08),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Text(item['icon']!, style: const TextStyle(fontSize: 16)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        item['title']!,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textMain,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: Text(
-                    item['desc']!,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppTheme.textSecondary,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
+            borderRadius: BorderRadius.circular(14),
           ),
-        );
-      },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 14)),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textMain,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1012,140 +884,179 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
     final isUser = msg.role == MessageRole.user;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final userBubbleColor = isDark ? const Color(0xFF2A2A32) : const Color(0xFFF0F0F0);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          // Avatar
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isUser
-                    ? Colors.white24
-                    : AppTheme.accent.withValues(alpha: 0.5),
+          if (!isUser)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.accent,
+                          AppTheme.accent.withValues(alpha: 0.7),
+                        ],
+                      ),
+                    ),
+                    child: const Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Tatvik',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-              gradient: isUser
-                  ? const LinearGradient(
-                      colors: [Color(0xFF2D3748), Color(0xFF1A202C)],
-                    )
-                  : LinearGradient(
-                      colors: [
-                        AppTheme.accent,
-                        AppTheme.accent.withValues(alpha: 0.7),
+            ),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.82,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isUser
+                    ? AppTheme.accent.withValues(alpha: isDark ? 0.85 : 1.0)
+                    : userBubbleColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isUser ? 20 : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : 20),
+                ),
+                border: isUser
+                    ? null
+                    : Border.all(color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.06)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MarkdownBody(
+                    data: msg.content,
+                    onTapLink: (text, href, title) async {
+                      if (href != null) {
+                        final url = Uri.parse(href);
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                        }
+                      }
+                    },
+                    styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                      p: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontSize: 15,
+                        height: 1.5,
+                      ),
+                      a: TextStyle(
+                        color: isUser ? Colors.white.withValues(alpha: 0.9) : AppTheme.accent,
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      code: TextStyle(
+                        backgroundColor: isUser
+                            ? Colors.white.withValues(alpha: 0.15)
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.08)
+                                : Colors.black.withValues(alpha: 0.05)),
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: isUser
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.03)
+                                : Colors.black.withValues(alpha: 0.02)),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isUser
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : AppTheme.border,
+                        ),
+                      ),
+                      h4: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h3: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h2: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h1: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      blockquote: TextStyle(
+                        color: isUser
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : AppTheme.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      listBullet: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                      ),
+                      strong: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      em: TextStyle(
+                        color: isUser ? Colors.white : AppTheme.textMain,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                  if (!isUser) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        AnimatedCopyButton(
+                          text: msg.content,
+                          size: 14,
+                          color: AppTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.volume_up_rounded, size: 14),
+                          color: AppTheme.textSecondary,
+                          tooltip: 'Read Aloud',
+                          onPressed: () => SpeechHelper.speak(msg.content),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
                       ],
                     ),
-            ),
-            child: Center(
-              child: isUser
-                  ? Text(
-                      state.username.isNotEmpty
-                          ? state.username[0].toUpperCase()
-                          : 'U',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Content Area
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Sender Name
-                Text(
-                  isUser ? 'You' : 'Tatvik AI',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: isUser ? AppTheme.textSecondary : AppTheme.accent,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                // Markdown Content (ChatGPT styled: clean full-width, no card bubble background)
-                MarkdownBody(
-                  data: msg.content,
-                  onTapLink: (text, href, title) async {
-                    if (href != null) {
-                      final url = Uri.parse(href);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(
-                          url,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    }
-                  },
-                  styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
-                      .copyWith(
-                        p: TextStyle(
-                          color: AppTheme.textMain,
-                          fontSize: 15,
-                          height: 1.5,
-                        ),
-                        a: TextStyle(
-                          color: AppTheme.accent,
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        code: TextStyle(
-                          backgroundColor: isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : Colors.black.withValues(alpha: 0.05),
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                          color: AppTheme.textMain,
-                        ),
-                        codeblockDecoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.03)
-                              : Colors.black.withValues(alpha: 0.02),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.border),
-                        ),
-                      ),
-                ),
-                if (!isUser) ...[
-                  const SizedBox(height: 12),
-                  // Chat Action Buttons
-                  Row(
-                    children: [
-                      AnimatedCopyButton(
-                        text: msg.content,
-                        size: 15,
-                        color: AppTheme.textSecondary,
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.volume_up_rounded, size: 15),
-                        color: AppTheme.textSecondary,
-                        tooltip: 'Read Aloud',
-                        onPressed: () {
-                          SpeechHelper.speak(msg.content);
-                        },
-                      ),
+                    if (msg.openclawTask != null) ...[
+                      const SizedBox(height: 12),
+                      _buildOpenClawResultCard(msg.openclawTask!),
                     ],
-                  ),
-                  // OpenClaw action result card (shown when agent ran a task)
-                  if (msg.openclawTask != null) ...[
-                    const SizedBox(height: 12),
-                    _buildOpenClawResultCard(msg.openclawTask!),
                   ],
                 ],
-              ],
+              ),
             ),
           ),
         ],
