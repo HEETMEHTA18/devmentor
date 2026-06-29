@@ -158,154 +158,250 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
             // Large title header
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 60,
-                  bottom: 8,
-                ),
+                padding: const EdgeInsets.only(left: 24, right: 24, top: 60, bottom: 24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Explore',
-                      style: GoogleFonts.inter(
-                        fontSize: 34,
+                      style: GoogleFonts.outfit(
+                        fontSize: 40,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.textMain,
-                        letterSpacing: -0.5,
+                        letterSpacing: -1,
                       ),
                     ),
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.08)
-                            : Colors.black.withValues(alpha: 0.05),
+                        color: AppTheme.surfaceElevated,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.neonPurple.withValues(alpha: 0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      child: Icon(
-                        Icons.search_rounded,
-                        size: 18,
-                        color: AppTheme.textSecondary,
-                      ),
+                      child: Icon(Icons.search_rounded, size: 22, color: AppTheme.textSecondary),
                     ),
                   ],
                 ),
               ),
             ),
+            
+            // Bento Grid Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double w = constraints.maxWidth;
+                    final bool isDesktop = w > 900;
+                    final spacing = 16.0;
+                    
+                    final double half = isDesktop ? (w - spacing) / 2 : (w - spacing) / 2;
+                    final double third = isDesktop ? (w - spacing * 2) / 3 : w;
+                    final double full = w;
 
-            // Section: GitHub Discover
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 16,
-                  bottom: 12,
-                ),
-                child: Text(
-                  'GitHub Discover',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textMain,
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GlassCard(
-                  borderRadius: 16,
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      _buildDiscoverRow(
-                        icon: Icons.trending_up_rounded,
-                        iconColor: const Color(0xFF34C759),
-                        label: 'Trending Repositories',
-                        onTap: () => setState(() => _activeTab = 1),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
-                        icon: Icons.sentiment_satisfied_alt_rounded,
-                        iconColor: const Color(0xFFFF9500),
-                        label: 'Awesome Lists',
-                        onTap: () => setState(() => _activeTab = 4),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
-                        icon: Icons.search_rounded,
-                        iconColor: const Color(0xFF5E5CE6),
-                        label: 'Codebase Q&A Search',
-                        onTap: () => setState(() => _activeTab = 8),
-                        showDivider: false,
-                      ),
-                    ],
-                  ),
+                    return Wrap(
+                      spacing: spacing,
+                      runSpacing: spacing,
+                      children: [
+                        // Large Hero App Store Card
+                        SizedBox(
+                          width: full,
+                          height: 200,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 6),
+                            child: GlassCard(
+                              padding: const EdgeInsets.all(24),
+                              child: Stack(
+                                children: [
+                                  Positioned(
+                                    right: -20,
+                                    bottom: -20,
+                                    child: Icon(Icons.code_rounded, size: 120, color: AppTheme.neonPurple.withValues(alpha: 0.2)),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.neonPurple.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text('FEATURED AI AGENT', style: GoogleFonts.spaceMono(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.neonPurple)),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Continuous Code Reviewer', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                                          const SizedBox(height: 8),
+                                          Text('Automated PR analysis & security audits in real-time.', style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Half Cards
+                        SizedBox(
+                          width: half,
+                          height: 160,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 1),
+                            child: GlassCard(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(Icons.trending_up_rounded, size: 32, color: AppTheme.neonGreen),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Trending', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      Text('Repositories', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: half,
+                          height: 160,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 4),
+                            child: GlassCard(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Icon(Icons.star_rounded, size: 32, color: AppTheme.neonOrange),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Awesome', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      Text('Curated Lists', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Thirds for desktop, full for mobile
+                        SizedBox(
+                          width: third,
+                          height: 120,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 2),
+                            child: GlassCard(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(color: AppTheme.blue.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                    child: Icon(Icons.description_rounded, color: AppTheme.blue),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('Resume Reviewer', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                        Text('AI Tailoring', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: third,
+                          height: 120,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() => _activeTab = 5);
+                              appState.fetchWeeklyTechDigest();
+                            },
+                            child: GlassCard(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(color: AppTheme.peach.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                    child: Icon(Icons.travel_explore_rounded, color: AppTheme.peach),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('Deep Research', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                        Text('OSINT Agent', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: third,
+                          height: 120,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _activeTab = 8),
+                            child: GlassCard(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(color: AppTheme.neonGreen.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                    child: Icon(Icons.search_rounded, color: AppTheme.neonGreen),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('Codebase Q&A', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                        Text('Semantic Search', style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
 
-            // Section: Tatvik Intelligence
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 24,
-                  bottom: 12,
-                ),
-                child: Text(
-                  'Tatvik Intelligence',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textMain,
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GlassCard(
-                  borderRadius: 16,
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      _buildDiscoverRow(
-                        icon: Icons.description_rounded,
-                        iconColor: const Color(0xFF5856D6),
-                        label: 'Tatvik Resume Reviewer',
-                        onTap: () => setState(() => _activeTab = 2),
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
-                        icon: Icons.travel_explore_rounded,
-                        iconColor: const Color(0xFF0A84FF),
-                        label: 'Deep Research Agent',
-                        onTap: () {
-                          setState(() => _activeTab = 5);
-                          appState.fetchWeeklyTechDigest();
-                        },
-                        showDivider: true,
-                      ),
-                      _buildDiscoverRow(
-                        icon: Icons.code_rounded,
-                        iconColor: const Color(0xFF32D74B),
-                        label: 'Continuous Code Reviewer',
-                        onTap: () => setState(() => _activeTab = 6),
-                        showDivider: false,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
 
             // Activity Section Header
             SliverToBoxAdapter(
@@ -431,63 +527,6 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDiscoverRow({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required VoidCallback onTap,
-    bool showDivider = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 18, color: iconColor),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textMain,
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: AppTheme.textSecondary.withValues(alpha: 0.4),
-                ),
-              ],
-            ),
-          ),
-          if (showDivider)
-            Padding(
-              padding: const EdgeInsets.only(left: 62),
-              child: Container(
-                height: 0.5,
-                color: AppTheme.border.withValues(alpha: 0.3),
-              ),
-            ),
-        ],
       ),
     );
   }
