@@ -418,6 +418,14 @@ class _MovingAsciiBackgroundState extends State<MovingAsciiBackground>
             color: color,
             fontWeight: text.length > 1 ? FontWeight.bold : FontWeight.w500,
             letterSpacing: text.length > 1 ? 1.5 : 0,
+          ).copyWith(
+            fontFamilyFallback: const [
+              'Menlo',
+              'Consolas',
+              'Courier New',
+              'monospace',
+              'sans-serif',
+            ],
           ),
         ),
         textDirection: TextDirection.ltr,

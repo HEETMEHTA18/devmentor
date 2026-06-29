@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import 'web_safe_liquid_glass.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -49,7 +50,7 @@ class GlassCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: OCLiquidGlassGroup(
+        child: SafeOCLiquidGlassGroup(
           settings: OCLiquidGlassSettings(
             refractStrength: -0.05,
             blurRadiusPx: activeBlur > 0 ? activeBlur : 2.0,
@@ -60,7 +61,7 @@ class GlassCard extends StatelessWidget {
               // Liquid glass shader layer - decorative, doesn't intercept taps
               Positioned.fill(
                 child: IgnorePointer(
-                  child: OCLiquidGlass(
+                  child: SafeOCLiquidGlass(
                     borderRadius: borderRadius,
                     color: glassColor,
                     child: const SizedBox.expand(),

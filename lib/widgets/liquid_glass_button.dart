@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import '../core/theme/app_theme.dart';
+import 'web_safe_liquid_glass.dart';
 
 class LiquidGlassButton extends StatefulWidget {
   final VoidCallback? onPressed;
@@ -217,7 +218,7 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
             scale: _scaleAnimation,
             child: Opacity(
               opacity: widget.onPressed == null ? 0.5 : 1.0,
-              child: OCLiquidGlassGroup(
+              child: SafeOCLiquidGlassGroup(
                 settings: const OCLiquidGlassSettings(
                   refractStrength: -0.06,
                   blurRadiusPx: 3.0,
@@ -229,7 +230,7 @@ class _LiquidGlassButtonState extends State<LiquidGlassButton>
                     // Glass shader layer - decorative only, doesn't intercept taps
                     Positioned.fill(
                       child: IgnorePointer(
-                        child: OCLiquidGlass(
+                        child: SafeOCLiquidGlass(
                           borderRadius: widget.borderRadius,
                           color: Colors.transparent,
                           child: const SizedBox.expand(),
