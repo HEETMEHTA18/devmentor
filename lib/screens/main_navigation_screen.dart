@@ -18,6 +18,7 @@ import '../core/utils/web_helper.dart';
 import 'home/home_screen.dart';
 import 'repositories/discover_repos_screen.dart';
 import 'chat/chat_screen.dart';
+import 'prompts/prompt_hub_screen.dart';
 import 'roadmap/roadmap_screen.dart';
 import 'profile/profile_screen.dart';
 import 'desktop/desktop_scaffold.dart';
@@ -108,6 +109,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     const HomeScreen(),
     const DiscoverReposScreen(),
     const ChatScreen(),
+    const PromptHubScreen(),
     const RoadmapScreen(),
     const ProfileScreen(),
   ];
@@ -542,8 +544,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                               ),
                               child: LayoutBuilder(
                                 builder: (context, constraints) {
-                                  final totalWidth = constraints.maxWidth;
-                                  final itemWidth = totalWidth / 5;
+                                  final itemWidth = constraints.maxWidth / 6;
                                   final int mobileIndex = _selectedIndex;
                                   return Stack(
                                     children: [
@@ -663,19 +664,27 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                                             SizedBox(width: itemWidth), // Space for center FAB
                                             _MainNavigationItem(
                                               index: 3,
-                                              label: 'Roadmap',
-                                              icon: Icons.route_rounded,
+                                              label: 'Prompts',
+                                              icon: Icons.psychology_rounded,
                                               width: itemWidth,
                                               isSelected: _selectedIndex == 3,
                                               onTap: () => _onTabSelected(3),
                                             ),
                                             _MainNavigationItem(
                                               index: 4,
-                                              label: 'Settings',
-                                              icon: Icons.settings_rounded,
+                                              label: 'Roadmap',
+                                              icon: Icons.route_rounded,
                                               width: itemWidth,
                                               isSelected: _selectedIndex == 4,
                                               onTap: () => _onTabSelected(4),
+                                            ),
+                                            _MainNavigationItem(
+                                              index: 5,
+                                              label: 'Settings',
+                                              icon: Icons.settings_rounded,
+                                              width: itemWidth,
+                                              isSelected: _selectedIndex == 5,
+                                              onTap: () => _onTabSelected(5),
                                             ),
                                           ],
                                         ),
@@ -699,17 +708,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                             height: 64,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const LinearGradient(
+                              gradient: LinearGradient(
                                 colors: [
-                                  Color(0xFFFE6B35), // Vibrant Orange matching the user's design image
-                                  Color(0xFFF95326),
+                                  AppTheme.accent,
+                                  AppTheme.accent.withValues(alpha: 0.8),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFE6B35).withValues(alpha: 0.4),
+                                  color: AppTheme.accent.withValues(alpha: 0.4),
                                   blurRadius: 16,
                                   offset: const Offset(0, 8),
                                   spreadRadius: 2,

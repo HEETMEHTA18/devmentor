@@ -548,6 +548,7 @@ This is simulated offline prompts.md content.
     if (githubUsername.isNotEmpty) {
       fetchGithubData(githubUsername);
       fetchFollowingActivity();
+      fetchOpenPullRequests();
     }
     if (token == null) return;
     fetchActivityData();
@@ -601,6 +602,11 @@ This is simulated offline prompts.md content.
 
   List<Map<String, dynamic>> followingActivity = [];
   bool isLoadingFollowingActivity = false;
+
+  List<Map<String, dynamic>> openPullRequests = [];
+  bool isLoadingOpenPullRequests = false;
+
+  List<GitHubActivityEvent> parsedActivityEvents = [];
 
   // Developer DNA
   String? dnaArchetype;
@@ -1733,6 +1739,7 @@ This is simulated offline prompts.md content.
 
           await fetchActivityData();
           await fetchFollowingActivity();
+          await fetchOpenPullRequests();
           await fetchLearningPaths();
           await fetchOpportunities();
           await fetchPromptHistory();
@@ -1822,6 +1829,7 @@ This is simulated offline prompts.md content.
 
     fetchActivityData();
     fetchFollowingActivity();
+    fetchOpenPullRequests();
     fetchLearningPaths();
     fetchOpportunities();
     fetchPromptHistory();
@@ -1914,6 +1922,7 @@ This is simulated offline prompts.md content.
 
           fetchActivityData();
           fetchFollowingActivity();
+          fetchOpenPullRequests();
           fetchLearningPaths();
           fetchOpportunities();
           fetchPromptHistory();
@@ -2131,9 +2140,6 @@ This is simulated offline prompts.md content.
     }
   }
 
-  /// Parsed rich events for the new activity feed.
-  List<GitHubActivityEvent> parsedActivityEvents = [];
-
   /// Direct GitHub API fallback for activity feed.
   Future<void> _fallbackToGitHubEventsApi() async {
     try {
@@ -2181,6 +2187,76 @@ This is simulated offline prompts.md content.
       }
     } catch (e) {
       debugPrint('GitHub Events API fallback also failed: $e');
+    }
+  }
+
+  Future<void> fetchOpenPullRequests({bool force = false}) async {
+    if (githubUsername.isEmpty) return;
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastTime = prefs.getInt('open_prs_timestamp_$githubUsername') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      
+      if (!force && (now - lastTime) < 300000 && openPullRequests.isNotEmpty) {
+        return; // 5 min cache
+      }
+      
+      final cachedRaw = prefs.getString('open_prs_cache_$githubUsername');
+      if (cachedRaw != null && !force) {
+        openPullRequests = List<Map<String, dynamic>>.from(jsonDecode(cachedRaw));
+        notifyListeners();
+        if ((now - lastTime) < 300000) return;
+      }
+    } catch (_) {}
+
+    isLoadingOpenPullRequests = true;
+    notifyListeners();
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.github.com/search/issues?q=is:pr+is:open+author:$githubUsername&sort=updated&order=desc'),
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final items = data['items'] as List?;
+        if (items != null) {
+          openPullRequests = items.take(5).map((e) {
+            String repo = '';
+            if (e['repository_url'] != null) {
+              final parts = (e['repository_url'] as String).split('/');
+              if (parts.length >= 2) {
+                repo = '${parts[parts.length - 2]}/${parts.last}';
+              }
+            }
+            return {
+              'repo': repo,
+              'title': e['title'] ?? 'Untitled',
+              'number': e['number'] ?? 0,
+              'url': e['html_url'] ?? '',
+              'time': e['created_at'] ?? '',
+              'comments': e['comments'] ?? 0,
+              'activity': 'Last updated ${e['updated_at'] ?? ''}',
+            };
+          }).toList();
+          
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('open_prs_cache_$githubUsername', jsonEncode(openPullRequests));
+            await prefs.setInt('open_prs_timestamp_$githubUsername', DateTime.now().millisecondsSinceEpoch);
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching open PRs: $e');
+    } finally {
+      isLoadingOpenPullRequests = false;
+      notifyListeners();
     }
   }
 

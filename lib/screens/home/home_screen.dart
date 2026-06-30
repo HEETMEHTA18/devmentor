@@ -1813,11 +1813,32 @@ class HomeScreen extends StatelessWidget {
       return _buildLockedAiFeature(context, state, 'Recent Activity', Icons.call_split_rounded);
     }
     
-    // Using mock data reflecting real PR structure like GitHub Mobile
-    final prs = [
-      {'repo': 'flutter/flutter', 'title': 'fix: prevent cascading cancellations in add_data_points asyncio.gather calls', 'number': 142055, 'url': 'https://github.com/flutter/flutter/pull/142055', 'time': '1d', 'comments': 1, 'activity': 'github-actions[bot] commented'},
-      {'repo': 'HEETMEHTA18/devmentor', 'title': '[Tatvik Agent] I want you to make a pr on the repo named devmentor with a content new version', 'number': 12, 'url': 'https://github.com/HEETMEHTA18/devmentor/pull/12', 'time': '2d', 'comments': 1, 'activity': 'chatgpt-codex-connector[bot] commented'},
-    ];
+    if (state.isLoadingOpenPullRequests && state.openPullRequests.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(color: AppTheme.accent),
+        ),
+      );
+    }
+    
+    final prs = state.openPullRequests;
+    if (prs.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1C1E).withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Center(
+          child: Text(
+            'No open pull requests',
+            style: GoogleFonts.inter(color: AppTheme.textSecondary),
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
