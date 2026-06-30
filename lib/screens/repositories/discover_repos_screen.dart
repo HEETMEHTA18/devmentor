@@ -2173,167 +2173,292 @@ class _DiscoverReposScreenState extends State<DiscoverReposScreen> {
       actionText = 'commented on an issue in';
     }
 
-    return GlassCard(
-      borderRadius: 16,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Actor Row (GitHub Mobile Style)
-          Row(
+    final String? targetUrl = _getActivityTargetUrl(event);
+
+    return MouseRegion(
+      cursor: targetUrl != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: targetUrl != null
+            ? () async {
+                final uri = Uri.tryParse(targetUrl);
+                if (uri != null) {
+                  await launchUrl(
+                    uri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                }
+              }
+            : null,
+        child: GlassCard(
+          borderRadius: 16,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                backgroundImage: event.actorAvatarUrl.isNotEmpty
-                    ? NetworkImage(event.actorAvatarUrl)
-                    : null,
-                radius: 12,
-                backgroundColor: AppTheme.border,
-                child: event.actorAvatarUrl.isEmpty
-                    ? const Icon(Icons.person, size: 14)
-                    : null,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
+              // 1. Actor Row (GitHub Mobile Style)
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundImage: event.actorAvatarUrl.isNotEmpty
+                        ? NetworkImage(event.actorAvatarUrl)
+                        : null,
+                    radius: 12,
+                    backgroundColor: AppTheme.border,
+                    child: event.actorAvatarUrl.isEmpty
+                        ? const Icon(Icons.person, size: 14)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: event.actorLogin,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textMain,
+                            ),
+                          ),
+                          TextSpan(text: ' $actionText '),
+                          TextSpan(
+                            text: event.repoName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textMain,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _timeAgo(event.createdAt),
                     style: GoogleFonts.inter(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: AppTheme.textSecondary,
                     ),
+                  ),
+                ],
+              ),
+              
+              if (event.displayTitle.isNotEmpty || event.aiSummaryBullets.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.03)
+                        : Colors.black.withValues(alpha: 0.02),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextSpan(
-                        text: event.actorLogin,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textMain,
+                      // Title / Commit Message
+                      if (event.displayTitle.isNotEmpty) ...[
+                        Text(
+                          event.displayTitle,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textMain,
+                            height: 1.4,
+                          ),
                         ),
-                      ),
-                      TextSpan(text: ' $actionText '),
-                      TextSpan(
-                        text: event.repoName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textMain,
+                        if (event.aiSummaryBullets.isNotEmpty) const SizedBox(height: 12),
+                      ],
+                      
+                      // Summary Bullets
+                      if (event.aiSummaryBullets.isNotEmpty)
+                        ...event.aiSummaryBullets.map((bullet) => Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 6, right: 8),
+                                    child: Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.textSecondary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      bullet,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        color: AppTheme.textSecondary,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                            
+                      // Diff Stats
+                      if ((event.commitCount ?? 0) > 0) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Icon(Icons.commit_rounded, size: 14, color: AppTheme.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${event.commitCount} commit${event.commitCount! > 1 ? 's' : ''}',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            if ((event.additions ?? 0) > 0) ...[
+                              Text(
+                                '+${event.additions}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.success,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            if ((event.deletions ?? 0) > 0)
+                              Text(
+                                '-${event.deletions}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFFF453A),
+                                ),
+                              ),
+                          ],
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
-              ),
-              Text(
-                _timeAgo(event.createdAt),
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppTheme.textSecondary,
-                ),
+              ],
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildActivityTypeBadge(event.type, isDark),
+                  if (targetUrl != null)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View on GitHub',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.accent,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.open_in_new_rounded,
+                          size: 12,
+                          color: AppTheme.accent,
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ],
           ),
-          
-          if (event.displayTitle.isNotEmpty || event.aiSummaryBullets.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.03)
-                    : Colors.black.withValues(alpha: 0.02),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.border.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title / Commit Message
-                  if (event.displayTitle.isNotEmpty) ...[
-                    Text(
-                      event.displayTitle,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textMain,
-                        height: 1.4,
-                      ),
-                    ),
-                    if (event.aiSummaryBullets.isNotEmpty) const SizedBox(height: 12),
-                  ],
-                  
-                  // Summary Bullets
-                  if (event.aiSummaryBullets.isNotEmpty)
-                    ...event.aiSummaryBullets.map((bullet) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6, right: 8),
-                                child: Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.textSecondary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  bullet,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    color: AppTheme.textSecondary,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )),
-                        
-                  // Diff Stats
-                  if ((event.commitCount ?? 0) > 0) ...[
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(Icons.commit_rounded, size: 14, color: AppTheme.textSecondary),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${event.commitCount} commit${event.commitCount! > 1 ? 's' : ''}',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        if ((event.additions ?? 0) > 0) ...[
-                          Text(
-                            '+${event.additions}',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.success,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        if ((event.deletions ?? 0) > 0)
-                          Text(
-                            '-${event.deletions}',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFFF453A),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
+        ),
+      ),
+    );
+  }
+
+  String? _getActivityTargetUrl(GitHubActivityEvent event) {
+    if (event.type == 'PushEvent' && event.commits.isNotEmpty) {
+      final sha = event.commits.first['sha'];
+      if (sha != null && sha.isNotEmpty) {
+        return 'https://github.com/${event.repoName}/commit/$sha';
+      }
+    } else if (event.type == 'PullRequestEvent' && event.prNumber != null) {
+      return 'https://github.com/${event.repoName}/pull/${event.prNumber}';
+    } else if (event.type == 'IssuesEvent' && event.issueNumber != null) {
+      return 'https://github.com/${event.repoName}/issues/${event.issueNumber}';
+    } else if (event.type == 'IssueCommentEvent' && event.issueNumber != null) {
+      return 'https://github.com/${event.repoName}/issues/${event.issueNumber}';
+    }
+    return 'https://github.com/${event.repoName}';
+  }
+
+  Widget _buildActivityTypeBadge(String type, bool isDark) {
+    String label = 'Activity';
+    IconData icon = Icons.info_outline;
+    Color color = AppTheme.textSecondary;
+
+    if (type == 'PushEvent') {
+      label = 'Push';
+      icon = Icons.commit_rounded;
+      color = AppTheme.accent;
+    } else if (type == 'PullRequestEvent') {
+      label = 'PR';
+      icon = Icons.merge_type_rounded;
+      color = AppTheme.success;
+    } else if (type == 'IssuesEvent') {
+      label = 'Issue';
+      icon = Icons.error_outline_rounded;
+      color = const Color(0xFFFF9500);
+    } else if (type == 'IssueCommentEvent') {
+      label = 'Comment';
+      icon = Icons.comment_rounded;
+      color = const Color(0xFF34C759);
+    } else if (type == 'WatchEvent') {
+      label = 'Star';
+      icon = Icons.star_rounded;
+      color = const Color(0xFFFFCC00);
+    } else if (type == 'ForkEvent') {
+      label = 'Fork';
+      icon = Icons.fork_right_rounded;
+      color = const Color(0xFF5856D6);
+    } else if (type == 'ReleaseEvent') {
+      label = 'Release';
+      icon = Icons.new_releases_rounded;
+      color = const Color(0xFFAF52DE);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label.toUpperCase(),
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: color,
+              letterSpacing: 0.5,
             ),
-          ],
+          ),
         ],
       ),
     );
