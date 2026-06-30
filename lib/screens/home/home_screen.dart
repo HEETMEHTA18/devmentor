@@ -159,7 +159,6 @@ class HomeScreen extends StatelessWidget {
                   final spacing = 24.0;
                   // Calculate widths for bento boxes
                   final double w = constraints.maxWidth;
-                  final bool isTablet = w > 600 && w <= 900;
                   double langWidth = isDesktop ? w : w;
 
                   return Column(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../../providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/liquid_glass_button.dart';
@@ -24,33 +26,57 @@ class _TaskCommandScreenState extends State<TaskCommandScreen> {
     'HeetMehta18/Portfolio',
   ];
 
-  void _startTask() {
+  Future<void> _startTask() async {
     if (_taskController.text.isEmpty) return;
     
+    final appState = Provider.of<AppState>(context, listen: false);
+
     setState(() {
       _currentState = TaskState.planning;
     });
 
-    // Simulate agentic loop
-    Future.delayed(const Duration(seconds: 2), () {
+    // Simulate agentic loop UI while calling the actual backend
+    Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
       setState(() => _currentState = TaskState.coding);
       
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
         setState(() => _currentState = TaskState.testing);
-        
-        Future.delayed(const Duration(seconds: 2), () {
-          if (!mounted) return;
-          setState(() => _currentState = TaskState.prCreation);
-          
-          Future.delayed(const Duration(seconds: 2), () {
-            if (!mounted) return;
-            setState(() => _currentState = TaskState.done);
-          });
-        });
       });
     });
+
+    try {
+      // Set the repo in AppState if needed or pass directly
+      final parts = _selectedRepo.split('/');
+      if (parts.length == 2) {
+        appState.selectedRepoOwner = parts[0];
+        appState.selectedRepoName = parts[1];
+      }
+
+      await appState.sendVoicePipelineCommand(_taskController.text);
+      
+      if (mounted) {
+        setState(() {
+          _currentState = TaskState.prCreation;
+        });
+        
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            setState(() => _currentState = TaskState.done);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentState = TaskState.idle;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to execute task: $e')),
+        );
+      }
+    }
   }
 
   void _cancelTask() {

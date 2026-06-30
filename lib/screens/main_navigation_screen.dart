@@ -20,7 +20,6 @@ import 'repositories/discover_repos_screen.dart';
 import 'chat/chat_screen.dart';
 import 'roadmap/roadmap_screen.dart';
 import 'profile/profile_screen.dart';
-import 'prompts/prompt_hub_screen.dart';
 import 'desktop/desktop_scaffold.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -109,7 +108,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     const HomeScreen(),
     const DiscoverReposScreen(),
     const ChatScreen(),
-    const PromptHubScreen(),
     const RoadmapScreen(),
     const ProfileScreen(),
   ];
@@ -482,269 +480,257 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                   padding: const EdgeInsets.only(
                     left: 12,
                     right: 12,
-                    bottom: 8,
+                    bottom: 12,
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        // Deep ambient shadow
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: isDark ? 0.50 : 0.12,
-                          ),
-                          blurRadius: 32,
-                          offset: const Offset(0, 12),
-                          spreadRadius: -4,
-                        ),
-                        // Tight shadow for depth
-                        BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: isDark ? 0.30 : 0.08,
-                          ),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(
-                          sigmaX: isMobileBrowser
-                              ? 25.0
-                              : (isDark ? 40.0 : 30.0),
-                          sigmaY: isMobileBrowser
-                              ? 25.0
-                              : (isDark ? 40.0 : 30.0),
-                        ),
-                        child: Container(
-                          height: 68,
-                          decoration: BoxDecoration(
-                            color: isMobileBrowser
-                                ? (isDark
-                                          ? const Color(0xFF1C1C1E)
-                                          : Colors.white)
-                                      .withValues(alpha: isDark ? 0.45 : 0.70)
-                                : (isDark
-                                          ? const Color(0xFF1C1C1E)
-                                          : Colors.white)
-                                      .withValues(alpha: isDark ? 0.25 : 0.55),
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: Colors.white.withValues(
-                                alpha: isMobileBrowser
-                                    ? 0.25
-                                    : (isDark ? 0.18 : 0.45),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: isDark ? 0.50 : 0.12,
                               ),
-                              width: 0.5,
+                              blurRadius: 32,
+                              offset: const Offset(0, 12),
+                              spreadRadius: -4,
                             ),
-                          ),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final totalWidth = constraints.maxWidth;
-                              final itemWidth = totalWidth / 6;
-                              final int mobileIndex = _selectedIndex;
-                              return Stack(
-                                children: [
-                                  // iOS Liquid Glass Pill Indicator
-                                  if (mobileIndex != -1)
-                                    AnimatedPositioned(
-                                      duration: const Duration(milliseconds: 350),
-                                      curve: Curves.easeOutCubic,
-                                      left: mobileIndex * itemWidth + 6,
-                                    top: 6,
-                                    bottom: 6,
-                                    width: itemWidth - 12,
-                                    child: SafeOCLiquidGlassGroup(
-                                      settings: const OCLiquidGlassSettings(
-                                        refractStrength: -0.07,
-                                        blurRadiusPx: 4.0,
-                                        specStrength: 28.0,
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          // 1. Refractive liquid glass shader (decorative, doesn't intercept taps)
-                                          Positioned.fill(
-                                            child: IgnorePointer(
-                                              child: SafeOCLiquidGlass(
-                                                borderRadius: 22,
-                                                color: Colors.transparent,
-                                                child: const SizedBox.expand(),
-                                              ),
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                alpha: isDark ? 0.30 : 0.08,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(
+                              sigmaX: isMobileBrowser
+                                  ? 25.0
+                                  : (isDark ? 40.0 : 30.0),
+                              sigmaY: isMobileBrowser
+                                  ? 25.0
+                                  : (isDark ? 40.0 : 30.0),
+                            ),
+                            child: Container(
+                              height: 68,
+                              decoration: BoxDecoration(
+                                color: isMobileBrowser
+                                    ? (isDark
+                                              ? const Color(0xFF1C1C1E)
+                                              : Colors.white)
+                                          .withValues(alpha: isDark ? 0.45 : 0.70)
+                                    : (isDark
+                                              ? const Color(0xFF1C1C1E)
+                                              : Colors.white)
+                                          .withValues(alpha: isDark ? 0.25 : 0.55),
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(
+                                  color: Colors.white.withValues(
+                                    alpha: isMobileBrowser
+                                        ? 0.25
+                                        : (isDark ? 0.18 : 0.45),
+                                  ),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final totalWidth = constraints.maxWidth;
+                                  final itemWidth = totalWidth / 5;
+                                  final int mobileIndex = _selectedIndex;
+                                  return Stack(
+                                    children: [
+                                      // iOS Liquid Glass Pill Indicator (Hide if index 2 since it's the floating button)
+                                      if (mobileIndex != -1 && mobileIndex != 2)
+                                        AnimatedPositioned(
+                                          duration: const Duration(milliseconds: 350),
+                                          curve: Curves.easeOutCubic,
+                                          left: mobileIndex * itemWidth + 6,
+                                          top: 6,
+                                          bottom: 6,
+                                          width: itemWidth - 12,
+                                          child: SafeOCLiquidGlassGroup(
+                                            settings: const OCLiquidGlassSettings(
+                                              refractStrength: -0.07,
+                                              blurRadiusPx: 4.0,
+                                              specStrength: 28.0,
                                             ),
-                                          ),
-                                          // 2. High fidelity glass container backing (with sheen and thin border)
-                                          Positioned.fill(
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: isDark
-                                                    ? Colors.white.withValues(
-                                                        alpha: 0.12,
-                                                      )
-                                                    : Colors.white.withValues(
-                                                        alpha: 0.70,
-                                                      ),
-                                                borderRadius:
-                                                    BorderRadius.circular(22),
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withValues(
-                                                        alpha: isDark
-                                                            ? 0.20
-                                                            : 0.60,
-                                                      ),
-                                                  width: 0.5,
+                                            child: Stack(
+                                              children: [
+                                                Positioned.fill(
+                                                  child: IgnorePointer(
+                                                    child: SafeOCLiquidGlass(
+                                                      borderRadius: 22,
+                                                      color: Colors.transparent,
+                                                      child: const SizedBox.expand(),
+                                                    ),
+                                                  ),
                                                 ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withValues(
-                                                          alpha: isDark
-                                                              ? 0.25
-                                                              : 0.06,
+                                                Positioned.fill(
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: isDark
+                                                          ? Colors.white.withValues(alpha: 0.12)
+                                                          : Colors.white.withValues(alpha: 0.70),
+                                                      borderRadius: BorderRadius.circular(22),
+                                                      border: Border.all(
+                                                        color: Colors.white.withValues(
+                                                          alpha: isDark ? 0.20 : 0.60,
                                                         ),
-                                                    blurRadius: 8,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Stack(
-                                                children: [
-                                                  // Glossy specular reflection gradient
-                                                  Positioned.fill(
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              22,
+                                                        width: 0.5,
+                                                      ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black.withValues(
+                                                            alpha: isDark ? 0.25 : 0.06,
+                                                          ),
+                                                          blurRadius: 8,
+                                                          offset: const Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Stack(
+                                                      children: [
+                                                        Positioned.fill(
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              borderRadius: BorderRadius.circular(22),
+                                                              gradient: LinearGradient(
+                                                                begin: Alignment.topCenter,
+                                                                end: Alignment.bottomCenter,
+                                                                colors: [
+                                                                  Colors.white.withValues(alpha: isDark ? 0.15 : 0.45),
+                                                                  Colors.white.withValues(alpha: 0.0),
+                                                                ],
+                                                                stops: const [0.0, 0.5],
+                                                              ),
                                                             ),
-                                                        gradient: LinearGradient(
-                                                          begin: Alignment
-                                                              .topCenter,
-                                                          end: Alignment
-                                                              .bottomCenter,
-                                                          colors: [
-                                                            Colors.white
-                                                                .withValues(
-                                                                  alpha: isDark
-                                                                      ? 0.15
-                                                                      : 0.45,
-                                                                ),
-                                                            Colors.white
-                                                                .withValues(
-                                                                  alpha: 0.0,
-                                                                ),
-                                                          ],
-                                                          stops: const [
-                                                            0.0,
-                                                            0.5,
-                                                          ],
+                                                          ),
                                                         ),
-                                                      ),
+                                                        Positioned(
+                                                          top: 0.5,
+                                                          left: 11.0,
+                                                          right: 11.0,
+                                                          height: 1.0,
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              gradient: LinearGradient(
+                                                                colors: [
+                                                                  Colors.white.withValues(alpha: 0.0),
+                                                                  Colors.white.withValues(alpha: isDark ? 0.40 : 0.80),
+                                                                  Colors.white.withValues(alpha: 0.0),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
-                                                  // Xcode style glossy top reflection lip
-                                                  Positioned(
-                                                    top: 0.5,
-                                                    left: 11.0,
-                                                    right: 11.0,
-                                                    height: 1.0,
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        gradient: LinearGradient(
-                                                          colors: [
-                                                            Colors.white
-                                                                .withValues(
-                                                                  alpha: 0.0,
-                                                                ),
-                                                            Colors.white
-                                                                .withValues(
-                                                                  alpha: isDark
-                                                                      ? 0.40
-                                                                      : 0.80,
-                                                                ),
-                                                            Colors.white
-                                                                .withValues(
-                                                                  alpha: 0.0,
-                                                                ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ],
+                                        ),
+                                      // Nav Items
+                                      Positioned.fill(
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                          children: [
+                                            _MainNavigationItem(
+                                              index: 0,
+                                              label: 'Home',
+                                              icon: Icons.home_rounded,
+                                              width: itemWidth,
+                                              isSelected: _selectedIndex == 0,
+                                              onTap: () => _onTabSelected(0),
+                                            ),
+                                            _MainNavigationItem(
+                                              index: 1,
+                                              label: 'Explore',
+                                              icon: Icons.explore_rounded,
+                                              width: itemWidth,
+                                              isSelected: _selectedIndex == 1,
+                                              onTap: () => _onTabSelected(1),
+                                            ),
+                                            SizedBox(width: itemWidth), // Space for center FAB
+                                            _MainNavigationItem(
+                                              index: 3,
+                                              label: 'Roadmap',
+                                              icon: Icons.route_rounded,
+                                              width: itemWidth,
+                                              isSelected: _selectedIndex == 3,
+                                              onTap: () => _onTabSelected(3),
+                                            ),
+                                            _MainNavigationItem(
+                                              index: 4,
+                                              label: 'Settings',
+                                              icon: Icons.settings_rounded,
+                                              width: itemWidth,
+                                              isSelected: _selectedIndex == 4,
+                                              onTap: () => _onTabSelected(4),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  // Nav Items
-                                  Positioned.fill(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceAround,
-                                      children: [
-                                        _MainNavigationItem(
-                                          index: 0,
-                                          label: 'Home',
-                                          icon: Icons.home_rounded,
-                                          width: itemWidth,
-                                          isSelected: _selectedIndex == 0,
-                                          onTap: () => _onTabSelected(0),
-                                        ),
-                                        _MainNavigationItem(
-                                          index: 1,
-                                          label: 'Explore',
-                                          icon: Icons.explore_rounded,
-                                          width: itemWidth,
-                                          isSelected: _selectedIndex == 1,
-                                          onTap: () => _onTabSelected(1),
-                                        ),
-                                        _MainNavigationItem(
-                                          index: 2,
-                                          label: 'Chat',
-                                          icon: Icons.chat_bubble_rounded,
-                                          width: itemWidth,
-                                          isSelected: _selectedIndex == 2,
-                                          onTap: () => _onTabSelected(2),
-                                        ),
-                                        _MainNavigationItem(
-                                          index: 3,
-                                          label: 'Prompts',
-                                          icon: Icons.auto_awesome_rounded,
-                                          width: itemWidth,
-                                          isSelected: _selectedIndex == 3,
-                                          onTap: () => _onTabSelected(3),
-                                        ),
-                                        _MainNavigationItem(
-                                          index: 4,
-                                          label: 'Roadmap',
-                                          icon: Icons.route_rounded,
-                                          width: itemWidth,
-                                          isSelected: _selectedIndex == 4,
-                                          onTap: () => _onTabSelected(4),
-                                        ),
-                                        _MainNavigationItem(
-                                          index: 5,
-                                          label: 'Settings',
-                                          icon: Icons.settings_rounded,
-                                          width: itemWidth,
-                                          isSelected: _selectedIndex == 5,
-                                          onTap: () => _onTabSelected(5),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      
+                      // Floating Lifted Center Button
+                      Positioned(
+                        bottom: 24, // Lifted above the bar
+                        child: GestureDetector(
+                          onTap: () => _onTabSelected(2),
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFE6B35), // Vibrant Orange matching the user's design image
+                                  Color(0xFFF95326),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFE6B35).withValues(alpha: 0.4),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 8),
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.chat_bubble_rounded, // Chat icon since they asked for the chat button
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                     ),
