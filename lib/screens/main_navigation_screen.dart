@@ -17,6 +17,7 @@ import '../providers/app_state.dart';
 import '../core/utils/web_helper.dart';
 import 'home/home_screen.dart';
 import 'repositories/discover_repos_screen.dart';
+import 'chat/chat_screen.dart';
 import 'roadmap/roadmap_screen.dart';
 import 'profile/profile_screen.dart';
 import 'prompts/prompt_hub_screen.dart';
@@ -75,31 +76,39 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       tabIndex: 1,
     ),
     WalkthroughStep(
-      icon: Icons.psychology_outlined,
-      title: 'Tatvik Chat & Prompts 💬',
+      icon: Icons.chat_bubble_outline_rounded,
+      title: 'AI Chat 💬',
       description:
-          'Interact with your AI Mentor. Save topics directly to your Development Memory to customize your future roadmaps.',
+          'Your dedicated AI mentor chat. Ask about code, architecture, resumes, or career advice with full context awareness.',
       tabIndex: 2,
+    ),
+    WalkthroughStep(
+      icon: Icons.psychology_outlined,
+      title: 'Prompt Intelligence ✨',
+      description:
+          'Manage and discover AI prompts. Auto-sync from .autodevs/ directories in your repositories.',
+      tabIndex: 3,
     ),
     WalkthroughStep(
       icon: Icons.route_outlined,
       title: 'Interactive Roadmaps 🗺️',
       description:
           'Follow milestones and structured step-by-step paths curated for you. Tap nodes to see advanced details.',
-      tabIndex: 3,
+      tabIndex: 4,
     ),
     WalkthroughStep(
       icon: Icons.settings_outlined,
       title: 'Settings & Security ⚙️',
       description:
           'Manage preferences, update your personal memory, and lock down your GitHub account sync to ensure your data stays private.',
-      tabIndex: 4,
+      tabIndex: 5,
     ),
   ];
 
   final List<Widget> _screens = [
     const HomeScreen(),
     const DiscoverReposScreen(),
+    const ChatScreen(),
     const PromptHubScreen(),
     const RoadmapScreen(),
     const ProfileScreen(),
@@ -534,7 +543,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final totalWidth = constraints.maxWidth;
-                              final itemWidth = totalWidth / 5;
+                              final itemWidth = totalWidth / 6;
                               final int mobileIndex = _selectedIndex;
                               return Stack(
                                 children: [
@@ -696,27 +705,35 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                                         ),
                                         _MainNavigationItem(
                                           index: 2,
-                                          label: 'Prompts',
-                                          icon: Icons.auto_awesome_rounded,
+                                          label: 'Chat',
+                                          icon: Icons.chat_bubble_rounded,
                                           width: itemWidth,
                                           isSelected: _selectedIndex == 2,
                                           onTap: () => _onTabSelected(2),
                                         ),
                                         _MainNavigationItem(
                                           index: 3,
-                                          label: 'Roadmap',
-                                          icon: Icons.route_rounded,
+                                          label: 'Prompts',
+                                          icon: Icons.auto_awesome_rounded,
                                           width: itemWidth,
                                           isSelected: _selectedIndex == 3,
                                           onTap: () => _onTabSelected(3),
                                         ),
                                         _MainNavigationItem(
                                           index: 4,
-                                          label: 'Settings',
-                                          icon: Icons.settings_rounded,
+                                          label: 'Roadmap',
+                                          icon: Icons.route_rounded,
                                           width: itemWidth,
                                           isSelected: _selectedIndex == 4,
                                           onTap: () => _onTabSelected(4),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 5,
+                                          label: 'Settings',
+                                          icon: Icons.settings_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 5,
+                                          onTap: () => _onTabSelected(5),
                                         ),
                                       ],
                                     ),

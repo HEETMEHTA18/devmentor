@@ -14,7 +14,8 @@ import '../../utils/speech_helper.dart';
 import '../../widgets/liquid_glass_button.dart';
 
 class MentorChatScreen extends StatefulWidget {
-  const MentorChatScreen({super.key});
+  final bool embedded;
+  const MentorChatScreen({super.key, this.embedded = false});
 
   @override
   State<MentorChatScreen> createState() => _MentorChatScreenState();
@@ -561,10 +562,7 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
     final appState = Provider.of<AppState>(context);
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF212121),
-      appBar: _buildAppBar(context, appState, isDesktop),
-      body: Column(
+    final body = Column(
         children: [
           if (appState.lastUploadedResumeText != null &&
               appState.lastUploadedResumeText!.isNotEmpty)
@@ -618,7 +616,20 @@ class _MentorChatScreenState extends State<MentorChatScreen> {
             ),
           _buildInputArea(appState),
         ],
-      ),
+      );
+
+    // Embedded mode: skip Scaffold/AppBar, just return the body column
+    if (widget.embedded) {
+      return Container(
+        color: const Color(0xFF212121),
+        child: body,
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF212121),
+      appBar: _buildAppBar(context, appState, isDesktop),
+      body: body,
     );
   }
 
