@@ -146,4 +146,5 @@ async def run_continuous_code_review(
         raise
     except Exception as e:
         logger.error(f"Code Reviewer Exception: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An error occurred during code review.")
+

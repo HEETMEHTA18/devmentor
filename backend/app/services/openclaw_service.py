@@ -106,13 +106,13 @@ class OpenClawService:
                 logger.warning(f"OpenClaw dispatch timed out: {e}")
                 return {
                     "success": False,
-                    "error": f"OpenClaw dispatch timed out: {str(e)}",
+                    "error": "OpenClaw dispatch timed out.",
                 }
             except Exception as e:
                 logger.exception("OpenClaw dispatch failed")
                 return {
                     "success": False,
-                    "error": f"An error occurred during tool execution: {str(e)}",
+                    "error": "An error occurred during tool execution.",
                 }
 
     def _stub(self, tool_id: str, capability: str, params: dict) -> dict:
