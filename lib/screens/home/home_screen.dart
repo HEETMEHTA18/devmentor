@@ -1810,124 +1810,142 @@ class HomeScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────
   Widget _buildOpenPullRequestsSection(BuildContext context, AppState state) {
     if (!state.aiInsights) {
-      return _buildLockedAiFeature(context, state, 'Open Pull Requests', Icons.merge_type_rounded);
+      return _buildLockedAiFeature(context, state, 'Recent Activity', Icons.call_split_rounded);
     }
     
-    // Using mock data reflecting real PR structure
+    // Using mock data reflecting real PR structure like GitHub Mobile
     final prs = [
-      {'repo': 'flutter/flutter', 'title': 'Fix scrolling issues on iOS', 'number': 142055, 'status': 'Open', 'url': 'https://github.com/flutter/flutter/pull/142055', 'commit': 'a4f91d2'},
-      {'repo': 'HEETMEHTA18/devmentor', 'title': 'Add GitHub Events Service', 'number': 12, 'status': 'Review Required', 'url': 'https://github.com/HEETMEHTA18/devmentor/pull/12', 'commit': '8f3a9e1'},
+      {'repo': 'flutter/flutter', 'title': 'fix: prevent cascading cancellations in add_data_points asyncio.gather calls', 'number': 142055, 'url': 'https://github.com/flutter/flutter/pull/142055', 'time': '1d', 'comments': 1, 'activity': 'github-actions[bot] commented'},
+      {'repo': 'HEETMEHTA18/devmentor', 'title': '[Tatvik Agent] I want you to make a pr on the repo named devmentor with a content new version', 'number': 12, 'url': 'https://github.com/HEETMEHTA18/devmentor/pull/12', 'time': '2d', 'comments': 1, 'activity': 'chatgpt-codex-connector[bot] commented'},
     ];
 
-    return GlassCard(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.call_split_rounded, color: AppTheme.accent, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                'OPEN PULL REQUESTS',
-                style: GoogleFonts.outfit(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recent',
+          style: GoogleFonts.inter(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          const SizedBox(height: 16),
-          ...prs.map((pr) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E).withValues(alpha: 0.8), // Deep dark background like GitHub Mobile
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          ),
+          child: Column(
+            children: prs.asMap().entries.map((entry) {
+              final int idx = entry.key;
+              final pr = entry.value;
+              final bool isLast = idx == prs.length - 1;
+
+              return InkWell(
+                onTap: () async {
+                  final url = Uri.parse(pr['url'].toString());
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+                borderRadius: BorderRadius.vertical(
+                  top: idx == 0 ? const Radius.circular(16) : Radius.zero,
+                  bottom: isLast ? const Radius.circular(16) : Radius.zero,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.merge_type_rounded, size: 20, color: AppTheme.success),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${pr['repo']} #${pr['number']}',
-                                style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                pr['title'].toString(),
-                                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textMain),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(Icons.commit_rounded, size: 14, color: AppTheme.textSecondary),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    pr['commit'].toString(),
-                                    style: GoogleFonts.spaceMono(fontSize: 12, color: AppTheme.textSecondary),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.neonOrange.withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(color: AppTheme.neonOrange.withValues(alpha: 0.4)),
-                                    ),
-                                    child: Text(
-                                      pr['status'].toString(),
-                                      style: GoogleFonts.inter(fontSize: 10, color: AppTheme.neonOrange, fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        LiquidGlassButton(
-                          onPressed: () async {
-                            final url = Uri.parse(pr['url'].toString());
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url, mode: LaunchMode.externalApplication);
-                            }
-                          },
-                          color: AppTheme.accent.withValues(alpha: 0.1),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          borderRadius: 8,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.open_in_new_rounded, size: 14, color: Colors.white),
-                              const SizedBox(width: 6),
-                              Text(
-                                'View on GitHub',
-                                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: isLast ? null : Border(
+                      bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
                     ),
-                  ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // PR Icon
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Icon(Icons.call_split_rounded, size: 22, color: AppTheme.success),
+                      ),
+                      const SizedBox(width: 14),
+                      // Content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Repo & Time
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${pr['repo']} #${pr['number']}',
+                                    style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  pr['time'].toString(),
+                                  style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            // Title & Comments
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    pr['title'].toString(),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppTheme.textMain,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    pr['comments'].toString(),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: AppTheme.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            // Activity
+                            Text(
+                              pr['activity'].toString(),
+                              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }),
-        ],
-      ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 
