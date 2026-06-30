@@ -14,7 +14,10 @@ client = TestClient(app)
 
 
 def setup_module():
-    Base.metadata.drop_all(bind=engine)
+    try:
+        Base.metadata.drop_all(bind=engine)
+    except Exception:
+        pass
     Base.metadata.create_all(bind=engine)
     import app.api.v1.endpoints.research as research
 

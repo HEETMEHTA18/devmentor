@@ -504,150 +504,102 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
                         top: false,
                         child: SizedBox(
                           height: 64,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            alignment: Alignment.bottomCenter,
-                            children: [
-                              Positioned.fill(
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final sideWidth = (constraints.maxWidth - 80) / 2;
-                                    final leftItemWidth = sideWidth / 2;
-                                    final rightItemWidth = sideWidth / 3;
-                                    final int mobileIndex = _selectedIndex;
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final itemWidth = constraints.maxWidth / 6;
+                              final int mobileIndex = _selectedIndex;
 
-                                    double indicatorLeft = 0;
-                                    double indicatorWidth = 0;
-                                    if (mobileIndex == 0) {
-                                      indicatorLeft = 6;
-                                      indicatorWidth = leftItemWidth - 12;
-                                    } else if (mobileIndex == 1) {
-                                      indicatorLeft = leftItemWidth + 6;
-                                      indicatorWidth = leftItemWidth - 12;
-                                    } else if (mobileIndex == 3) {
-                                      indicatorLeft = sideWidth + 80 + 6;
-                                      indicatorWidth = rightItemWidth - 12;
-                                    } else if (mobileIndex == 4) {
-                                      indicatorLeft = sideWidth + 80 + rightItemWidth + 6;
-                                      indicatorWidth = rightItemWidth - 12;
-                                    } else if (mobileIndex == 5) {
-                                      indicatorLeft = sideWidth + 80 + 2 * rightItemWidth + 6;
-                                      indicatorWidth = rightItemWidth - 12;
-                                    }
+                              double indicatorLeft = 0;
+                              double indicatorWidth = 0;
+                              if (mobileIndex >= 0 && mobileIndex <= 5) {
+                                indicatorLeft = mobileIndex * itemWidth + 6;
+                                indicatorWidth = itemWidth - 12;
+                              }
 
-                                    return Stack(
-                                      children: [
-                                        // Clean Solid Pill Indicator (Hide if index 2 since it's the floating button)
-                                        if (mobileIndex != -1 && mobileIndex != 2)
-                                          AnimatedPositioned(
-                                            duration: const Duration(milliseconds: 350),
-                                            curve: Curves.easeOutCubic,
-                                            left: indicatorLeft,
-                                            top: 6,
-                                            bottom: 6,
-                                            width: indicatorWidth,
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: isDark
-                                                    ? Colors.white.withValues(alpha: 0.08)
-                                                    : Colors.black.withValues(alpha: 0.05),
-                                                borderRadius: BorderRadius.circular(22),
-                                                border: Border.all(
-                                                  color: isDark
-                                                      ? Colors.white.withValues(alpha: 0.1)
-                                                      : Colors.black.withValues(alpha: 0.05),
-                                                  width: 0.5,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        // Nav Items
-                                        Positioned.fill(
-                                          child: Row(
-                                            children: [
-                                              _MainNavigationItem(
-                                                index: 0,
-                                                label: 'Home',
-                                                icon: Icons.grid_view_rounded,
-                                                width: leftItemWidth,
-                                                isSelected: _selectedIndex == 0,
-                                                onTap: () => _onTabSelected(0),
-                                              ),
-                                              _MainNavigationItem(
-                                                index: 1,
-                                                label: 'Explore',
-                                                icon: Icons.explore_rounded,
-                                                width: leftItemWidth,
-                                                isSelected: _selectedIndex == 1,
-                                                onTap: () => _onTabSelected(1),
-                                              ),
-                                              const SizedBox(width: 80), // Space for center FAB
-                                              _MainNavigationItem(
-                                                index: 3,
-                                                label: 'Prompts',
-                                                icon: Icons.psychology_rounded,
-                                                width: rightItemWidth,
-                                                isSelected: _selectedIndex == 3,
-                                                onTap: () => _onTabSelected(3),
-                                              ),
-                                              _MainNavigationItem(
-                                                index: 4,
-                                                label: 'Roadmap',
-                                                icon: Icons.route_rounded,
-                                                width: rightItemWidth,
-                                                isSelected: _selectedIndex == 4,
-                                                onTap: () => _onTabSelected(4),
-                                              ),
-                                              _MainNavigationItem(
-                                                index: 5,
-                                                label: 'Settings',
-                                                icon: Icons.settings_rounded,
-                                                width: rightItemWidth,
-                                                isSelected: _selectedIndex == 5,
-                                                onTap: () => _onTabSelected(5),
-                                              ),
-                                            ],
+                              return Stack(
+                                children: [
+                                  // Clean Solid Pill Indicator
+                                  if (mobileIndex >= 0 && mobileIndex <= 5)
+                                    AnimatedPositioned(
+                                      duration: const Duration(milliseconds: 350),
+                                      curve: Curves.easeOutCubic,
+                                      left: indicatorLeft,
+                                      top: 6,
+                                      bottom: 6,
+                                      width: indicatorWidth,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.08)
+                                              : Colors.black.withValues(alpha: 0.05),
+                                          borderRadius: BorderRadius.circular(22),
+                                          border: Border.all(
+                                            color: isDark
+                                                ? Colors.white.withValues(alpha: 0.1)
+                                                : Colors.black.withValues(alpha: 0.05),
+                                            width: 0.5,
                                           ),
                                         ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
-                              // Floating Lifted Center Button
-                              Positioned(
-                                bottom: 12, // Lifted above the bar
-                                child: GestureDetector(
-                                  onTap: () => _onTabSelected(2),
-                                  child: Container(
-                                    width: 56,
-                                    height: 56,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppTheme.accent,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: AppTheme.accent.withValues(alpha: 0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                      border: Border.all(
-                                        color: isDark ? Colors.black26 : Colors.white24,
-                                        width: 1.5,
                                       ),
                                     ),
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.chat_bubble_rounded,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
+                                  // Nav Items
+                                  Positioned.fill(
+                                    child: Row(
+                                      children: [
+                                        _MainNavigationItem(
+                                          index: 0,
+                                          label: 'Home',
+                                          icon: Icons.grid_view_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 0,
+                                          onTap: () => _onTabSelected(0),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 1,
+                                          label: 'Explore',
+                                          icon: Icons.explore_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 1,
+                                          onTap: () => _onTabSelected(1),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 2,
+                                          label: 'Chat',
+                                          icon: Icons.chat_bubble_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 2,
+                                          onTap: () => _onTabSelected(2),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 3,
+                                          label: 'Prompts',
+                                          icon: Icons.psychology_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 3,
+                                          onTap: () => _onTabSelected(3),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 4,
+                                          label: 'Roadmap',
+                                          icon: Icons.route_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 4,
+                                          onTap: () => _onTabSelected(4),
+                                        ),
+                                        _MainNavigationItem(
+                                          index: 5,
+                                          label: 'Settings',
+                                          icon: Icons.settings_rounded,
+                                          width: itemWidth,
+                                          isSelected: _selectedIndex == 5,
+                                          onTap: () => _onTabSelected(5),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                              ),
-                            ],
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
