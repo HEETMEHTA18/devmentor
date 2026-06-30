@@ -1837,7 +1837,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   // ─────────────────────────────────────────────────
-  Widget _buildLockedAiFeature(BuildContext context, String title, IconData icon) {
+  Widget _buildLockedAiFeature(BuildContext context, AppState state, String title, IconData icon) {
     return GlassCard(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -1865,17 +1865,33 @@ class HomeScreen extends StatelessWidget {
               color: AppTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
-              Icon(Icons.lock_rounded, size: 16, color: AppTheme.accent),
-              const SizedBox(width: 8),
-              Text(
-                'Enable AI Insights in Settings to unlock',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.accent,
+              LiquidGlassButton(
+                onPressed: () {
+                  state.togglePreference('ai');
+                },
+                color: AppTheme.accent.withValues(alpha: 0.2),
+                borderRadius: 12,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.lock_open_rounded, size: 16, color: AppTheme.accent),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Unlock Feature',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.accent,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1889,7 +1905,7 @@ class HomeScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────
   Widget _buildOpenPullRequestsSection(BuildContext context, AppState state) {
     if (!state.aiInsights) {
-      return _buildLockedAiFeature(context, 'Open Pull Requests', Icons.merge_type_rounded);
+      return _buildLockedAiFeature(context, state, 'Open Pull Requests', Icons.merge_type_rounded);
     }
     
     // Using mock data for now, as fetching PRs from other open source repos might require a specific API call
@@ -1966,7 +1982,7 @@ class HomeScreen extends StatelessWidget {
   // ─────────────────────────────────────────────────
   Widget _buildAgentDigestSection(BuildContext context, AppState state) {
     if (!state.aiInsights) {
-      return _buildLockedAiFeature(context, '24/7 AI Research Agent', Icons.radar_rounded);
+      return _buildLockedAiFeature(context, state, '24/7 AI Research Agent', Icons.radar_rounded);
     }
     
     final digest = state.whatsNewDigest;
